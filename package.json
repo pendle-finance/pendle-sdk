@@ -1,4 +1,6 @@
 {
+  "name": "@pendle/sdk",
+  "author": "Pendle Labs",
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -31,8 +33,6 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "pendle-sdk",
-  "author": "vicom",
   "module": "dist/pendle-sdk.esm.js",
   "size-limit": [
     {
@@ -54,6 +54,9 @@
   },
   "dependencies": {
     "@pendle/core": "^1.0.1",
-    "ethers": "^5.4.4"
+    "bignumber.js": "^9.0.1",
+    "dotenv": "^10.0.0",
+    "ethers": "^5.4.4",
+    "ts-node": "^10.2.1"
   }
 }
