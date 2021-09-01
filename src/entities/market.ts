@@ -2,11 +2,7 @@ import { TokenAmount, Token } from './token';
 import { ethers, providers } from 'ethers';
 import { contractAddresses } from '../constants';
 import { contracts } from '../contracts';
-
-export type MarketInterest = {
-  address: string,
-  interest: TokenAmount
-};
+import { YtOrMarketInterest } from './token';
 
 const dummyAddress = "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"; // SUSHI
 const dummyDecimal = 18;
@@ -14,10 +10,6 @@ const dummyDecimal = 18;
 export class Market {
   public readonly address: string;
   public readonly tokens: Token[];
-  // public token0Amount?: string[]; //TODO: make it an array of amounts
-  // public token1Amount?: string;
-  // public token0WeightRaw?: string;
-  // public token1WeightRaw?: string;
 
   public constructor(
     marketAddress: string,
@@ -33,20 +25,20 @@ export class Market {
   }
 
   //TODO
-  public static contract(provider: providers.JsonRpcSigner): any { 
+  public static methods(provider: providers.JsonRpcSigner): Record<string, any> {
     return  {
       /**
        * name
        */
-      async fetchInterests(markets: string[], userAddress: string): Promise<MarketInterest[]> {
+      async fetchInterests(markets: string[], userAddress: string): Promise<YtOrMarketInterest[]> {
         const redeemProxyContract = new ethers.Contract(contractAddresses.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, provider.provider);
         const userInterests = await redeemProxyContract.callStatic.redeemMarkets(markets, { from: userAddress });
-        const formattedResult: MarketInterest[] = [];
+        const formattedResult: YtOrMarketInterest[] = [];
         for (let i = 0; i < markets.length; i ++) {
           const market = markets[i];
           formattedResult.push(
             {
-              address: market, 
+              address: market,
               interest: new TokenAmount(
                 new Token(
                   dummyAddress,
@@ -59,7 +51,7 @@ export class Market {
         }
         return formattedResult;
       }
-    }  
+    }
   }
 
 }
