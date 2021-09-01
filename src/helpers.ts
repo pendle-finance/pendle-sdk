@@ -5,3 +5,7 @@ export const decimalFactor = (decimal: number): string => {
     .pow(decimal)
     .toString();
 };
+
+export const getGlobalEpochId = (): number => {
+  return (currentTime - launchTime) / 7 days + 1
+};

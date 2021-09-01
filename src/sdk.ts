@@ -1,7 +1,7 @@
-import { Contract, providers } from 'ethers';
+import { providers } from 'ethers';
 import { PendleMarket } from './entities';
-import { contracts } from './contracts';
 import { Token, TokenAmount } from './entities';
+import { fetchPendleMarketData, fetchTokenBalances } from './fetchers';
 
 export class Sdk {
   public readonly provider: providers.JsonRpcProvider;
@@ -13,40 +13,62 @@ export class Sdk {
   public async fetchPendleMarketData(
     marketAddress: string
   ): Promise<PendleMarket> {
-    const marketContract = new Contract(
-      marketAddress,
-      contracts.IPendleMarket.abi,
-      this.provider
-    );
-    const reserves = await marketContract.getReserves();
-    const ytTokenAddress = await marketContract.xyt();
-    const baseTokenAddress = await marketContract.token();
-    const ytTokenContract = new Contract(
-      ytTokenAddress,
-      contracts.IERC20.abi,
-      this.provider
-    );
-    const baseTokenContract = new Contract(
-      baseTokenAddress,
-      contracts.IERC20.abi,
-      this.provider
-    );
-    const ytTokenDecimals = await ytTokenContract.decimals();
-    const baseTokenDecimals = await baseTokenContract.decimals();
+    return await fetchPendleMarketData(this.provider, marketAddress);
+  }
 
-    const market = new PendleMarket(
-      marketAddress.toLowerCase(),
-      new TokenAmount(
-        new Token(ytTokenAddress, ytTokenDecimals.toNumber()),
-        reserves.xytBalance.toString()
-      ),
-      new TokenAmount(
-        new Token(baseTokenAddress, baseTokenDecimals.toNumber()),
-        reserves.tokenBalance.toString()
-      ),
-      reserves.xytWeight.toString(),
-      reserves.tokenWeight.toString()
-    );
-    return market;
+  public async fetchTokenBalances( // should be  in Token.contract
+    tokens: Token[],
+    userAddress: string
+  ): Promise<TokenAmount[]> {
+    return await fetchTokenBalances(this.provider, tokens, userAddress);
+  }
+
+  public async fetchInterestsAndRewards( //TODO: move into Market.contract, StakingPool.contract and YT.contract
+    yieldTokens: address[],
+    markets: address[],
+    pools: StakingPool[],
+    userAddress: string
+  ): Promise<Object> {
+
+
+
+    return {
+      yieldTokens: [
+        {
+          address: '0x12345',
+          interests: {
+            address: '0xaUSDCaddress',
+            value: '345',
+          },
+        },
+      ],
+      markets: [
+        {
+          address: '0x123',
+          interests: {
+            address: '0xaUSDCaddress',
+            value: '123',
+          },
+        },
+        {
+          address: '0x123',
+          interests: {
+            address: '0xcDAIaddress',
+            value: '123',
+          },
+        },
+      ],
+      pools: [
+        {
+          address: '0x567',
+          interests: {
+            address: '0xSUSHI',
+            value: '567',
+          },
+          rewards: new TokenAmount(new Token('0xPENDLE', 18), '14123'),
+          accruingRewards: new TokenAmount(new Token('0xPENDLE', 18), '14123'),
+        },
+      ],
+    };
   }
 }

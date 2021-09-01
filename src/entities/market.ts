@@ -1,26 +1,20 @@
-import { TokenAmount } from './token';
+import { TokenAmount, Token } from './token';
 import { RONE } from '../constants';
 
 export class Market {
   public readonly address: string;
-  public token0Amount?: TokenAmount;
-  public token1Amount?: TokenAmount;
-  public token0WeightRaw?: string;
-  public token1WeightRaw?: string;
+  public readonly tokens: Token[];
+  // public token0Amount?: string[]; //TODO: make it an array of amounts
+  // public token1Amount?: string;
+  // public token0WeightRaw?: string;
+  // public token1WeightRaw?: string;
 
   public constructor(
     marketAddress: string,
-    token0Amount?: TokenAmount,
-    token1Amount?: TokenAmount,
-    token0WeightRaw?: string,
-    token1WeightRaw?: string
+    tokens: Token[],
   ) {
     this.address = marketAddress;
-    this.token0Amount = token0Amount;
-    this.token1Amount = token1Amount;
-    const half = RONE.div(2).toString();
-    this.token0WeightRaw = token0WeightRaw || half;
-    this.token1WeightRaw = token1WeightRaw || half;
+    this.tokens = tokens
   }
 
   public getToken0PriceInToken1(): string {
@@ -28,9 +22,24 @@ export class Market {
     return '1';
   }
 
-  public getToken1PriceInToken0(): string {
-    // TODO
-    return '1';
+  //TODO
+  public static contract(provider: providers.JsonRpcSigner) => { function1, function2 }
+  MarketContract object that handles all contract interactions
+  {
+    // public getToken1PriceInToken0(): string {
+    //   // TODO
+    //   return '1';
+    // }
+    //
+    // public fetchReserveData()
+    // public getLiquidity(): string {
+    //
+    // }
+    //
+    // public getSwapExactInData(provider: providers.JsonRpcSigner, inAmount: TokenAmount, slippage: number, ) {
+    //   returns price impact, exact out, ...
+    // }
+    
   }
 }
 

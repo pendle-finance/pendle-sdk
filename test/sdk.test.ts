@@ -7,7 +7,8 @@ jest.setTimeout(30000);
 describe('Sdk', () => {
   it('fetchPendleMarketData', async () => {
     const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
-    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    // TODO
+    const provider = new ethers.providers.JsonRpcSigner(providerUrl,);
 
     const sdk = new Sdk(provider);
 
