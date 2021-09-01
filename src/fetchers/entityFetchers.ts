@@ -29,16 +29,16 @@ export async function fetchPendleMarketData(
 
   const market = new PendleMarket(
     marketAddress.toLowerCase(),
-    new TokenAmount(
-      new Token(ytTokenAddress, ytTokenDecimals.toNumber()),
-      reserves.xytBalance.toString()
-    ),
-    new TokenAmount(
-      new Token(baseTokenAddress, baseTokenDecimals.toNumber()),
-      reserves.tokenBalance.toString()
-    ),
-    reserves.xytWeight.toString(),
-    reserves.tokenWeight.toString()
+    [
+      new TokenAmount(
+        new Token(ytTokenAddress, ytTokenDecimals.toNumber()),
+        reserves.xytBalance.toString()
+      ),
+      new TokenAmount(
+        new Token(baseTokenAddress, baseTokenDecimals.toNumber()),
+        reserves.tokenBalance.toString()
+      )
+    ]
   );
   return market;
 }

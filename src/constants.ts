@@ -18,3 +18,7 @@ export const RONE = BN.from(2).pow(40);
 export const INF = BN.from(2)
   .pow(256)
   .sub(1);
+
+export const contractAddresses = {
+  PendleRedeemProxy: "0xeafedac4d569ec91fa1e6e53d6fedc6dc9c60db5",
+}

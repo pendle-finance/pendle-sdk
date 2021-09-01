@@ -6,6 +6,6 @@ export const decimalFactor = (decimal: number): string => {
     .toString();
 };
 
-export const getGlobalEpochId = (): number => {
-  return (currentTime - launchTime) / 7 days + 1
-};
+// export const getGlobalEpochId = (): number => {
+//   return (currentTime - launchTime) / 7 days + 1
+// };

@@ -1,5 +1,15 @@
 import { TokenAmount, Token } from './token';
-import { RONE } from '../constants';
+import { ethers, providers } from 'ethers';
+import { contractAddresses } from '../constants';
+import { contracts } from '../contracts';
+
+export type MarketInterest = {
+  address: string,
+  interest: TokenAmount
+};
+
+const dummyAddress = "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"; // SUSHI
+const dummyDecimal = 18;
 
 export class Market {
   public readonly address: string;
@@ -23,24 +33,35 @@ export class Market {
   }
 
   //TODO
-  public static contract(provider: providers.JsonRpcSigner) => { function1, function2 }
-  MarketContract object that handles all contract interactions
-  {
-    // public getToken1PriceInToken0(): string {
-    //   // TODO
-    //   return '1';
-    // }
-    //
-    // public fetchReserveData()
-    // public getLiquidity(): string {
-    //
-    // }
-    //
-    // public getSwapExactInData(provider: providers.JsonRpcSigner, inAmount: TokenAmount, slippage: number, ) {
-    //   returns price impact, exact out, ...
-    // }
-    
+  public static contract(provider: providers.JsonRpcSigner): any { 
+    return  {
+      /**
+       * name
+       */
+      async fetchInterests(markets: string[], userAddress: string): Promise<MarketInterest[]> {
+        const redeemProxyContract = new ethers.Contract(contractAddresses.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, provider.provider);
+        const userInterests = await redeemProxyContract.callStatic.redeemMarkets(markets, { from: userAddress });
+        const formattedResult: MarketInterest[] = [];
+        for (let i = 0; i < markets.length; i ++) {
+          const market = markets[i];
+          formattedResult.push(
+            {
+              address: market, 
+              interest: new TokenAmount(
+                new Token(
+                  dummyAddress,
+                  dummyDecimal,
+                ),
+                userInterests[i].toString()
+              )
+            }
+          );
+        }
+        return formattedResult;
+      }
+    }  
   }
+
 }
 
 export class PendleMarket extends Market {
@@ -49,11 +70,8 @@ export class PendleMarket extends Market {
 
   public constructor(
     marketAddress: string,
-    yt?: TokenAmount,
-    baseToken?: TokenAmount,
-    ytWeightRaw?: string,
-    baseTokenWeightRaw?: string
+    tokens: TokenAmount[]
   ) {
-    super(marketAddress, yt, baseToken, ytWeightRaw, baseTokenWeightRaw);
+    super(marketAddress, [tokens[0].token!, tokens[1].token!]);
   }
 }

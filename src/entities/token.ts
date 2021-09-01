@@ -1,6 +1,7 @@
 import BigNumberjs from 'bignumber.js';
 import { decimalFactor } from '../helpers';
-import { providers } from 'ethers'
+// import { providers } from 'ethers'
+// import { contractAddresses } from '../constants';
 
 export class Token {
   public readonly address: string;
@@ -14,12 +15,12 @@ export class Token {
   }
 }
 
-export class YT extends Token { // TODO
-  // public readonly forgeId: string
-  public contract = (provider: any) => {
+// export class YT extends Token { // TODO
+//   // public readonly forgeId: string
+//   public contract = (provider: any) => {
 
-  }
-}
+//   }
+// }
 
 export class TokenAmount {
   public readonly token: Token;

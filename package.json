@@ -56,7 +56,7 @@
     "@pendle/core": "^1.0.1",
     "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
-    "ethers": "^5.4.4",
+    "ethers": "^5.4.6",
     "ts-node": "^10.2.1"
   }
 }
