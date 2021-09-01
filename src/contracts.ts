@@ -11,5 +11,5 @@ export const contracts = {
   IPendleRouter,
   IERC20,
   PendleLiquidityMiningBase,
-  PendleRedeemProxy
+  PendleRedeemProxy,
 };

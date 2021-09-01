@@ -1,16 +1,16 @@
 import BigNumberjs from 'bignumber.js';
 import { decimalFactor, indexRange } from '../helpers';
-import { providers, Contract } from 'ethers'
+import { providers, Contract } from 'ethers';
 import { contractAddresses } from '../constants';
 import { contracts } from '../contracts';
 
-const dummyAddress = "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"; // SUSHI
+const dummyAddress = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'; // SUSHI
 const dummyDecimal = 18;
 
 export type YtOrMarketInterest = {
-  address: string
-  interest: TokenAmount
-}
+  address: string;
+  interest: TokenAmount;
+};
 
 export class Token {
   public readonly address: string;
@@ -25,26 +25,37 @@ export class Token {
 }
 
 export class Yt extends Token {
-  public static methods(provider: providers.JsonRpcSigner): Record<string, any> {
-    const fetchInterests = async(yts: string[], userAddress: string): Promise<YtOrMarketInterest[]> => {
-      const redeemProxyContract = new Contract(contractAddresses.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, provider.provider);
-      const userInterests = await redeemProxyContract.callStatic.redeemXyts(yts, { from: userAddress })
-      return await Promise.all(indexRange(0, yts.length).map(async(i) => {
-        return {
-          address: yts[i],
-          interest: new TokenAmount(
-            new Token(
-              dummyAddress,
-              dummyDecimal,
+  public static methods(
+    provider: providers.JsonRpcSigner
+  ): Record<string, any> {
+    const fetchInterests = async (
+      yts: string[],
+      userAddress: string
+    ): Promise<YtOrMarketInterest[]> => {
+      const redeemProxyContract = new Contract(
+        contractAddresses.PendleRedeemProxy,
+        contracts.PendleRedeemProxy.abi,
+        provider.provider
+      );
+      const userInterests = await redeemProxyContract.callStatic.redeemXyts(
+        yts,
+        { from: userAddress }
+      );
+      return await Promise.all(
+        indexRange(0, yts.length).map(async i => {
+          return {
+            address: yts[i],
+            interest: new TokenAmount(
+              new Token(dummyAddress, dummyDecimal),
+              userInterests[i].toString()
             ),
-            userInterests[i].toString()
-          )
-        }
-      }))
-    }
+          };
+        })
+      );
+    };
     return {
-      fetchInterests
-    }
+      fetchInterests,
+    };
   }
 }
 

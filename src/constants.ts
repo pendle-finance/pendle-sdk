@@ -20,5 +20,5 @@ export const INF = BN.from(2)
   .sub(1);
 
 export const contractAddresses = {
-  PendleRedeemProxy: "0xeafedac4d569ec91fa1e6e53d6fedc6dc9c60db5",
-}
+  PendleRedeemProxy: '0xeafedac4d569ec91fa1e6e53d6fedc6dc9c60db5',
+};

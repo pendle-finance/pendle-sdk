@@ -16,11 +16,11 @@ export class Sdk {
     return await fetchPendleMarketData(this.provider, marketAddress);
   }
 
-  public async fetchTokenBalances( // should be  in Token.contract
+  public async fetchTokenBalances(
+    // should be  in Token.contract
     tokens: Token[],
     userAddress: string
   ): Promise<TokenAmount[]> {
     return await fetchTokenBalances(this.provider, tokens, userAddress);
   }
-
 }

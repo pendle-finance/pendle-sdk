@@ -3,44 +3,44 @@ import { providers } from 'ethers';
 // import { contractAddresses } from '../constants';
 // import { contracts } from '../contracts';
 
-const sushiToken = new Token('0x6b3595068778dd592e39a122f4f5a5cf09c90fe2', 18)
-const pendleToken = new Token('0x808507121B80c02388fAd14726482e061B8da827', 18)
-const dummyAmount = '123456000000000000'
+const sushiToken = new Token('0x6b3595068778dd592e39a122f4f5a5cf09c90fe2', 18);
+const pendleToken = new Token('0x808507121B80c02388fAd14726482e061B8da827', 18);
+const dummyAmount = '123456000000000000';
 
 export interface StakingPoolId {
-  address: string
-  inputTokenAddress: string
-  contractType: string
+  address: string;
+  inputTokenAddress: string;
+  contractType: string;
 }
 
 export type PoolInterstAndRewards = {
-  address: string
-  inputToken: Token
-  interest: TokenAmount
-  claimableRewards: TokenAmount[]
-}
+  address: string;
+  inputToken: Token;
+  interest: TokenAmount;
+  claimableRewards: TokenAmount[];
+};
 
 export type PoolAccruingRewards = {
-  address: string
-  inputToken: Token
-  accruingRewards: TokenAmount[]
-}
+  address: string;
+  inputToken: Token;
+  accruingRewards: TokenAmount[];
+};
 
 export type PoolVestedRewards = {
-  address: string
-  inputToken: Token
-  vestedRewards: FutureEpochRewards[]
-}
+  address: string;
+  inputToken: Token;
+  vestedRewards: FutureEpochRewards[];
+};
 
 export type FutureEpochRewards = {
-  epochId: number
-  rewards: TokenAmount[]
-}
+  epochId: number;
+  rewards: TokenAmount[];
+};
 
 export enum StakingPoolType {
-  LmV1 = "PendleLiquidityMining",
-  LmV2 = "PendleLiquidityMiningV2",
-  PendleSingleSided = "PendleSingleStaking"
+  LmV1 = 'PendleLiquidityMining',
+  LmV2 = 'PendleLiquidityMiningV2',
+  PendleSingleSided = 'PendleSingleStaking',
 }
 
 export class StakingPool {
@@ -50,70 +50,85 @@ export class StakingPool {
   public readonly interestTokens?: Token[]; //
   public readonly contractType?: StakingPoolType;
 
-  constructor(address: string, inputToken: Token, rewardTokens: Token[], interestTokens?: Token[], contractType?: StakingPoolType) {
-    this.address = address
-    this.inputToken = inputToken
-    this.rewardTokens = rewardTokens
-    this.interestTokens = interestTokens
-    this.contractType = contractType
+  constructor(
+    address: string,
+    inputToken: Token,
+    rewardTokens: Token[],
+    interestTokens?: Token[],
+    contractType?: StakingPoolType
+  ) {
+    this.address = address;
+    this.inputToken = inputToken;
+    this.rewardTokens = rewardTokens;
+    this.interestTokens = interestTokens;
+    this.contractType = contractType;
   }
 
   public static methods(_: providers.JsonRpcSigner): Record<string, any> {
-    const fetchInterestsAndRewards = async(stakingPools: StakingPoolId[], _: string): Promise<PoolInterstAndRewards[]> => {
+    const fetchInterestsAndRewards = async (
+      stakingPools: StakingPoolId[],
+      _: string
+    ): Promise<PoolInterstAndRewards[]> => {
       // const lmV1Contracts = stakingPools.filter((pool) => pool.contractType = StakingPoolType.LmV1)
       // const lmV2Contracts = stakingPools.filter((pool) => pool.contractType = StakingPoolType.LmV2)
       // const redeemProxyContract = new Contract(contractAddresses.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, provider.provider);
       //TODO: fetch rewards and interests
 
       // return dummy data
-      return stakingPools.map((stakingPool) => ({
+      return stakingPools.map(stakingPool => ({
         address: stakingPool.address,
         inputToken: new Token(stakingPool.inputTokenAddress, 18),
         interest: new TokenAmount(sushiToken, dummyAmount),
-        claimableRewards: [new TokenAmount(pendleToken, dummyAmount)]
-      }))
-    }
+        claimableRewards: [new TokenAmount(pendleToken, dummyAmount)],
+      }));
+    };
 
-    const fetchAccruingRewards = async(stakingPools: StakingPoolId[], _: string): Promise<PoolAccruingRewards[]> => {
+    const fetchAccruingRewards = async (
+      stakingPools: StakingPoolId[],
+      _: string
+    ): Promise<PoolAccruingRewards[]> => {
       // return dummy data
-      return stakingPools.map((stakingPool) => ({
+      return stakingPools.map(stakingPool => ({
         address: stakingPool.address,
         inputToken: new Token(stakingPool.inputTokenAddress, 18),
-        accruingRewards: [new TokenAmount(pendleToken, dummyAmount)]
-      }))
-    }
+        accruingRewards: [new TokenAmount(pendleToken, dummyAmount)],
+      }));
+    };
 
-    const fetchVestedRewards = async(stakingPools: StakingPoolId[], _: string): Promise<PoolVestedRewards[]> => {
+    const fetchVestedRewards = async (
+      stakingPools: StakingPoolId[],
+      _: string
+    ): Promise<PoolVestedRewards[]> => {
       // return dummy data
-      return stakingPools.map((stakingPool) => ({
+      return stakingPools.map(stakingPool => ({
         address: stakingPool.address,
         inputToken: new Token(stakingPool.inputTokenAddress, 18),
         vestedRewards: [
           {
             epochId: 12,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)]
+            rewards: [new TokenAmount(pendleToken, dummyAmount)],
           },
           {
             epochId: 13,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)]
+            rewards: [new TokenAmount(pendleToken, dummyAmount)],
           },
           {
             epochId: 14,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)]
+            rewards: [new TokenAmount(pendleToken, dummyAmount)],
           },
           {
             epochId: 15,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)]
+            rewards: [new TokenAmount(pendleToken, dummyAmount)],
           },
-        ]
-      }))
-    }
+        ],
+      }));
+    };
 
     return {
       fetchInterestsAndRewards,
       fetchAccruingRewards,
-      fetchVestedRewards
-    }
+      fetchVestedRewards,
+    };
   }
   // sendStake(provider: providers.JsonRpcSigner, amount: string): Promise<Transaction> ; // returns a promise
   // sendUnstake(provider: providers.JsonRpcSigner, amount: string): Promise<any>; // returns a promise
