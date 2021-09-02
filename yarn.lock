@@ -1473,10 +1473,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@pendle/core@^1.0.1":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.1.0.tgz#4657b62c661cfecefc1c9faf4567c4dc6553ac0f"
-  integrity sha512-YsoNXaP+VGTLx5AzwMzuJFTwSq47A15vdNAkA6yi5p7GAzfqU9wGNV9xSkJnSFGEFWIugIsgzzroVjXdc1azEA==
+"@pendle/core@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.1.1.tgz#96592b105221bda394834486de6529c7eb308ce2"
+  integrity sha512-HfflNp2/kc8usUnffluMe1ExqvvUtzY/DNUAlUOfmYFyrIrEqfjS/LQEumDCULsRxMYuQMk/ZAvoiGRuW9HGug==
   dependencies:
     bignumber.js "^9.0.1"
 
@@ -8355,7 +8355,7 @@ tslib@^1.8.1, tslib@^1.9.0, tslib@^1.9.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.0.3:
+tslib@^2.0.3, tslib@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==

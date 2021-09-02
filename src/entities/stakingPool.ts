@@ -1,11 +1,9 @@
-import { Token, TokenAmount } from './token';
-import { providers } from 'ethers';
+import { providers, Contract, BigNumber as BN } from 'ethers';
+import { mainnetContracts } from '../deployedContracts/mainnet'
 // import { contractAddresses } from '../constants';
-// import { contracts } from '../contracts';
-
-const sushiToken = new Token('0x6b3595068778dd592e39a122f4f5a5cf09c90fe2', 18);
-const pendleToken = new Token('0x808507121B80c02388fAd14726482e061B8da827', 18);
-const dummyAmount = '123456000000000000';
+import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolInterstAndRewards, populatePoolVestedRewards } from '../helpers'
+import { decimalsRecords, ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
+import { Token, TokenAmount } from '../entities'
 
 export interface StakingPoolId {
   address: string;
@@ -16,14 +14,14 @@ export interface StakingPoolId {
 export type PoolInterstAndRewards = {
   address: string;
   inputToken: Token;
-  interest: TokenAmount;
+  interest?: TokenAmount;
   claimableRewards: TokenAmount[];
 };
 
 export type PoolAccruingRewards = {
   address: string;
   inputToken: Token;
-  accruingRewards: TokenAmount[];
+  accruingRewards: FutureEpochRewards[];
 };
 
 export type PoolVestedRewards = {
@@ -64,64 +62,120 @@ export class StakingPool {
     this.contractType = contractType;
   }
 
-  public static methods(_: providers.JsonRpcSigner): Record<string, any> {
-    const fetchInterestsAndRewards = async (
-      stakingPools: StakingPoolId[],
-      _: string
-    ): Promise<PoolInterstAndRewards[]> => {
-      // const lmV1Contracts = stakingPools.filter((pool) => pool.contractType = StakingPoolType.LmV1)
-      // const lmV2Contracts = stakingPools.filter((pool) => pool.contractType = StakingPoolType.LmV2)
-      // const redeemProxyContract = new Contract(contractAddresses.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, provider.provider);
-      //TODO: fetch rewards and interests
+  public static methods(provider: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    let stakingPools: any[], redeemProxy: string, liquidityRewardsProxy: string, decimalsRecord: Record<string, number>;
 
-      // return dummy data
-      return stakingPools.map(stakingPool => ({
-        address: stakingPool.address,
-        inputToken: new Token(stakingPool.inputTokenAddress, 18),
-        interest: new TokenAmount(sushiToken, dummyAmount),
-        claimableRewards: [new TokenAmount(pendleToken, dummyAmount)],
-      }));
+    if (chainId === undefined || chainId == 1) {
+      stakingPools = mainnetContracts.stakingPools;
+      redeemProxy = mainnetContracts.PendleRedeemProxy;
+      liquidityRewardsProxy = mainnetContracts.PendleLiquidityRewardsProxy;
+      decimalsRecord = decimalsRecords.mainnet;
+    } else {
+      throw Error("Unsupported Network");
+    }
+
+    const redeemProxyContract = new Contract(
+      redeemProxy,
+      contracts.PendleRedeemProxy.abi,
+      provider.provider
+    );
+
+    const liquidityRewardsProxyContract = new Contract(
+      liquidityRewardsProxy,
+      contracts.PendleLiquidityRewardsProxy.abi,
+      provider.provider
+    )
+    const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
+      return stakingPoolInfo.contractType == "PendleLiquidityMining";
+    })
+    const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
+      return stakingPoolInfo.contractType == "PendleLiquidityMiningV2";
+    })
+
+    const fetchInterestsAndRewards = async (
+      userAddress: string
+    ): Promise<PoolInterstAndRewards[]> => {
+
+      const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
+        Lm1s.map((LmInfo: any) => LmInfo.address),
+        Lm1s.map((LmInfo: any) => LmInfo.expiry),
+        userAddress
+      );
+      const userLm1Rewards = await redeemProxyContract.callStatic.redeemLmRewards(
+        Lm1s.map((LmInfo: any) => LmInfo.address),
+        Lm1s.map((LmInfo: any) => LmInfo.expiry),
+        userAddress
+      )
+      const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
+        return populatePoolInterstAndRewards(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
+      });
+
+      const userLm2Interests = await redeemProxyContract.callStatic.redeemLmV2Interests(
+        Lm2s.map((LmInfo: any) => LmInfo.address),
+        userAddress
+      );
+      const userLm2Rewards = await redeemProxyContract.callStatic.redeemLmV2Rewards(
+        Lm2s.map((LmInfo: any) => LmInfo.address),
+        userAddress
+      );
+      const Lm2InterestsAndRewards = indexRange(0, Lm2s.length).map((i: number) => {
+        return populatePoolInterstAndRewards(Lm2s[i], userLm2Interests[i].toString(), userLm2Rewards[i].toString(), decimalsRecord);
+      });
+
+      return Lm1InterestsAndRewards.concat(Lm2InterestsAndRewards);
     };
 
     const fetchAccruingRewards = async (
-      stakingPools: StakingPoolId[],
-      _: string
+      userAddress: string
     ): Promise<PoolAccruingRewards[]> => {
-      // return dummy data
-      return stakingPools.map(stakingPool => ({
-        address: stakingPool.address,
-        inputToken: new Token(stakingPool.inputTokenAddress, 18),
-        accruingRewards: [new TokenAmount(pendleToken, dummyAmount)],
+
+      const userLm1AccruingRewards = await Promise.all(Lm1s.map((LmInfo: any) => {
+        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateAccruing(LmInfo.address, LmInfo.expiry, userAddress)
+          .then((d: any) => d.userTentativeReward)
+          .catch(() => ZERO);
       }));
+      const userLm2AccruingRewards = await Promise.all(Lm2s.map((LmInfo: any) => {
+        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateAccruingV2(LmInfo.address, userAddress)
+          .then((d: any) => d.userTentativeReward)
+          .catch(() => ZERO);
+      }))
+
+      const currentTime: BN = BN.from(Date.now()).div(BN.from(1000));
+      const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
+
+      const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+        return populatePoolAccruingRewards(Lm1s[i], userLm1AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
+      });
+      const userLm2AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+        return populatePoolAccruingRewards(Lm2s[i], userLm2AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
+      });
+      return userLm1AccruingRewardsFormatted.concat(userLm2AccruingRewardsFormatted);
     };
 
     const fetchVestedRewards = async (
-      stakingPools: StakingPoolId[],
-      _: string
+      userAddress: string
     ): Promise<PoolVestedRewards[]> => {
-      // return dummy data
-      return stakingPools.map(stakingPool => ({
-        address: stakingPool.address,
-        inputToken: new Token(stakingPool.inputTokenAddress, 18),
-        vestedRewards: [
-          {
-            epochId: 12,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)],
-          },
-          {
-            epochId: 13,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)],
-          },
-          {
-            epochId: 14,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)],
-          },
-          {
-            epochId: 15,
-            rewards: [new TokenAmount(pendleToken, dummyAmount)],
-          },
-        ],
+      const userLm1VestedRewards = await Promise.all(Lm1s.map((LmInfo: any) => {
+        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, [LmInfo.expiry], userAddress)
+          .then((d: any) => d.vestedRewards)
+          .catch(() => Array(VestingEpoches - 1).fill(ZERO));
       }));
+      const userLm2VestedRewards = await Promise.all(Lm2s.map((LmInfo: any) => {
+        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, userAddress)
+          .then((d: any) => d.vestedRewards)
+          .catch(() => Array(VestingEpoches - 1).fill(ZERO));
+      }));
+
+      const currentTime: BN = BN.from(Date.now()).div(BN.from(1000));
+      const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
+
+      const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+        return populatePoolVestedRewards(Lm1s[i], userLm1VestedRewards[i], currentEpochId, decimalsRecord);
+      });
+      const userLm2VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+        return populatePoolVestedRewards(Lm2s[i], userLm2VestedRewards[i], currentEpochId, decimalsRecord);
+      });
+      return userLm1VestedRewardsFormatted.concat(userLm2VestedRewardsFormatted);
     };
 
     return {

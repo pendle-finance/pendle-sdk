@@ -1,11 +1,10 @@
 import { TokenAmount, Token } from './token';
 import { ethers, providers } from 'ethers';
-import { contractAddresses } from '../constants';
+import { mainnetContracts } from '../deployedContracts/mainnet';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest } from './token';
+import { decimalsRecords } from '../constants'
 
-const dummyAddress = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'; // SUSHI
-const dummyDecimal = 18;
 
 export class Market {
   public readonly address: string;
@@ -23,41 +22,52 @@ export class Market {
 
   //TODO
   public static methods(
-    provider: providers.JsonRpcSigner
+    provider: providers.JsonRpcSigner,
+    chainId?: number
   ): Record<string, any> {
-    return {
-      /**
-       * name
-       */
-      async fetchInterests(
-        markets: string[],
-        userAddress: string
-      ): Promise<YtOrMarketInterest[]> {
-        const redeemProxyContract = new ethers.Contract(
-          contractAddresses.PendleRedeemProxy,
-          contracts.PendleRedeemProxy.abi,
-          provider.provider
-        );
-        const userInterests = await redeemProxyContract.callStatic.redeemMarkets(
-          markets,
-          { from: userAddress }
-        );
-        const formattedResult: YtOrMarketInterest[] = [];
-        for (let i = 0; i < markets.length; i++) {
-          const market = markets[i];
-          formattedResult.push({
-            address: market,
-            interest: new TokenAmount(
-              new Token(dummyAddress, dummyDecimal),
-              userInterests[i].toString()
-            ),
-          });
-        }
-        return formattedResult;
-      },
+    
+    let markets: any[], redeemProxy: string, decimalsRecord: Record<string, number>;
+    if (chainId === undefined || chainId == 1) {
+      markets = mainnetContracts.markets;
+      redeemProxy = mainnetContracts.PendleRedeemProxy;
+      decimalsRecord = decimalsRecords.mainnet;
+    } else {
+      throw Error("Unsupported Network");
+    }
+    const redeemProxyContract = new ethers.Contract(
+      redeemProxy,
+      contracts.PendleRedeemProxy.abi,
+      provider.provider
+    );
+
+    const fetchInterests = async (
+      userAddress: string,
+    ): Promise<YtOrMarketInterest[]> => {
+      
+      const formattedResult: YtOrMarketInterest[] = [];
+      
+      const userInterests = await redeemProxyContract.callStatic.redeemMarkets(
+        markets.map((marketInfo: any) => marketInfo.address),
+        { from: userAddress }
+      );
+      for (let i = 0; i < markets.length; i++) {
+        const marketInfo = markets[i];
+        formattedResult.push({
+          address: marketInfo.address,
+          interest: new TokenAmount(
+            new Token(marketInfo.rewardTokenAddresses[0], decimalsRecord[marketInfo.rewardTokenAddresses[0]]),
+            userInterests[i].toString()
+          ),
+        });
+      }
+      return formattedResult;
     };
-  }
+    return {
+      fetchInterests
+    }
+  };
 }
+
 
 export class PendleMarket extends Market {
   public ytWeightRaw?: string;

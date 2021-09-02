@@ -1,11 +1,9 @@
 import BigNumberjs from 'bignumber.js';
-import { decimalFactor, indexRange } from '../helpers';
+import { decimalFactor } from '../helpers';
 import { providers, Contract } from 'ethers';
-import { contractAddresses } from '../constants';
+import { mainnetContracts } from '../deployedContracts/mainnet';
 import { contracts } from '../contracts';
-
-const dummyAddress = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'; // SUSHI
-const dummyDecimal = 18;
+import { decimalsRecords } from '../constants'
 
 export type YtOrMarketInterest = {
   address: string;
@@ -26,32 +24,44 @@ export class Token {
 
 export class Yt extends Token {
   public static methods(
-    provider: providers.JsonRpcSigner
+    provider: providers.JsonRpcSigner,
+    chainId?: number
   ): Record<string, any> {
+    let YTs: any[], redeemProxy: string, decimalsRecord: Record<string, number>;
+    if (chainId === undefined || chainId == 1) { // Default to mainnet
+      YTs = mainnetContracts.YTs;
+      redeemProxy = mainnetContracts.PendleRedeemProxy;
+      decimalsRecord = decimalsRecords.mainnet;
+    } else {
+      throw Error("Unsupported Network");
+    }
+    const redeemProxyContract = new Contract(
+      redeemProxy,
+      contracts.PendleRedeemProxy.abi,
+      provider.provider
+    );
+
     const fetchInterests = async (
-      yts: string[],
-      userAddress: string
+      userAddress: string,
     ): Promise<YtOrMarketInterest[]> => {
-      const redeemProxyContract = new Contract(
-        contractAddresses.PendleRedeemProxy,
-        contracts.PendleRedeemProxy.abi,
-        provider.provider
-      );
+
+      const formattedResult: YtOrMarketInterest[] = [];
+
       const userInterests = await redeemProxyContract.callStatic.redeemXyts(
-        yts,
+        YTs.map((YTInfo: any) => YTInfo.address),
         { from: userAddress }
       );
-      return await Promise.all(
-        indexRange(0, yts.length).map(async i => {
-          return {
-            address: yts[i],
-            interest: new TokenAmount(
-              new Token(dummyAddress, dummyDecimal),
-              userInterests[i].toString()
-            ),
-          };
-        })
-      );
+      for (let i = 0; i < YTs.length; i++) {
+        const YTInfo = YTs[i];
+        formattedResult.push({
+          address: YTInfo.address,
+          interest: new TokenAmount(
+            new Token(YTInfo.rewardTokenAddresses[0], decimalsRecord[YTInfo.rewardTokenAddresses[0]]),
+            userInterests[i].toString()
+          ),
+        });
+      }
+      return formattedResult;
     };
     return {
       fetchInterests,
