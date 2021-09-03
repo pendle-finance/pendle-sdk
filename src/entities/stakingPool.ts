@@ -1,9 +1,9 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
-import { mainnetContracts } from '../deployedContracts/mainnet'
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolInterstAndRewards, populatePoolVestedRewards } from '../helpers'
-import { decimalsRecords, ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
+import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolInterstAndRewards, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
+import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
 import { Token, TokenAmount } from '../entities'
+import { NetworkInfo, LMINFO } from '../networks';
 
 export interface StakingPoolId {
   address: string;
@@ -63,28 +63,24 @@ export class StakingPool {
   }
 
   public static methods(provider: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
-    let stakingPools: any[], redeemProxy: string, liquidityRewardsProxy: string, decimalsRecord: Record<string, number>;
 
-    if (chainId === undefined || chainId == 1) {
-      stakingPools = mainnetContracts.stakingPools;
-      redeemProxy = mainnetContracts.PendleRedeemProxy;
-      liquidityRewardsProxy = mainnetContracts.PendleLiquidityRewardsProxy;
-      decimalsRecord = decimalsRecords.mainnet;
-    } else {
-      throw Error("Unsupported Network");
-    }
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const stakingPools: LMINFO[] = networkInfo.contractAddresses.stakingPools;
 
     const redeemProxyContract = new Contract(
-      redeemProxy,
+      networkInfo.contractAddresses.misc.PendleRedeemProxy,
       contracts.PendleRedeemProxy.abi,
       provider.provider
     );
 
     const liquidityRewardsProxyContract = new Contract(
-      liquidityRewardsProxy,
+      networkInfo.contractAddresses.misc.PendleLiquidityRewardsProxy,
       contracts.PendleLiquidityRewardsProxy.abi,
       provider.provider
     )
+
+    const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
+
     const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
       return stakingPoolInfo.contractType == "PendleLiquidityMining";
     })

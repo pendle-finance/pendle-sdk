@@ -1,6 +1,7 @@
+import { NetworkContractAddresses } from ".";
 import { EXP_2021, EXP_2022 } from "../constants";
 
-export const mainnetContracts = {
+export const mainnetContracts: NetworkContractAddresses = {
     stakingPools: [
         {
             address: "0x0f3bccbfef1dc227f33a11d7a51cd02dead208c8",
@@ -267,7 +268,9 @@ export const mainnetContracts = {
             ]
         },
     ],
-    PendleRedeemProxy: '0x9efdb1d70184627277a408098ec4880b9b99e3be',
-    PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b'
+    misc: {
+        PendleRedeemProxy: '0x9efdb1d70184627277a408098ec4880b9b99e3be',
+        PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b'
+    }
 }
 

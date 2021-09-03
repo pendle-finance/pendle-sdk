@@ -1,9 +1,9 @@
 import { TokenAmount, Token } from './token';
-import { ethers, providers } from 'ethers';
-import { mainnetContracts } from '../deployedContracts/mainnet';
+import { Contract, providers } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest } from './token';
-import { decimalsRecords } from '../constants'
+import { MARKETNFO, NetworkInfo } from '../networks';
+import { distributeConstantsByNetwork } from '../helpers'
 
 
 export class Market {
@@ -25,20 +25,17 @@ export class Market {
     provider: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
-    
-    let markets: any[], redeemProxy: string, decimalsRecord: Record<string, number>;
-    if (chainId === undefined || chainId == 1) {
-      markets = mainnetContracts.markets;
-      redeemProxy = mainnetContracts.PendleRedeemProxy;
-      decimalsRecord = decimalsRecords.mainnet;
-    } else {
-      throw Error("Unsupported Network");
-    }
-    const redeemProxyContract = new ethers.Contract(
-      redeemProxy,
+
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const markets: MARKETNFO[] = networkInfo.contractAddresses.markets;
+
+    const redeemProxyContract = new Contract(
+      networkInfo.contractAddresses.misc.PendleRedeemProxy,
       contracts.PendleRedeemProxy.abi,
       provider.provider
     );
+
+    const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const fetchInterests = async (
       userAddress: string,

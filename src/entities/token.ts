@@ -1,9 +1,8 @@
 import BigNumberjs from 'bignumber.js';
-import { decimalFactor } from '../helpers';
+import { decimalFactor, distributeConstantsByNetwork } from '../helpers';
 import { providers, Contract } from 'ethers';
-import { mainnetContracts } from '../deployedContracts/mainnet';
+import { NetworkInfo, YTINFO } from '../networks';
 import { contracts } from '../contracts';
-import { decimalsRecords } from '../constants'
 
 export type YtOrMarketInterest = {
   address: string;
@@ -27,19 +26,15 @@ export class Yt extends Token {
     provider: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
-    let YTs: any[], redeemProxy: string, decimalsRecord: Record<string, number>;
-    if (chainId === undefined || chainId == 1) { // Default to mainnet
-      YTs = mainnetContracts.YTs;
-      redeemProxy = mainnetContracts.PendleRedeemProxy;
-      decimalsRecord = decimalsRecords.mainnet;
-    } else {
-      throw Error("Unsupported Network");
-    }
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const redeemProxyContract = new Contract(
-      redeemProxy,
+      networkInfo.contractAddresses.misc.PendleRedeemProxy,
       contracts.PendleRedeemProxy.abi,
       provider.provider
     );
+
+    const YTs: YTINFO[] = networkInfo.contractAddresses.YTs;
+    const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const fetchInterests = async (
       userAddress: string,

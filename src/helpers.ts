@@ -1,5 +1,7 @@
 import { BigNumber as BN } from 'ethers';
 import { TokenAmount, Token, PoolInterstAndRewards, PoolAccruingRewards, FutureEpochRewards, PoolVestedRewards } from './entities';
+import { LMINFO, mainnetContracts, NetworkInfo } from './networks'
+import { decimalsRecords } from './constants'
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)
@@ -15,10 +17,25 @@ export const indexRange = (start: number, end: number): number[] => {
   return arr;
 };
 
-export const populatePoolInterstAndRewards = (LmInfo: any, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolInterstAndRewards => {
+export const distributeConstantsByNetwork = (chainId?: number): NetworkInfo => {
+  if (chainId === undefined || chainId == 1) { // Default to mainnet
+    return {
+      chainId: 1,
+      contractAddresses: mainnetContracts,
+      decimalsRecord: decimalsRecords.mainnet
+    }
+  } else {
+    throw Error("Unsupported Network");
+  }
+}
+
+export const populatePoolInterstAndRewards = (LmInfo: LMINFO, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolInterstAndRewards => {
   return {
     address: LmInfo.address,
-    inputToken: LmInfo.inputTokenAddress,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
     interest: LmInfo.interestTokensAddresses.length > 0
       ? new TokenAmount(
         new Token(
@@ -40,10 +57,13 @@ export const populatePoolInterstAndRewards = (LmInfo: any, interestAmount: strin
   }
 }
 
-export const populatePoolAccruingRewards = (LmInfo: any, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
+export const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
   return {
     address: LmInfo.address,
-    inputToken: LmInfo.inputTokenAddress,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
     accruingRewards: indexRange(0, vestingEpoches).map((i: number): FutureEpochRewards => {
       return {
         epochId: i + currentEpochId,
@@ -61,10 +81,13 @@ export const populatePoolAccruingRewards = (LmInfo: any, tentativeReward: BN, cu
   }
 }
 
-export const populatePoolVestedRewards = (LmInfo: any, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
+export const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
   return {
     address: LmInfo.address,
-    inputToken: LmInfo.inputTokenAddress,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
     vestedRewards: indexRange(0, vestedRewards.length).map((i: number): FutureEpochRewards => {
       return {
         epochId: i + currentEpochId,
