@@ -1,6 +1,6 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolInterstAndRewards, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
+import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
 import { Token, TokenAmount } from '../entities'
 import { NetworkInfo, LMINFO } from '../networks';
@@ -11,11 +11,21 @@ export interface StakingPoolId {
   contractType: string;
 }
 
-export type PoolInterstAndRewards = {
-  address: string;
+export enum YieldType {
+	INTEREST="interest",
+	REWARDS="rewards"
+}
+
+export type YieldInfo = {
+	yield: TokenAmount,
+	yieldType: YieldType
+}
+
+export type PoolYields = {
+  address: string; // pool
   inputToken: Token;
-  interest?: TokenAmount;
-  claimableRewards: TokenAmount[];
+	
+  yields: YieldInfo[];
 };
 
 export type PoolAccruingRewards = {
@@ -90,7 +100,7 @@ export class StakingPool {
 
     const fetchInterestsAndRewards = async (
       userAddress: string
-    ): Promise<PoolInterstAndRewards[]> => {
+    ): Promise<PoolYields[]> => {
 
       const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
         Lm1s.map((LmInfo: any) => LmInfo.address),
@@ -103,7 +113,7 @@ export class StakingPool {
         userAddress
       )
       const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
-        return populatePoolInterstAndRewards(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
+        return populatePoolYields(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
       });
 
       const userLm2Interests = await redeemProxyContract.callStatic.redeemLmV2Interests(
@@ -115,7 +125,7 @@ export class StakingPool {
         userAddress
       );
       const Lm2InterestsAndRewards = indexRange(0, Lm2s.length).map((i: number) => {
-        return populatePoolInterstAndRewards(Lm2s[i], userLm2Interests[i].toString(), userLm2Rewards[i].toString(), decimalsRecord);
+        return populatePoolYields(Lm2s[i], userLm2Interests[i].toString(), userLm2Rewards[i].toString(), decimalsRecord);
       });
 
       return Lm1InterestsAndRewards.concat(Lm2InterestsAndRewards);

@@ -1,5 +1,5 @@
 import { BigNumber as BN } from 'ethers';
-import { TokenAmount, Token, PoolInterstAndRewards, PoolAccruingRewards, FutureEpochRewards, PoolVestedRewards } from './entities';
+import { TokenAmount, Token, PoolYields, YieldInfo, PoolAccruingRewards, FutureEpochRewards, PoolVestedRewards, YieldType } from './entities';
 import { LMINFO, mainnetContracts, NetworkInfo } from './networks'
 import { decimalsRecords } from './constants'
 
@@ -29,31 +29,38 @@ export const distributeConstantsByNetwork = (chainId?: number): NetworkInfo => {
   }
 }
 
-export const populatePoolInterstAndRewards = (LmInfo: LMINFO, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolInterstAndRewards => {
+export const populatePoolYields = (LmInfo: LMINFO, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolYields => {
+  const yields: YieldInfo[] = [
+    {
+      yield: new TokenAmount(
+        new Token(
+          LmInfo.rewardTokenAddresses[0],
+          decimalsRecord[LmInfo.rewardTokenAddresses[0]]
+        ),
+        rewardAmount
+      ),
+      yieldType: YieldType.REWARDS
+    }
+  ];
+  if (LmInfo.interestTokensAddresses.length > 0) {
+    yields.push({
+      yield: new TokenAmount(
+        new Token(
+          LmInfo.interestTokensAddresses[0],
+          decimalsRecord[LmInfo.interestTokensAddresses[0]]
+        ),
+        interestAmount
+      ),
+      yieldType: YieldType.INTEREST
+    })
+  }
   return {
     address: LmInfo.address,
     inputToken: new Token(
       LmInfo.inputTokenAddress,
       decimalsRecord[LmInfo.inputTokenAddress]
     ),
-    interest: LmInfo.interestTokensAddresses.length > 0
-      ? new TokenAmount(
-        new Token(
-          LmInfo.interestTokensAddresses[0],
-          decimalsRecord[LmInfo.interestTokensAddresses[0]]
-        ),
-        interestAmount
-      )
-      : undefined,
-    claimableRewards: [
-      new TokenAmount(
-        new Token(
-          LmInfo.rewardTokenAddresses[0],
-          decimalsRecord[LmInfo.rewardTokenAddresses[0]]
-        ),
-        rewardAmount
-      )
-    ],
+    yields: yields
   }
 }
 
