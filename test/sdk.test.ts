@@ -45,7 +45,7 @@ describe('Sdk', () => {
   it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer
-    ).fetchInterestsAndRewards(
+    ).fetchClaimableYields(
       dummyUser
     );
     console.log(JSON.stringify(interestsAndRewards, null, '  '));

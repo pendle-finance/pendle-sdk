@@ -98,7 +98,7 @@ export class StakingPool {
       return stakingPoolInfo.contractType == "PendleLiquidityMiningV2";
     })
 
-    const fetchInterestsAndRewards = async (
+    const fetchClaimableYields = async (
       userAddress: string
     ): Promise<PoolYields[]> => {
       const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
@@ -186,7 +186,7 @@ export class StakingPool {
     };
 
     return {
-      fetchInterestsAndRewards,
+      fetchClaimableYields,
       fetchAccruingRewards,
       fetchVestedRewards,
     };
