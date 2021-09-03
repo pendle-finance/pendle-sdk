@@ -101,8 +101,6 @@ export class StakingPool {
     const fetchInterestsAndRewards = async (
       userAddress: string
     ): Promise<PoolYields[]> => {
-
-      console.log("in fetchInterestsAndRewards")
       const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
         Lm1s.map((LmInfo: any) => LmInfo.address),
         Lm1s.map((LmInfo: any) => LmInfo.expiry),

@@ -280,7 +280,7 @@ export const mainnetContracts: NetworkContractAddresses = {
         },
     ],
     misc: {
-        PendleRedeemProxy: '0x9efdb1d70184627277a408098ec4880b9b99e3be',
+        PendleRedeemProxy: '0x6231986eed646d24152f3529d815fd85c295f06c',
         PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b'
     }
 }
