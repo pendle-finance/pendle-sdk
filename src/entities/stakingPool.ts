@@ -1,4 +1,4 @@
-import { providers, Contract, BigNumber as BN } from 'ethers';
+import { providers, Contract } from 'ethers';
 // import { contractAddresses } from '../constants';
 import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
@@ -102,6 +102,7 @@ export class StakingPool {
       userAddress: string
     ): Promise<PoolYields[]> => {
 
+      console.log("in fetchInterestsAndRewards")
       const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
         Lm1s.map((LmInfo: any) => LmInfo.address),
         Lm1s.map((LmInfo: any) => LmInfo.expiry),
@@ -146,7 +147,8 @@ export class StakingPool {
           .catch(() => ZERO);
       }))
 
-      const currentTime: BN = BN.from(Date.now()).div(BN.from(1000));
+      const latestBlockNumber = await provider.provider.getBlockNumber();
+      const currentTime: number = (await provider.provider.getBlock(latestBlockNumber)).timestamp;
       const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
 
       const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
@@ -172,7 +174,8 @@ export class StakingPool {
           .catch(() => Array(VestingEpoches - 1).fill(ZERO));
       }));
 
-      const currentTime: BN = BN.from(Date.now()).div(BN.from(1000));
+      const latestBlockNumber = await provider.provider.getBlockNumber();
+      const currentTime: number = (await provider.provider.getBlock(latestBlockNumber)).timestamp;
       const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
 
       const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {

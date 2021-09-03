@@ -112,8 +112,8 @@ export const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], c
   }
 }
 
-export const getCurrentEpochId = (currentTime: BN, startTime: BN, epochDuration: BN): number => {
-  return currentTime.sub(startTime).div(epochDuration).add(1).toNumber();
+export const getCurrentEpochId = (currentTime: number | BN, startTime: number | BN, epochDuration: number | BN): number => {
+  return BN.from(currentTime).sub(startTime).div(epochDuration).add(1).toNumber();
 }
 // export const getGlobalEpochId = (): number => {
 //   return (currentTime - launchTime) / 7 days + 1

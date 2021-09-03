@@ -166,6 +166,17 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: []
+        },
+        {
+            address: "0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc",
+            inputTokenAddress: "0xb124c4e18a282143d362a066736fd60d22393ef4",
+            contractType: "PendleLiquidityMiningV2",
+            rewardTokenAddresses: [
+                "0x808507121b80c02388fad14726482e061b8da827"
+            ],
+            interestTokensAddresses: [
+                "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"
+            ]
         }
     ],
     YTs: [
