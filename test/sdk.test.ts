@@ -42,7 +42,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it('StakingPool.methods.fetchClaimableYields', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer
     ).fetchClaimableYields(
@@ -60,7 +60,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchVestedRewards', async () => {
+  it.only('StakingPool.methods.fetchVestedRewards', async () => {
     const vestedRewards = await StakingPool.methods(signer).fetchVestedRewards(
       dummyUser
     );

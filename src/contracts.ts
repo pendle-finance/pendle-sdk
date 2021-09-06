@@ -3,7 +3,8 @@ const IPendleRouter = require('@pendle/core/build/artifacts/contracts/interfaces
 const IERC20 = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
 const PendleLiquidityMiningBase = require('@pendle/core/build/artifacts/contracts/core/abstract/PendleLiquidityMiningBase.sol/PendleLiquidityMiningBase.json');
 const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleRedeemProxy.sol/PendleRedeemProxy.json');
-const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json')
+const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json');
+const MultiCallV2 = require('./abis/MulticallV2.json');
 
 //TODO: User proper IERC20
 
@@ -13,5 +14,6 @@ export const contracts = {
   IERC20,
   PendleLiquidityMiningBase,
   PendleRedeemProxy,
-  PendleLiquidityRewardsProxy
+  PendleLiquidityRewardsProxy,
+  MultiCallV2
 };

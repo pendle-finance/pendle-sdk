@@ -1,7 +1,26 @@
-import { BigNumber as BN } from 'ethers';
+import { BigNumber as BN, Bytes, utils } from 'ethers';
 import { TokenAmount, Token, PoolYields, YieldInfo, PoolAccruingRewards, FutureEpochRewards, PoolVestedRewards, YieldType } from './entities';
 import { LMINFO, mainnetContracts, NetworkInfo } from './networks'
 import { decimalsRecords } from './constants'
+
+export type Call_MultiCall = {
+  target: string,
+  callData: string
+}
+
+export type Result_MultiCall = {
+  success: boolean,
+  returnData: Bytes;
+}
+
+export function getFunctionABIByName(abi: any[], name: string): any {
+  return abi.find((f: any) => f.name == name);
+}
+
+export function formatOutput(returnedData: any, abi: any, name: string) {
+  return utils.defaultAbiCoder.decode(getFunctionABIByName(abi, name).outputs.map((f: any) => f.type), returnedData);
+}
+
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)

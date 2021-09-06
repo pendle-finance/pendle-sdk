@@ -281,7 +281,8 @@ export const mainnetContracts: NetworkContractAddresses = {
     ],
     misc: {
         PendleRedeemProxy: '0x6231986eed646d24152f3529d815fd85c295f06c',
-        PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b'
+        PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b',
+        MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696'
     }
 }
 

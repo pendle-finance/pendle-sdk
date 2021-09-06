@@ -1,6 +1,6 @@
-import { providers, Contract } from 'ethers';
+import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
+import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork, Call_MultiCall, Result_MultiCall, formatOutput } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
 import { Token, TokenAmount } from '../entities'
 import { NetworkInfo, LMINFO } from '../networks';
@@ -12,19 +12,19 @@ export interface StakingPoolId {
 }
 
 export enum YieldType {
-	INTEREST="interest",
-	REWARDS="rewards"
+  INTEREST = "interest",
+  REWARDS = "rewards"
 }
 
 export type YieldInfo = {
-	yield: TokenAmount,
-	yieldType: YieldType
+  yield: TokenAmount,
+  yieldType: YieldType
 }
 
 export type PoolYields = {
   address: string; // pool
   inputToken: Token;
-	
+
   yields: YieldInfo[];
 };
 
@@ -89,6 +89,12 @@ export class StakingPool {
       provider.provider
     )
 
+    const multiCallV2Contract = new Contract(
+      networkInfo.contractAddresses.misc.MultiCallV2,
+      contracts.MultiCallV2.abi,
+      provider.provider
+    )
+
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
@@ -101,28 +107,45 @@ export class StakingPool {
     const fetchClaimableYields = async (
       userAddress: string
     ): Promise<PoolYields[]> => {
-      const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
+      const calls: Call_MultiCall[] = [];
+      const lm1sInterestsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmInterests(
         Lm1s.map((LmInfo: any) => LmInfo.address),
         Lm1s.map((LmInfo: any) => LmInfo.expiry),
         userAddress
-      );
-      const userLm1Rewards = await redeemProxyContract.callStatic.redeemLmRewards(
+      )).data!;
+      calls.push({ target: redeemProxyContract.address, callData: lm1sInterestsCallData })
+      const lm1sRewardsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmRewards(
         Lm1s.map((LmInfo: any) => LmInfo.address),
         Lm1s.map((LmInfo: any) => LmInfo.expiry),
         userAddress
-      )
+      )).data!;
+      calls.push({target: redeemProxyContract.address, callData: lm1sRewardsCallData});
+
+      const lm2sInterestsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmV2Interests(
+        Lm2s.map((LmInfo: any) => LmInfo.address),
+        userAddress
+      )).data!;
+      calls.push({target: redeemProxyContract.address, callData: lm2sInterestsCallData});
+      const lm2sRewardsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmV2Rewards(
+        Lm2s.map((LmInfo: any) => LmInfo.address),
+        userAddress
+      )).data!;
+      calls.push({target: redeemProxyContract.address, callData: lm2sRewardsCallData});
+
+      const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
+
+      const userLm1Interests: BN[] = formatOutput(returnedData[0].returnData, contracts.PendleRedeemProxy.abi, "redeemLmInterests")[0];
+      const userLm1Rewards: BN[] = formatOutput(returnedData[1].returnData, contracts.PendleRedeemProxy.abi, "redeemLmRewards")[0];
+      const userLm2Interests: BN[] = formatOutput(returnedData[2].returnData, contracts.PendleRedeemProxy.abi, "redeemLmV2Interests")[0];
+      const userLm2Rewards: BN[] = formatOutput(returnedData[3].returnData, contracts.PendleRedeemProxy.abi, "redeemLmV2Rewards")[0];
+
+      console.log(returnedData[0].returnData);
+      console.log(userLm1Interests);
+
       const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolYields(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
       });
 
-      const userLm2Interests = await redeemProxyContract.callStatic.redeemLmV2Interests(
-        Lm2s.map((LmInfo: any) => LmInfo.address),
-        userAddress
-      );
-      const userLm2Rewards = await redeemProxyContract.callStatic.redeemLmV2Rewards(
-        Lm2s.map((LmInfo: any) => LmInfo.address),
-        userAddress
-      );
       const Lm2InterestsAndRewards = indexRange(0, Lm2s.length).map((i: number) => {
         return populatePoolYields(Lm2s[i], userLm2Interests[i].toString(), userLm2Rewards[i].toString(), decimalsRecord);
       });
@@ -134,16 +157,36 @@ export class StakingPool {
       userAddress: string
     ): Promise<PoolAccruingRewards[]> => {
 
-      const userLm1AccruingRewards = await Promise.all(Lm1s.map((LmInfo: any) => {
-        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateAccruing(LmInfo.address, LmInfo.expiry, userAddress)
-          .then((d: any) => d.userTentativeReward)
-          .catch(() => ZERO);
+      const Lm1AccruingRewardsCalls: Call_MultiCall[] = await Promise.all(Lm1s.map(async function (LmInfo: LMINFO) {
+        return {
+          target: liquidityRewardsProxyContract.address,
+          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateAccruing(LmInfo.address, LmInfo.expiry, userAddress)).data!
+        }
       }));
-      const userLm2AccruingRewards = await Promise.all(Lm2s.map((LmInfo: any) => {
-        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateAccruingV2(LmInfo.address, userAddress)
-          .then((d: any) => d.userTentativeReward)
-          .catch(() => ZERO);
-      }))
+      const Lm2AccruingRewardsCalls: Call_MultiCall[] = await Promise.all(Lm2s.map(async function (LmInfo: LMINFO) {
+        return {
+          target: liquidityRewardsProxyContract.address,
+          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateAccruingV2(LmInfo.address, userAddress)).data!
+        }
+      }));
+      const calls = Lm1AccruingRewardsCalls.concat(Lm2AccruingRewardsCalls);
+      const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
+
+      const userLm1AccruingRewards: BN[] = indexRange(0, Lm1s.length).map((i: number) => {
+        if (returnedData[i].success) {
+          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateAccruing")[4];
+        } else {
+          return ZERO;
+        }
+      })
+
+      const userLm2AccruingRewards: BN[] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number) => {
+        if (returnedData[i].success) {
+          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateAccruingV2")[4];
+        } else {
+          return ZERO;
+        }
+      })
 
       const latestBlockNumber = await provider.provider.getBlockNumber();
       const currentTime: number = (await provider.provider.getBlock(latestBlockNumber)).timestamp;
@@ -161,16 +204,47 @@ export class StakingPool {
     const fetchVestedRewards = async (
       userAddress: string
     ): Promise<PoolVestedRewards[]> => {
-      const userLm1VestedRewards = await Promise.all(Lm1s.map((LmInfo: any) => {
-        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, [LmInfo.expiry], userAddress)
-          .then((d: any) => d.vestedRewards)
-          .catch(() => Array(VestingEpoches - 1).fill(ZERO));
+      const Lm1VestedRewardsCalls: Call_MultiCall[] = await Promise.all(Lm1s.map(async function (LmInfo: LMINFO) {
+        return {
+          target: liquidityRewardsProxyContract.address,
+          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateVested(LmInfo.address, [LmInfo.expiry], userAddress)).data!
+        }
       }));
-      const userLm2VestedRewards = await Promise.all(Lm2s.map((LmInfo: any) => {
-        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, userAddress)
-          .then((d: any) => d.vestedRewards)
-          .catch(() => Array(VestingEpoches - 1).fill(ZERO));
+      const Lm2VestedRewardsCalls: Call_MultiCall[] = await Promise.all(Lm2s.map(async function (LmInfo: LMINFO) {
+        return {
+          target: liquidityRewardsProxyContract.address,
+          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateVestedV2(LmInfo.address, userAddress)).data!
+        }
       }));
+      const calls = Lm1VestedRewardsCalls.concat(Lm2VestedRewardsCalls);
+      const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
+
+
+      const userLm1VestedRewards: BN[][] = indexRange(0, Lm1s.length).map((i: number) => {
+        if (returnedData[i].success) {
+          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVested")[1];
+        } else {
+          return Array(VestingEpoches - 1).fill(ZERO);
+        }
+      })
+      const userLm2VestedRewards: BN[][] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number) => {
+        if (returnedData[i].success) {
+          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVestedV2")[1];
+        } else {
+          return Array(VestingEpoches - 1).fill(ZERO);
+        }
+      })
+
+      // const userLm1VestedRewards = await Promise.all(Lm1s.map((LmInfo: any) => {
+      //   return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, [LmInfo.expiry], userAddress)
+      //     .then((d: any) => d.vestedRewards)
+      //     .catch(() => Array(VestingEpoches - 1).fill(ZERO));
+      // }));
+      // const userLm2VestedRewards = await Promise.all(Lm2s.map((LmInfo: any) => {
+      //   return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, userAddress)
+      //     .then((d: any) => d.vestedRewards)
+      //     .catch(() => Array(VestingEpoches - 1).fill(ZERO));
+      // }));
 
       const latestBlockNumber = await provider.provider.getBlockNumber();
       const currentTime: number = (await provider.provider.getBlock(latestBlockNumber)).timestamp;
