@@ -167,7 +167,7 @@ export class StakingPool {
           .catch(() => Array(VestingEpoches - 1).fill(ZERO));
       }));
       const userLm2VestedRewards = await Promise.all(Lm2s.map((LmInfo: any) => {
-        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVested(LmInfo.address, userAddress)
+        return liquidityRewardsProxyContract.callStatic.redeemAndCalculateVestedV2(LmInfo.address, userAddress)
           .then((d: any) => d.vestedRewards)
           .catch(() => Array(VestingEpoches - 1).fill(ZERO));
       }));
