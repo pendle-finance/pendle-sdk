@@ -3,6 +3,7 @@ import { decimalFactor, distributeConstantsByNetwork } from '../helpers';
 import { providers, Contract } from 'ethers';
 import { NetworkInfo, YTINFO } from '../networks';
 import { contracts } from '../contracts';
+import { dummyAddress } from "../constants";
 
 export type YtOrMarketInterest = {
   address: string;
@@ -89,3 +90,13 @@ export class TokenAmount {
     return this.rawAmnt;
   }
 }
+
+export const dummyToken: Token = new Token(
+  dummyAddress,
+  18
+);
+
+export const dummyTokenAmount: TokenAmount = new TokenAmount(
+  dummyToken,
+  "1000000000000000"
+)

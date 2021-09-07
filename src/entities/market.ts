@@ -3,8 +3,8 @@ import { Contract, providers } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest } from './token';
 import { MARKETNFO, NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, CurrencyAmount } from '../helpers'
-import { dummyCurrencyAmount, dummyToken, dummyTokenAmount } from '..';
+import { distributeConstantsByNetwork } from '../helpers'
+import { dummyCurrencyAmount, dummyToken, dummyTokenAmount, CurrencyAmount } from '..';
 import { YieldContract } from '.';
 
 export type TokenReserveDetails = {

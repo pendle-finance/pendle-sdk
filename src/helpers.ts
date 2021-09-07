@@ -3,11 +3,6 @@ import { TokenAmount, Token, PoolYields, YieldInfo, PoolAccruingRewards, FutureE
 import { LMINFO, mainnetContracts, NetworkInfo } from './networks'
 import { decimalsRecords } from './constants'
 
-export type CurrencyAmount = {
-  currency: string,
-  amount: string
-}
-
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)
     .pow(decimal)

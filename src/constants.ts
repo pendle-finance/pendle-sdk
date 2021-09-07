@@ -1,18 +1,11 @@
 import { BigNumber as BN, utils } from 'ethers';
-import { Token, TokenAmount } from '.';
-import { CurrencyAmount } from './helpers';
+
+export type CurrencyAmount = {
+  currency: string,
+  amount: string
+}
 
 export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
-
-export const dummyToken: Token = new Token(
-  dummyAddress,
-  18
-);
-
-export const dummyTokenAmount: TokenAmount = new TokenAmount(
-  dummyToken,
-  "1000000000000000"
-)
 
 export const dummyCurrencyAmount: CurrencyAmount = {
   currency: "USD",
@@ -40,6 +33,7 @@ export const INF = BN.from(2)
   .sub(1);
 export const EXP_2022 = BN.from("1672272000");
 export const EXP_2021 = BN.from("1640822400");
+console.log(EXP_2022);
 export const LMStartTime = BN.from("1623888000");
 export const LMEpochDuration = BN.from("604800");
 export const VestingEpoches = 5;
