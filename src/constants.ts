@@ -1,4 +1,23 @@
 import { BigNumber as BN, utils } from 'ethers';
+import { Token, TokenAmount } from '.';
+import { CurrencyAmount } from './helpers';
+
+export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
+
+export const dummyToken: Token = new Token(
+  dummyAddress,
+  18
+);
+
+export const dummyTokenAmount: TokenAmount = new TokenAmount(
+  dummyToken,
+  "1000000000000000"
+)
+
+export const dummyCurrencyAmount: CurrencyAmount = {
+  currency: "USD",
+  amount: "10000"
+}
 
 export const forgeIds = {
   COMPOUND: utils.formatBytes32String('CompoundV2'),
