@@ -1,6 +1,9 @@
 # Pendle SDK APIs
 
 ## YT
+
+### Static Methods:
+
 ```
 YtOrMarketInterest: {
   address: string;
@@ -89,8 +92,10 @@ pendleMarket.yieldContract() => YieldContract
 ```
 
 ## Staking Pool
-```
 
+### Static Methods:
+
+```
 enum YieldType {
 	INTEREST="interest",
 	REWARDS="rewards"
@@ -130,14 +135,17 @@ StakingPool.methods(JsonRpcSigner, chainId?).fetchVestedRewards(address) => Prom
 ```
 
 ## Yield Contract
+
+### Instance Methods: 
+
 ```
 RedeemDetails = {
   redeemableAmount: TokenAmount
   interestAmount: TokenAmount
 }
 
-YieldContract.methods(JsonRpcSigner, chainId?).mintDetails(toMint: TokenAmount) => Promise<TokenAmount[]>
-YieldContract.methods(JsonRpcSigner, chainId?).mint(toMint: TokenAmount) => Promise<TransactionResponse>
-YieldContract.methods(JsonRpcSigner, chainId?).redeemDetails(otAmount: TokenAmount, userAddress: string) => Promise<RedeemDetails>
-YieldContract.methods(JsonRpcSigner, chainId?).redeem(otAmount: TokenAmount): Promise<TransactionResponse>
+yieldContract.methods(JsonRpcSigner, chainId?).mintDetails(toMint: TokenAmount) => Promise<TokenAmount[]>
+yieldContract.methods(JsonRpcSigner, chainId?).mint(toMint: TokenAmount) => Promise<TransactionResponse>
+yieldContract.methods(JsonRpcSigner, chainId?).redeemDetails(otAmount: TokenAmount, userAddress: string) => Promise<RedeemDetails>
+yieldContract.methods(JsonRpcSigner, chainId?).redeem(otAmount: TokenAmount): Promise<TransactionResponse>
 ```
