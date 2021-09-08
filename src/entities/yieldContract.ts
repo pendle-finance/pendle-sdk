@@ -25,8 +25,8 @@ export class YieldContract {
             return [dummyTokenAmount, dummyTokenAmount];
         }
         const mint = async (_: TokenAmount): Promise<providers.TransactionResponse> => {
-            const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-            return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+            const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+            return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
         }
         const redeemDetails = async (_: TokenAmount, __: string): Promise<RedeemDetails> => {
             return {
@@ -35,8 +35,8 @@ export class YieldContract {
             }
         }
         const redeem = async(_: TokenAmount): Promise<providers.TransactionResponse> => {
-            const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-            return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+            const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+            return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
         }
         return {
             mintDetails,

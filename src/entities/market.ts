@@ -175,13 +175,13 @@ export class PendleMarket extends Market {
     };
 
     const swapExactIn = async (_: number, __: TokenAmount): Promise<providers.TransactionResponse> => {
-      const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-      return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+      return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
     }
 
     const swapExactOut = async (_: number, __: TokenAmount): Promise<providers.TransactionResponse> => {
-      const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-      return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+      return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
     }
 
     const addDualDetails = async (_: TokenAmount): Promise<AddDualLiquidityDetails> => {
@@ -192,8 +192,8 @@ export class PendleMarket extends Market {
     }
 
     const addDual = async (_: TokenAmount[], __: number | string): Promise<providers.TransactionResponse> => {
-      const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-      return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+      return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
     }
 
     const addSingleDetails = async (_: TokenAmount): Promise<AddSingleLiquidityDetails> => {
@@ -205,8 +205,8 @@ export class PendleMarket extends Market {
     }
 
     const addSingle = async (_: TokenAmount, __: number | string): Promise<providers.TransactionResponse> => {
-      const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-      return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+      return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
     }
 
     const removeDualDetails = async (_: number): Promise<RemoveDualLiquidityDetails> => {
@@ -219,8 +219,8 @@ export class PendleMarket extends Market {
     }
 
     const removeDual = async (_: number, __: number): Promise<providers.TransactionResponse> => {
-      const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-      return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+      return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
     }
 
     const removeSingleDetails = async (_: number, __: Token, ___: number): Promise<RemoveSingleLiquidityDetails> => {
@@ -232,8 +232,8 @@ export class PendleMarket extends Market {
     }
 
     const removeSingle = async (_: number, __: Token, ___: number): Promise<providers.TransactionResponse> => {
-      const USDTContract = new Contract("0xdac17f958d2ee523a2206206994597c13d831ec7", contracts.IERC20.abi);
-      return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
+      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
+      return (await USDCContract.connect(provider).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
     }
 
     return {
