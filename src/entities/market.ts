@@ -79,6 +79,10 @@ export class PendleMarket extends Market {
     super(marketAddress, [tokens[0], tokens[1]]);
   }
 
+  public yieldContract(): YieldContract {
+    return new YieldContract("Aave2", dummyToken, 1672272000);
+  }
+
   public static methods(
     provider: providers.JsonRpcSigner,
     chainId?: number
@@ -232,10 +236,6 @@ export class PendleMarket extends Market {
       return (await USDTContract.connect(provider).transfer(await provider.getAddress(), 1));
     }
 
-    const yieldContract = (): YieldContract => {
-      return new YieldContract("Aave2", dummyToken, 1672272000);
-    }
-
     return {
       readMarketDetails,
       swapExactInDetails,
@@ -250,7 +250,6 @@ export class PendleMarket extends Market {
       removeDual,
       removeSingleDetails,
       removeSingle,
-      yieldContract
     }
   }
 }

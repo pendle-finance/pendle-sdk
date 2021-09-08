@@ -1,103 +1,143 @@
-# TSDX User Guide
+# Pendle SDK APIs
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+## YT
+```
+YtOrMarketInterest: {
+  address: string;
+  interest: TokenAmount;
+};
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
-
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
-
-## Commands
-
-TSDX scaffolds your new library inside `/src`.
-
-To run TSDX, use:
-
-```bash
-npm start # or yarn start
+Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+## Market
 
-To do a one-off build, use `npm run build` or `yarn build`.
-
-To run tests, use `npm test` or `yarn test`.
-
-## Configuration
-
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
-
-### Jest
-
-Jest tests are set up to run with `npm test` or `yarn test`.
-
-### Bundle Analysis
-
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
+### Static Methods:
+```
+PendleMarket.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
 
-### Rollup
-
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
-
-### TypeScript
-
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
+### Instance Methods: 
+```
+CurrencyAmount = {
+  currency: string,
+  amount: string
 }
+
+MarketDetails = {
+  tokenReserves: TokenReserveDetails[],
+  otherDetails: { 
+    dailyVolume: CurrencyAmount, 
+    volume24hChange: string,
+    liquidity: CurrencyAmount,
+    liquidity24HChange: string,
+    swapFeeApr: string,
+    impliedYield: string
+  }
+}
+
+SwapDetails = {
+  inAmount: TokenAmount,
+  outAmount: TokenAmount,
+  minReceived: TokenAmount,
+  priceImpact: string,
+  swapFee: TokenAmount
+}
+
+AddDualLiquidityDetails = {
+  otherTokenAmount: TokenAmount,
+  shareOfPool: string
+}
+
+AddSingleLiquidityDetails = {
+  shareOfPool: string,
+  priceImpact: string,
+  swapFee: TokenAmount
+}
+
+RemoveDualLiquidityDetails = {
+  tokenAmounts: TokenAmount[]
+}
+
+RemoveSingleLiquidityDetails = {
+  outAmount: TokenAmount
+  priceImpact?: string
+  swapFee?: TokenAmount
+}
+
+pendleMarket.methods(JsonRpcSigner, chainId?).readMarketDetails() => Promise<MarketDetails>
+
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactInDetails(slippage: number, inAmount: TokenAmount) => Promise<SwapDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactOutDetails(slippage: number, outAmount: TokenAmount) => Promise<SwapDetails>
+
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactIn(slippage: number, inAmount: TokenAmount) => Promise<TransactionResponse>
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactOut(slippage: number, outAmount: TokenAmount) => Promise<TransactionResponse>
+
+pendleMarket.methods(JsonRpcSigner, chainId?).addDualDetails(tokenAmount: TokenAmount) => Promise<AddDualLiquidityDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).addDual(tokenAmounts: TokenAmount[], slippage: number | string) => Promise<TransactionResponse>
+
+pendleMarket.methods(JsonRpcSigner, chainId?).addSingleDetails(tokenAmount: TokenAmount) => Promise<AddSingleLiquidityDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).addSingle(tokenAmount: TokenAmount, slippage: number | string) => Promise<TransactionResponse>
+
+pendleMarket.methods(JsonRpcSigner, chainId?).removeDualDetails(percentage: number) => Promise<RemoveDualLiquidityDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).removeDual(percentage: number, slippage: number) => Promise<TransactionResponse>
+
+pendleMarket.methods(JsonRpcSigner, chainId?).removeSingleDetails(percentage: number, outToken: Token, slippage: number) => Promise<RemoveSingleLiquidityDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).removeSingle(percentage: number, outToken: Token, slippage: number) => Promise<TransactionResponse>
+
+pendleMarket.yieldContract() => YieldContract
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+## Staking Pool
+```
 
-## Module Formats
+enum YieldType {
+	INTEREST="interest",
+	REWARDS="rewards"
+}
 
-CJS, ESModules, and UMD module formats are supported.
+YieldInfo = {
+	yield: TokenAmount,
+	yieldType: YieldType 
+}
 
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+PoolYields = {
+  address: string; 
+  inputToken: Token;
+  yields: YieldInfo[];
+};
 
-## Named Exports
+FutureEpochRewards = {
+  epochId: number;
+  rewards: TokenAmount[];
+};
 
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+PoolAccruingRewards = {
+  address: string;
+  inputToken: Token;
+  accruingRewards: FutureEpochRewards[];
+};
 
-## Including Styles
+PoolVestedRewards = {
+  address: string;
+  inputToken: Token;
+  vestedRewards: FutureEpochRewards[];
+};
 
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+StakingPool.methods(JsonRpcSigner, chainId?).fetchClaimableYields(address) => Promise<PoolYields[]>
+StakingPool.methods(JsonRpcSigner, chainId?).fetchAccruingRewards(address) => Promise<PoolAccruingRewards[]>
+StakingPool.methods(JsonRpcSigner, chainId?).fetchVestedRewards(address) => Promise<PoolVestedRewards[]>
+```
 
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+## Yield Contract
+```
+RedeemDetails = {
+  redeemableAmount: TokenAmount
+  interestAmount: TokenAmount
+}
 
-## Publishing to NPM
-
-We recommend using [np](https://github.com/sindresorhus/np).
+YieldContract.methods(JsonRpcSigner, chainId?).mintDetails(toMint: TokenAmount) => Promise<TokenAmount[]>
+YieldContract.methods(JsonRpcSigner, chainId?).mint(toMint: TokenAmount) => Promise<TransactionResponse>
+YieldContract.methods(JsonRpcSigner, chainId?).redeemDetails(otAmount: TokenAmount, userAddress: string) => Promise<RedeemDetails>
+YieldContract.methods(JsonRpcSigner, chainId?).redeem(otAmount: TokenAmount): Promise<TransactionResponse>
+```
