@@ -75,8 +75,8 @@ export class PendleMarket extends Market {
   public ytWeightRaw?: string;
   public baseTokenWeightRaw?: string;
 
-  public constructor(marketAddress: string, tokens: TokenAmount[]) {
-    super(marketAddress, [tokens[0].token!, tokens[1].token!]);
+  public constructor(marketAddress: string, tokens: Token[]) {
+    super(marketAddress, [tokens[0], tokens[1]]);
   }
 
   public static methods(
