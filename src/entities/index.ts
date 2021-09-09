@@ -3,4 +3,5 @@ export * from './token';
 export * from './stakingPool';
 export * from './mappings'
 export * from './transactions'
+export * from './yieldContract';
 export type Address = string;
