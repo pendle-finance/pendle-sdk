@@ -217,6 +217,32 @@ export const mainnetContracts: NetworkContractAddresses = {
             ]
         }
     ],
+    OTs: [
+        {
+            address: "0x010a0288af52ed61e32674d82bbc7ddbfa9a1324",
+            yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c"
+        },
+        {
+            address: "0x8fcb1783bf4b71a51f702af0c266729c4592204a",
+            yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c"
+        },
+        {
+            address: "0xe55e3b62005a2035d48ac0c41a5a9c799f04892c",
+            yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
+        },
+        {
+            address: "0x3d4e7f52efafb9e0c70179b688fc3965a75bcfea",
+            yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
+        },
+        {
+            address: "0x322d6c69048330247165231eb7848a5c80a48878",
+            yieldTokenAddress: "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
+        },
+        {
+            address: '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
+            yieldTokenAddress: '0x37922c69b08babcceae735a31235c81f1d1e8e43'
+        }
+    ],
     markets: [
         {
             address: '0x9e382e5f78b06631e4109b5d48151f2b3f326df0',
@@ -281,7 +307,15 @@ export const mainnetContracts: NetworkContractAddresses = {
     ],
     misc: {
         PendleRedeemProxy: '0x6231986eed646d24152f3529d815fd85c295f06c',
-        PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b'
+        PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b',
+        PendleRouter: '0x1b6d3e5da9004668e14ca39d1553e9a46fe842b3',
+        PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6'
+    },
+    forges: {
+        "AaveV2": "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",
+        "Compound": "0xc02ac197a4d32d93d473779fbea2dca1fb313ed5",
+        "SushiswapSimple": "0x6b0e6b4c0ee4b6460e5cd35a3625a172fe9d3930",
+        "SushiswapComplex": "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251"
     }
 }
 

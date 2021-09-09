@@ -8,8 +8,10 @@ export type NetworkInfo = {
 export type NetworkContractAddresses = {
     stakingPools: LMINFO[],
     YTs: YTINFO[],
+    OTs: OTINFO[],
     markets: MARKETNFO[],
-    misc: Record<string, string> 
+    misc: Record<string, string> ,
+    forges: Record<string, string>
 }
 export type LMINFO = {
     address: string,
@@ -28,5 +30,9 @@ export type MARKETNFO = {
     pair: string[],
     rewardTokenAddresses: string[]
 };
+export type OTINFO = {
+    address: string,
+    yieldTokenAddress: string
+}
 
 export * from './mainnet';

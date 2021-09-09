@@ -57,5 +57,11 @@ export const decimalsRecords: Record<string, Record<string, number>> = {
     "0x0d8a21f2ea15269b7470c347083ee1f85e6a723b": 18,
     "0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6": 18,
     "0x4556c4488cc16d5e9552cc1a99a529c1392e4fe9": 18,
+    "0xffaf22db1ff7e4983b57ca9632f796f68ededef9": 6,
+    "0xcdb5b940e95c8632decdc806b90dd3fc44e699fe": 6,
+    "0x31654eb46a3a450265c6dfc4fc4fbbfe371e26fe": 8,
+    "0xb7defe73528942793649c0a950ec528f66159047": 8,
+    "0x311fcb5db45a3a5876975f8108237f20525fa7e0": 18,
+    "0x49c8ac20de6409c7e0b8f9867cffd1481d8206c6": 18
   }
 };
