@@ -1,6 +1,6 @@
-import { Contract, providers } from 'ethers';
+import { Contract, providers, BigNumber as BN } from 'ethers';
 import { contracts } from '../contracts';
-import { Token, TokenAmount, PendleMarket } from '../entities';
+import { Token, PendleMarket } from '../entities';
 
 export async function fetchPendleMarketData(
   provider: providers.JsonRpcProvider,
@@ -11,7 +11,6 @@ export async function fetchPendleMarketData(
     contracts.IPendleMarket.abi,
     provider
   );
-  const reserves = await marketContract.getReserves();
   const ytTokenAddress = await marketContract.xyt();
   const baseTokenAddress = await marketContract.token();
   const ytTokenContract = new Contract(
@@ -24,18 +23,15 @@ export async function fetchPendleMarketData(
     contracts.IERC20.abi,
     provider
   );
-  const ytTokenDecimals = await ytTokenContract.decimals();
-  const baseTokenDecimals = await baseTokenContract.decimals();
+  const ytTokenDecimals: BN = await ytTokenContract.decimals();
+  const baseTokenDecimals: BN = await baseTokenContract.decimals();
 
   const market = new PendleMarket(marketAddress.toLowerCase(), [
-    new TokenAmount(
-      new Token(ytTokenAddress, ytTokenDecimals.toNumber()),
-      reserves.xytBalance.toString()
+    new Token(
+      ytTokenAddress,
+      ytTokenDecimals.toNumber()
     ),
-    new TokenAmount(
-      new Token(baseTokenAddress, baseTokenDecimals.toNumber()),
-      reserves.tokenBalance.toString()
-    ),
+    new Token(baseTokenAddress, baseTokenDecimals.toNumber()),
   ]);
   return market;
 }
