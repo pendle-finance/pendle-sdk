@@ -3,6 +3,9 @@ const IPendleRouter = require('@pendle/core/build/artifacts/contracts/interfaces
 const IPendleData = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleData.sol/IPendleData.json');
 const IPendleForge = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleForge.sol/IPendleForge.json');
 const PendleSushiswapComplexForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSushiswapComplexForge.sol/PendleSushiswapComplexForge.json')
+const PendleAaveV2Forge = require('@pendle/core/build/artifacts/contracts/core/aave/v2/PendleAaveV2Forge.sol/PendleAaveV2Forge.json');
+const PendleCompoundForge = require('@pendle/core/build/artifacts/contracts/core/compound/PendleCompoundForge.sol/PendleCompoundForge.json');
+const PendleSushiswapSimpleForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapSimple/PendleSushiswapSimpleForge.sol/PendleSushiswapSimpleForge.json');
 const IERC20 = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
 const PendleLiquidityMiningBase = require('@pendle/core/build/artifacts/contracts/core/abstract/PendleLiquidityMiningBase.sol/PendleLiquidityMiningBase.json');
 const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleRedeemProxy.sol/PendleRedeemProxy.json');
@@ -19,5 +22,8 @@ export const contracts = {
   PendleLiquidityMiningBase,
   PendleRedeemProxy,
   PendleLiquidityRewardsProxy,
-  PendleSushiswapComplexForge
+  PendleSushiswapComplexForge,
+  PendleSushiswapSimpleForge,
+  PendleAaveV2Forge,
+  PendleCompoundForge
 };
