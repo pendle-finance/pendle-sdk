@@ -6,14 +6,13 @@ type SubgraphQuery = {
   page: number;
   limit: number;
 };
-
-interface ForgeQuery extends SubgraphQuery {
+export interface ForgeQuery extends SubgraphQuery {
   forgeId: 'CompoundV2' | 'AaveV2' | 'SushiswapSimple' | 'SushiswapComplex';
   expiry: number;
   underlyingTokenAddress: Address;
 }
 
-interface PendleAmmQuery extends SubgraphQuery {
+export interface PendleAmmQuery extends SubgraphQuery {
   marketAddress: Address;
 }
 
