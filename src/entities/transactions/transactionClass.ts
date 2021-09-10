@@ -17,17 +17,22 @@ interface PendleAmmQuery extends SubgraphQuery {
   marketAddress: Address;
 }
 
+const networkMapping: Record<string | number, number> = {
+  1: 1,
+  mainnet: 1,
+  42: 42,
+  kovan: 42,
+};
+
+const chainIdToNetworkMapping: Record<number, string> = {
+  1: 'mainnet',
+  42: 'kovan',
+};
+
 export class Transaction {
   private network = 1;
 
   constructor(_network: number | string = 1) {
-    const networkMapping: Record<string | number, number> = {
-      1: 1,
-      mainnet: 1,
-      42: 42,
-      kovan: 42,
-    };
-
     this.network = networkMapping[_network];
   }
 
@@ -95,7 +100,8 @@ export class Transaction {
           mintObj.amountMinted
         ),
       ],
-      network: 'mainnet',
+      network: chainIdToNetworkMapping[this.network],
+      chainId: this.network,
     }));
   }
 
@@ -153,7 +159,8 @@ export class Transaction {
           redeemObj.amountToRedeem
         ),
       ],
-      network: 'mainnet',
+      network: chainIdToNetworkMapping[this.network],
+      chainId: this.network,
     }));
   }
 
@@ -200,7 +207,8 @@ export class Transaction {
           swapObj.outAmount
         ),
       ],
-      network: 'mainnet',
+      network: chainIdToNetworkMapping[this.network],
+      chainId: this.network,
     }));
   }
 
@@ -259,7 +267,8 @@ export class Transaction {
         //   mintObj.amountMinted
         // ),
       ],
-      network: 'mainnet',
+      network: chainIdToNetworkMapping[this.network],
+      chainId: this.network,
     }));
   }
 }
