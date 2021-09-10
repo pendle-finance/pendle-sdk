@@ -1,11 +1,21 @@
 import { request, gql } from 'graphql-request';
-import { PendleSubgraphUrlMapping, TokenAmount, Token } from '../';
+import { PendleSubgraphUrlMapping, TokenAmount, Token, Address } from '../';
 import { TRANSACTION } from './types';
 
 type SubgraphQuery = {
   page: number;
   limit: number;
 };
+
+interface ForgeQuery extends SubgraphQuery {
+  forgeId: 'CompoundV2' | 'AaveV2' | 'SushiswapSimple' | 'SushiswapComplex';
+  expiry: number;
+  underlyingTokenAddress: Address;
+}
+
+interface PendleAmmQuery extends SubgraphQuery {
+  marketAddress: Address;
+}
 
 export class Transaction {
   private network = 1;
@@ -30,12 +40,10 @@ export class Transaction {
   }
 
   public async getMintTransactions(
-    queryObj: SubgraphQuery
+    queryObj: ForgeQuery
   ): Promise<TRANSACTION[]> {
-    // TODO
-    // , where: {forgeId: "${forgeId}", expiry: ${expiry}} underlying yield
     const query = gql`{
-            mintYieldTokens(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc) {
+            mintYieldTokens(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where: {forgeId: "${queryObj.forgeId}", expiry: ${queryObj.expiry}, underlyingAsset: "${queryObj.underlyingTokenAddress}"}) {
                 id
                 timestamp
                 mintedValueUSD
@@ -91,9 +99,9 @@ export class Transaction {
     }));
   }
 
-  public async getRedeemTransactions(queryObj: SubgraphQuery) {
+  public async getRedeemTransactions(queryObj: ForgeQuery) {
     const query = gql`{
-      redeemYieldTokens(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc) {
+      redeemYieldTokens(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where: {forgeId: "${queryObj.forgeId}", expiry: ${queryObj.expiry}, underlyingAsset: "${queryObj.underlyingTokenAddress}"}) {
           id
           timestamp
           redeemedValueUSD
@@ -149,9 +157,9 @@ export class Transaction {
     }));
   }
 
-  public async getSwapTransactions(queryObj: SubgraphQuery) {
+  public async getSwapTransactions(queryObj: PendleAmmQuery) {
     const query = gql`{
-      swaps(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc) {
+      swaps(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where : {pair: "${queryObj.marketAddress}"}) {
           id
           timestamp
           amountUSD
@@ -197,12 +205,10 @@ export class Transaction {
   }
 
   public async getLiquidityTransactions(
-    queryObj: SubgraphQuery
+    queryObj: PendleAmmQuery
   ): Promise<TRANSACTION[]> {
-    // TODO
-    // , where: {forgeId: "${forgeId}", expiry: ${expiry}} underlying yield
     const query = gql`{
-            liquidityPools(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc) {
+            liquidityPools(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where : {pair: "${queryObj.marketAddress}"}) {
                 id
                 timestamp
                 inAmount0
@@ -221,7 +227,8 @@ export class Transaction {
                 amountUSD
                 from
             }
-        }`;
+        
+      }`;
 
     const response = await request(
       PendleSubgraphUrlMapping[this.network],
