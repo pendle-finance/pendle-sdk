@@ -27,6 +27,11 @@ CurrencyAmount = {
   amount: string
 }
 
+TokenReserveDetails = {
+  reserves: TokenAmount
+  weights: string
+}
+
 MarketDetails = {
   tokenReserves: TokenReserveDetails[],
   otherDetails: { 
@@ -42,7 +47,8 @@ MarketDetails = {
 SwapDetails = {
   inAmount: TokenAmount,
   outAmount: TokenAmount,
-  minReceived: TokenAmount,
+  minReceived?: TokenAmount,
+  maxInput?: TokenAmount
   priceImpact: string,
   swapFee: TokenAmount
 }

@@ -4,8 +4,8 @@ import { dummyAddress } from "..";
 import { contracts } from '../contracts';
 import { forgeIds } from "../constants";
 import { NetworkInfo, OTINFO } from '../networks'
-import { distributeConstantsByNetwork, getABIByForgeId } from '../helpers'
-import { rmul, rdiv } from "../math";
+import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
+import { rmul, rdiv } from "../math/mathLib";
 
 export type RedeemDetails = {
     redeemableAmount: TokenAmount
@@ -82,7 +82,9 @@ export class YieldContract {
             }
         }
         const mint = async (toMint: TokenAmount): Promise<providers.TransactionResponse> => {
-            return PendleRouterContract.connect(signer).tokenizeYield(this.forgeId, this.underlyingAsset.address, this.expiry, toMint.rawAmount(), signer.getAddress());
+            const args = [this.forgeId, this.underlyingAsset.address, this.expiry, toMint.rawAmount(), signer.getAddress()];
+            const gasEstimate: BN = await PendleRouterContract.estimateGas.tokenizeYield(...args);
+            return PendleRouterContract.connect(signer).tokenizeYield(...args, getGasLimit(gasEstimate));
         }
         const redeemDetails = async (amountToRedeem: TokenAmount, userAddress: string): Promise<RedeemDetails> => {
             const interestRedeemed: BN = await PendleForgeContract.connect(signer.provider).callStatic.redeemDueInterests(userAddress, this.underlyingAsset.address, this.expiry, { from: networkInfo.contractAddresses.misc.PendleRouter });
@@ -101,7 +103,7 @@ export class YieldContract {
                     break;
                 }
 
-                case forgeIds.SUSHISWAP_SIMPLE: 
+                case forgeIds.SUSHISWAP_SIMPLE:
                 case forgeIds.SUSHISWAP_COMPLEX: {
                     const currentRate: BN = await PendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
                     amountRedeemed = rdiv(BN.from(amountToRedeem.rawAmount()), (currentRate));
@@ -119,13 +121,15 @@ export class YieldContract {
                 ),
             }
         }
-        const redeem = async (toRedeem: TokenAmount): Promise<providers.TransactionResponse> => {  
-            return PendleRouterContract.connect(signer).redeemUnderlying(
+        const redeem = async (toRedeem: TokenAmount): Promise<providers.TransactionResponse> => {
+            const args = [
                 this.forgeId,
                 this.underlyingAsset.address,
                 this.expiry,
                 toRedeem.rawAmount()
-            )
+            ];
+            const gasEstimate: BN = await PendleRouterContract.estimateGas.redeemUnderlying(...args);
+            return PendleRouterContract.connect(signer).redeemUnderlying(...args, getGasLimit(gasEstimate))
         }
         return {
             mintDetails,
