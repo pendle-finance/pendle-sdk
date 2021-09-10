@@ -35,6 +35,10 @@ export class Transaction {
     this.network = networkMapping[_network];
   }
 
+  private getSkipAmount(page: number, limit: number) {
+    return page * limit - limit;
+  }
+
   public currentNetwork(): number {
     return this.network;
   }
@@ -46,30 +50,43 @@ export class Transaction {
   public async getMintTransactions(
     queryObj: ForgeQuery
   ): Promise<TRANSACTION[]> {
-    const query = gql`{
-            mintYieldTokens(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where: {forgeId: "${queryObj.forgeId}", expiry: ${queryObj.expiry}, underlyingAsset: "${queryObj.underlyingTokenAddress}"}) {
-                id
-                timestamp
-                mintedValueUSD
-                amountToTokenize
-                amountMinted
-                expiry
-                xytAsset {
-                    id
-                    decimals
-                }
-                otAsset {
-                    id
-                    decimals
-                }
-                yieldBearingAsset {
-                    id
-                    symbol
-                    decimals
-                }
-                from
-            }
-        }`;
+    const query = gql`
+    {
+        mintYieldTokens
+        (
+          first: ${queryObj.limit}, 
+          skip: ${this.getSkipAmount(queryObj.page, queryObj.limit)}, 
+          orderBy: timestamp, 
+          orderDirection: desc, 
+          where: {
+            forgeId: "${queryObj.forgeId}", 
+            expiry: ${queryObj.expiry}, 
+            underlyingAsset: "${queryObj.underlyingTokenAddress}"
+          }
+        ) 
+      {   
+          id
+          timestamp
+          mintedValueUSD
+          amountToTokenize
+          amountMinted
+          expiry
+          xytAsset {
+              id
+              decimals
+          }
+          otAsset {
+              id
+              decimals
+          }
+          yieldBearingAsset {
+              id
+              symbol
+              decimals
+          }
+          from
+      }
+    }`;
 
     const response = await request(
       PendleSubgraphUrlMapping[this.network],
@@ -105,30 +122,43 @@ export class Transaction {
   }
 
   public async getRedeemTransactions(queryObj: ForgeQuery) {
-    const query = gql`{
-      redeemYieldTokens(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where: {forgeId: "${queryObj.forgeId}", expiry: ${queryObj.expiry}, underlyingAsset: "${queryObj.underlyingTokenAddress}"}) {
-          id
-          timestamp
-          redeemedValueUSD
-          amountToRedeem
-          amountRedeemed
-          expiry
-          xytAsset {
-              id
-              decimals
-          }
-          otAsset {
-              id
-              decimals
-          }
-          yieldBearingAsset {
-              id
-              symbol
-              decimals
-          }
-          from
+    const query = gql`
+    {
+      redeemYieldTokens
+      (
+        first: ${queryObj.limit},             
+        skip: ${this.getSkipAmount(queryObj.page, queryObj.limit)}, 
+        orderBy: timestamp, 
+        orderDirection: desc, 
+        where: {
+          forgeId: "${queryObj.forgeId}", 
+          expiry: ${queryObj.expiry}, 
+          underlyingAsset: "${queryObj.underlyingTokenAddress}"
+        }
+      ) 
+      {
+        id
+        timestamp
+        redeemedValueUSD
+        amountToRedeem
+        amountRedeemed
+        expiry
+        xytAsset {
+            id
+            decimals
+        }
+        otAsset {
+            id
+            decimals
+        }
+        yieldBearingAsset {
+            id
+            symbol
+            decimals
+        }
+        from
       }
-  }`;
+    }`;
 
     const response = await request(
       PendleSubgraphUrlMapping[this.network],
@@ -164,26 +194,37 @@ export class Transaction {
   }
 
   public async getSwapTransactions(queryObj: PendleAmmQuery) {
-    const query = gql`{
-      swaps(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where : {pair: "${queryObj.marketAddress}"}) {
-          id
-          timestamp
-          amountUSD
-          inAmount
-          outAmount
-          inToken {
-              id
-              decimals
-              symbol
-          }
-          outToken {
-              id
-              decimals
-              symbol
-          }
-          from
+    const query = gql`
+    {
+      swaps
+      (
+        first: ${queryObj.limit},         
+        skip: ${this.getSkipAmount(queryObj.page, queryObj.limit)}, 
+        orderBy: timestamp,
+        orderDirection: desc, 
+        where : {
+          pair: "${queryObj.marketAddress}"
+        }
+      )
+      {
+        id
+        timestamp
+        amountUSD
+        inAmount
+        outAmount
+        inToken {
+            id
+            decimals
+            symbol
+        }
+        outToken {
+            id
+            decimals
+            symbol
+        }
+        from
       }
-  }`;
+    }`;
 
     const response = await request(
       PendleSubgraphUrlMapping[this.network],
@@ -214,28 +255,37 @@ export class Transaction {
   public async getLiquidityTransactions(
     queryObj: PendleAmmQuery
   ): Promise<TRANSACTION[]> {
-    const query = gql`{
-            liquidityPools(first: ${queryObj.limit}, orderBy: timestamp, orderDirection: desc, where : {pair: "${queryObj.marketAddress}"}) {
-                id
-                timestamp
-                inAmount0
-                inAmount1
-                inToken0 {
-                  id
-                  symbol
-                  decimals
-                }
-                inToken1 {
-                  id
-                  symbol
-                  decimals
-                }
-                type
-                amountUSD
-                from
-            }
+    const query = gql`
+    {
+      liquidityPools
+      (
+        first: ${queryObj.limit},        
+        skip: ${this.getSkipAmount(queryObj.page, queryObj.limit)},  
+        orderBy: timestamp, 
+        orderDirection: desc, 
+        where : {pair: "${queryObj.marketAddress}"}
+      ) 
+      {
+          id
+          timestamp
+          inAmount0
+          inAmount1
+          inToken0 {
+            id
+            symbol
+            decimals
+          }
+          inToken1 {
+            id
+            symbol
+            decimals
+          }
+          type
+          amountUSD
+          from
+      }
         
-      }`;
+    }`;
 
     const response = await request(
       PendleSubgraphUrlMapping[this.network],
