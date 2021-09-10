@@ -1,5 +1,5 @@
 import { NetworkContractAddresses } from ".";
-import { EXP_2021, EXP_2022 } from "../constants";
+import { EXP_2021, EXP_2022, forgeIds } from "../constants";
 
 export const mainnetContracts: NetworkContractAddresses = {
     stakingPools: [
@@ -312,10 +312,10 @@ export const mainnetContracts: NetworkContractAddresses = {
         PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6'
     },
     forges: {
-        "AaveV2": "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",
-        "Compound": "0xc02ac197a4d32d93d473779fbea2dca1fb313ed5",
-        "SushiswapSimple": "0x6b0e6b4c0ee4b6460e5cd35a3625a172fe9d3930",
-        "SushiswapComplex": "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251"
+        [forgeIds.AAVE]: "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",
+        [forgeIds.COMPOUND]: "0xc02ac197a4d32d93d473779fbea2dca1fb313ed5",
+        [forgeIds.SUSHISWAP_SIMPLE]: "0x6b0e6b4c0ee4b6460e5cd35a3625a172fe9d3930",
+        [forgeIds.SUSHISWAP_COMPLEX]: "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251"
     }
 }
 

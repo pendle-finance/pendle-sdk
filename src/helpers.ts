@@ -1,7 +1,8 @@
 import { BigNumber as BN } from 'ethers';
 import { TokenAmount, Token, PoolYields, YieldInfo, PoolAccruingRewards, FutureEpochRewards, PoolVestedRewards, YieldType } from './entities';
 import { LMINFO, mainnetContracts, NetworkInfo } from './networks'
-import { decimalsRecords } from './constants'
+import { decimalsRecords, forgeIds } from './constants'
+import { contracts } from "./contracts";
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)
@@ -26,6 +27,26 @@ export const distributeConstantsByNetwork = (chainId?: number): NetworkInfo => {
     }
   } else {
     throw Error("Unsupported Network");
+  }
+}
+
+export function getABIByForgeId(id: string): any {
+  switch (id) {
+    case forgeIds.AAVE:
+      return contracts.PendleAaveV2Forge;
+
+    case forgeIds.COMPOUND:
+      return contracts.PendleCompoundForge;
+
+    case forgeIds.SUSHISWAP_SIMPLE:
+      return contracts.PendleSushiswapSimpleForge;
+
+    case forgeIds.SUSHISWAP_COMPLEX:
+      return contracts.PendleSushiswapComplexForge;
+
+    default: {
+      throw Error("Unsupported Forge Id");
+    }
   }
 }
 
