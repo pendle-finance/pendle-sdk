@@ -40,12 +40,13 @@ describe("Market", () => {
     let market: PendleMarket;
 
     beforeAll(async () => {
-        const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
+        // const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
 
-        //   const providerUrl = `http://127.0.0.1:8545`;
+        const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        signer = provider.getSigner();
-        market = markets.PendleEthMarket;
+        signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
+        console.log(signer);
+        market = markets.ETHUSDCMarket;
     });
 
     it("PendleMarket.readMarketDetails", async () => {
@@ -92,10 +93,10 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it.only('PendleMarket.addSingleDetails', async () => {
+    it('PendleMarket.addSingleDetails', async () => {
         const response = await market.methods(signer).addSingleDetails(new TokenAmount(
-            tokens.PENDLEToken,
-            BN.from(10).pow(23).toString()
+            tokens.ETHUSDCYTToken,
+            BN.from(10).pow(18).toString()
         ));
         console.log(response);
     })
@@ -115,9 +116,9 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it('PendleMarket.removeSingleDetails', async () => {
-        const response = await market.methods(signer).removeDualDetails(0.5, dummyToken, 0.001);
-        console.log(response);
+    it.only('PendleMarket.removeSingleDetails', async () => {
+        const response = await market.methods(signer).removeSingleDetails(0.05, tokens.USDCToken, 0.001);
+        console.log(JSON.stringify(response, null, '  '));
     })
 
     it('PendleMarket.removeSingle', async () => {

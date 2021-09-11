@@ -2,11 +2,11 @@ import { TokenAmount, Token } from './token';
 import { Contract, providers, BigNumber as BN } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest } from './token';
-import { MARKETNFO, NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, getDecimal, xor } from '../helpers'
-import { dummyCurrencyAmount, dummyToken, dummyTokenAmount, CurrencyAmount } from '..';
+import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
+import { distributeConstantsByNetwork, getDecimal, getGasLimit, xor } from '../helpers'
+import { dummyCurrencyAmount, CurrencyAmount } from '..';
 import { YieldContract } from './yieldContract';
-import { calAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate } from '../math/marketMath';
+import { calAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
 import bigDecimal from 'js-big-decimal';
 
 
@@ -48,7 +48,7 @@ export type AddSingleLiquidityDetails = {
 }
 
 export type RemoveDualLiquidityDetails = {
-  tokenAmounts: TokenAmount[]
+  tokenAmounts: TokenAmount[],
 }
 
 export type RemoveSingleLiquidityDetails = {
@@ -100,17 +100,27 @@ export class Market {
 }
 
 export class PendleMarket extends Market {
-  public ytWeightRaw?: string;
-  public baseTokenWeightRaw?: string;
+  public marketFactoryId: string = "";
 
   public constructor(marketAddress: string, tokens: Token[]) {
     super(marketAddress, [tokens[0], tokens[1]]);
   }
 
-  public yieldContract(): YieldContract {
-    return new YieldContract("Aave2", dummyToken, 1672272000);
+  public yieldContract(chainId?: number): YieldContract {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const ytInfo: YTINFO []= networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => yt.address == this.tokens[0].address);
+    if (ytInfo.length === 0) {
+      throw Error(`YT with address ${this.tokens[0].address} not found on this network`);
+    }
+    return new YieldContract(
+      ytInfo[0].forgeId,
+      new Token(
+        ytInfo[0].rewardTokenAddresses[0],
+        networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
+      ),
+      this.tokens[0].expiry!
+    )
   }
-
   public static methods(
     signer: providers.JsonRpcSigner,
     chainId?: number
@@ -160,6 +170,14 @@ export class PendleMarket extends Market {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const marketContract = new Contract(this.address, contracts.IPendleMarket.abi, signer.provider);
     const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
+    const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
+
+    const getMarketFactoryId = async (): Promise<string> => {
+      if (this.marketFactoryId === "") {
+        this.marketFactoryId = await marketContract.factoryId();
+      }
+      return this.marketFactoryId;
+    }
 
     const readMarketDetails = async (): Promise<MarketDetails> => {
 
@@ -191,7 +209,7 @@ export class PendleMarket extends Market {
       };
     };
 
-    const swapExactInDetails = async (slippage: number, inTokenAmount: TokenAmount): Promise<SwapDetails> => {
+    const swapExactInDetails = async (inTokenAmount: TokenAmount, slippage: number): Promise<SwapDetails> => {
       slippage = Math.trunc(slippage * Math.pow(10, SlippageMaxDecimals));
       const inAmount: BN = BN.from(inTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
@@ -234,7 +252,7 @@ export class PendleMarket extends Market {
       }
     };
 
-    const swapExactOutDetails = async (slippage: number, outTokenAmount: TokenAmount): Promise<SwapDetails> => {
+    const swapExactOutDetails = async (outTokenAmount: TokenAmount, slippage: number): Promise<SwapDetails> => {
       slippage = Math.trunc(slippage * Math.pow(10, SlippageMaxDecimals));
       const outAmount: BN = BN.from(outTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
@@ -277,17 +295,33 @@ export class PendleMarket extends Market {
       }
     };
 
-    const swapExactIn = async (_: number, __: TokenAmount): Promise<providers.TransactionResponse> => {
-      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
-      return (await USDCContract.connect(signer).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
+    const swapExactIn = async (inTokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
+      const details: SwapDetails = await swapExactInDetails(inTokenAmount, slippage);
+      const args: any[] = [
+        details.inAmount.token.address,
+        details.outAmount.token.address,
+        details.inAmount.rawAmount(),
+        details.minReceived!.rawAmount(),
+        await getMarketFactoryId()
+      ];
+      const gasEstimate = await pendleRouterContract.estimateGas.swapExactIn(...args);
+      return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
     }
 
-    const swapExactOut = async (_: number, __: TokenAmount): Promise<providers.TransactionResponse> => {
-      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
-      return (await USDCContract.connect(signer).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
+    const swapExactOut = async (outTokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
+      const details: SwapDetails = await swapExactOutDetails(outTokenAmount, slippage);
+      const args: any[] = [
+        details.inAmount.token.address,
+        details.outAmount.token.address,
+        details.outAmount.rawAmount(),
+        details.maxInput!.rawAmount(),
+        await getMarketFactoryId()
+      ];
+      const gasEstimate = await pendleRouterContract.estimateGas.swapExactIn(...args);
+      return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
     }
 
-    const addDualDetails = async (tokenAmount: TokenAmount): Promise<AddDualLiquidityDetails> => {
+    const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
       const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
@@ -302,9 +336,22 @@ export class PendleMarket extends Market {
       }
     }
 
-    const addDual = async (_: TokenAmount[], __: number | string): Promise<providers.TransactionResponse> => {
-      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
-      return (await USDCContract.connect(signer).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
+    const addDual = async (tokenAmounts: TokenAmount[], slippage: number): Promise<providers.TransactionResponse> => {
+      const desiredXytAmount: BN = BN.from(tokenAmounts[0].rawAmount());
+      const desiredTokenAmount: BN = BN.from(tokenAmounts[1].rawAmount());
+      const xytMinAmount: BN = BN.from(Math.trunc(desiredXytAmount.toNumber() * (1 - slippage)))
+      const tokenMinAmount: BN = BN.from(Math.trunc(desiredTokenAmount.toNumber() * (1 - slippage)))
+      const args: any[] = [
+        await getMarketFactoryId(),
+        this.tokens[0].address,
+        this.tokens[1].address,
+        desiredXytAmount,
+        desiredTokenAmount,
+        xytMinAmount,
+        tokenMinAmount
+      ]
+      const gasEstimate: BN = await pendleRouterContract.estimateGas.addMarketLiquidityDual(...args);
+      return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimit(gasEstimate));
     }
 
     const addSingleDetails = async (tokenAmount: TokenAmount): Promise<AddSingleLiquidityDetails> => {
@@ -322,15 +369,17 @@ export class PendleMarket extends Market {
         swapFee,
         totalSupplyLp
       );
+      console.log(details);
       const avgRate: BN = calAvgRate(details.inAmountSwapped, details.outAmountSwapped, tokenAmount.token.decimals);
-      const currentRateWithSwapFee: BN = calcRate(
+      const currentRate: BN = calcRate(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
         tokenDetailsRelative.outReserve,
         tokenDetailsRelative.outWeight,
         tokenAmount.token.decimals
       );
-      const priceImpact: bigDecimal = calcPriceImpact(currentRateWithSwapFee, avgRate);
+      console.log(currentRate.toString(), avgRate.toString())
+      const priceImpact: bigDecimal = calcPriceImpact(currentRate, avgRate);
       const shareOfPool: bigDecimal = calcShareOfPool(totalSupplyLp, details.exactOutLp);
       return {
         shareOfPool: shareOfPool.getValue(),
@@ -338,40 +387,137 @@ export class PendleMarket extends Market {
         swapFee: new TokenAmount(
           tokenAmount.token,
           details.swapFee.toString()
+        ),
+      }
+    }
+
+    const addSingle = async (tokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
+      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const totalSupplyLp: BN = await marketContract.totalSupply();
+      const swapFee: BN = await pendleDataContract.swapFee();
+      const inAmount: BN = BN.from(tokenAmount.rawAmount());
+      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+
+      const details: Record<string, BN> = calcOutAmountLp(
+        inAmount,
+        tokenDetailsRelative.inReserve,
+        tokenDetailsRelative.inWeight,
+        tokenDetailsRelative.outReserve,
+        swapFee,
+        totalSupplyLp
+      );
+      const exactOutLp: BN = details.exactOutLp;
+      const minOutLp: BN = BN.from(Math.trunc(exactOutLp.toNumber() * (1 - slippage)));
+      const args: any[] = [
+        await getMarketFactoryId(),
+        this.tokens[0].address,
+        this.tokens[1].address,
+        tokenAmount.token.address.toLowerCase() == this.tokens[0].address,
+        tokenAmount.rawAmount(),
+        minOutLp
+      ];
+      const gasEstimate: BN = await pendleRouterContract.estimateGas.addMarketLiquiditySingle(...args);
+      return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
+    }
+
+    const getLpAmountByFraction = async (percentage: number): Promise<BN> => {
+      if (percentage <= 0 || percentage > 1) {
+        throw Error("Invalid Percentage");
+      }
+      const userLpBalance: BN = await marketContract.balanceOf(signer.getAddress());
+      const redeemAmount: BN = BN.from(Math.trunc(userLpBalance.toNumber() * percentage));
+      return redeemAmount;
+    }
+
+    const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
+      const redeemAmount: BN = await getLpAmountByFraction(percentage);
+      const totalSupplyLp: BN = await marketContract.totalSupply();
+      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const xytRedeemAmout: BN = marketReserves.xytBalance.mul(redeemAmount).div(totalSupplyLp);
+      const baseTokenRedeemAmount: BN = marketReserves.tokenBalance.mul(redeemAmount).div(totalSupplyLp);
+      return {
+        tokenAmounts: [
+          new TokenAmount(
+            this.tokens[0],
+            xytRedeemAmout.toString()
+          ),
+          new TokenAmount(
+            this.tokens[1],
+            baseTokenRedeemAmount.toString()
+          )
+        ]
+
+      }
+    }
+
+    const removeDual = async (percentage: number, slippage: number): Promise<providers.TransactionResponse> => {
+      const details: RemoveDualLiquidityDetails = await removeDualDetails(percentage, slippage);
+      const desiredXytOut: BN = BN.from(details.tokenAmounts[0].rawAmount());
+      const desiredTokenOut: BN = BN.from(details.tokenAmounts[1].rawAmount());
+      const minXytOut: BN = BN.from(Math.trunc(desiredXytOut.toNumber() * (1 - slippage)));
+      const minTokenOut: BN = BN.from(Math.trunc(desiredTokenOut.toNumber() * (1 - slippage)));
+      const args: any[] = [
+        signer.getAddress(),
+        getLpAmountByFraction(percentage),
+        minXytOut,
+        minTokenOut
+      ]
+      const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquidityDual(...args);
+      return pendleRouterContract.connect(signer).removeMarketLiquidityDual(...args, getGasLimit(gasEstimate));
+    }
+
+    const removeSingleDetails = async (percentage: number, outToken: Token, _: number): Promise<RemoveSingleLiquidityDetails> => {
+      const redeemAmount: BN = await getLpAmountByFraction(percentage);
+      const totalSupplyLp: BN = await marketContract.totalSupply();
+      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const tokenDetailsRelative = this.getTokenDetailsRelative(outToken, marketReserves, false);
+      const swapFee: BN = await pendleDataContract.swapFee();
+
+      const details = calcOutAmountToken(
+        tokenDetailsRelative.inReserve,
+        tokenDetailsRelative.outReserve,
+        tokenDetailsRelative.outWeight,
+        totalSupplyLp,
+        redeemAmount,
+        swapFee
+      )
+      const avgRate: BN = calAvgRate(details.inAmountSwapped, details.outAmountSwapped, tokenDetailsRelative.inToken.decimals);
+      const currentRate: BN = calcRate(
+        tokenDetailsRelative.inReserve,
+        tokenDetailsRelative.inWeight,
+        tokenDetailsRelative.outReserve,
+        tokenDetailsRelative.outWeight,
+        tokenDetailsRelative.inToken.decimals
+      );
+      const priceImpact: bigDecimal = calcPriceImpact(currentRate, avgRate);
+
+      // const userLpBalance: BN = await marketContract.balanceOf(signer.getAddress());
+      // const redeemAmount: BN = BN.from(Math.trunc(userLpBalance.toNumber() * percentage));
+      return {
+        outAmount: new TokenAmount(
+          outToken,
+          details.exactOutToken.toString()
+        ),
+        priceImpact: priceImpact.getValue(),
+        swapFee: new TokenAmount(
+          outToken,
+          details.swapFee.toString()
         )
       }
     }
 
-    const addSingle = async (_: TokenAmount, __: number | string): Promise<providers.TransactionResponse> => {
-      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
-      return (await USDCContract.connect(signer).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
-    }
-
-    const removeDualDetails = async (_: number): Promise<RemoveDualLiquidityDetails> => {
-      return {
-        tokenAmounts: [
-          dummyTokenAmount,
-          dummyTokenAmount
-        ]
-      }
-    }
-
-    const removeDual = async (_: number, __: number): Promise<providers.TransactionResponse> => {
-      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
-      return (await USDCContract.connect(signer).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
-    }
-
-    const removeSingleDetails = async (_: number, __: Token, ___: number): Promise<RemoveSingleLiquidityDetails> => {
-      return {
-        outAmount: dummyTokenAmount,
-        priceImpact: "0.001",
-        swapFee: dummyTokenAmount
-      }
-    }
-
-    const removeSingle = async (_: number, __: Token, ___: number): Promise<providers.TransactionResponse> => {
-      const USDCContract = new Contract("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", contracts.IERC20.abi);
-      return (await USDCContract.connect(signer).approve('0xABB6f9F596dC2564406bAe7557d34B98bFeBB6b5', 1));
+    const removeSingle = async (percentage: number, outToken: Token, slippage: number): Promise<providers.TransactionResponse> => {
+      const details: RemoveSingleLiquidityDetails = await removeSingleDetails(percentage, outToken, slippage);
+      const exactOutAmount: BN = BN.from(details.outAmount.rawAmount());
+      const minOutAmount: BN = BN.from(Math.trunc(exactOutAmount.toNumber() * (1 - slippage)));
+      const args: any[] = [
+        signer.getAddress(),
+        outToken.address,
+        getLpAmountByFraction(percentage),
+        minOutAmount
+      ]
+      const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquiditySingle(...args);
+      return pendleRouterContract.connect(signer).removeMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
     }
 
     return {
@@ -413,12 +559,12 @@ export class PendleMarket extends Market {
       outToken = this.tokens[1];
     }
     return {
-      inReserve: inReserve,
-      inWeight: inWeight,
-      inToken: inToken,
-      outReserve: outReserve,
-      outWeight: outWeight,
-      outToken: outToken
+      inReserve,
+      inWeight,
+      inToken,
+      outReserve,
+      outWeight,
+      outToken
     }
   }
 }

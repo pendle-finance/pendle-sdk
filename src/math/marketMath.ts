@@ -107,10 +107,10 @@ export function calcOutAmountLp(
     const inAmountSwapped: BN = inAmountAfterFee.sub(inAmountRemained);
     const outAmountSwapped: BN = outTokenReserve.mul(exactOutLp).div(totalSupplyLp);
     return {
-        exactOutLp: exactOutLp,
+        exactOutLp,
         swapFee: inAmount.sub(inAmountAfterFee),
-        inAmountSwapped: inAmountSwapped,
-        outAmountSwapped: outAmountSwapped
+        inAmountSwapped,
+        outAmountSwapped
     }
 }
 
@@ -121,4 +121,35 @@ export function calcPriceImpact(idealRate: BN, actualRate: BN): bigDecimal {
 
 export function calcShareOfPool(originalBalance: BN, deltaInBalance: BN): bigDecimal {
     return new bigDecimal(deltaInBalance.toString()).divide(new bigDecimal(deltaInBalance.add(originalBalance).toString()), DecimalsPrecision);
+}
+
+export function calcOutAmountToken(
+    inTokenReserve: BN,
+    outTokenReserve: BN,
+    outTokenWeight: BN,
+    totalSupplyLp: BN,
+    inLp: BN,
+    swapFee: BN
+): Record<string, BN> {
+    const nWeight: BN = outTokenWeight;
+    const totalSupplyLpUpdated: BN = totalSupplyLp.sub(inLp);
+    const lpRatio: BN = rdiv(totalSupplyLpUpdated, totalSupplyLp);
+
+    const outTokenRatio: BN = rpow(lpRatio, rdiv(RONE, nWeight));
+    const outTokenBalanceUpdated: BN = rmul(outTokenRatio, outTokenReserve);
+
+    const outAmountTokenBeforeSwapFee: BN = outTokenReserve.sub(outTokenBalanceUpdated);
+
+    const feePortion: BN = rmul(RONE.sub(nWeight), swapFee);
+    const exactOutToken: BN = rmul(outAmountTokenBeforeSwapFee, RONE.sub(feePortion));
+
+    const inAmountSwapped: BN = inLp.mul(inTokenReserve).div(totalSupplyLp);
+    const outAmountSwapped: BN = outAmountTokenBeforeSwapFee.sub(inLp.mul(outTokenReserve).div(totalSupplyLp));
+
+    return {
+        exactOutToken,
+        swapFee: outAmountTokenBeforeSwapFee.sub(exactOutToken),
+        inAmountSwapped,
+        outAmountSwapped
+    };
 }

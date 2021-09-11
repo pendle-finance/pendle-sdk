@@ -23,12 +23,14 @@ export type LMINFO = {
 };
 export type YTINFO = {
     address: string,
-    rewardTokenAddresses: string[]
+    rewardTokenAddresses: string[],
+    forgeId: string
 };
 export type MARKETNFO = {
     address: string,
     pair: string[],
-    rewardTokenAddresses: string[]
+    rewardTokenAddresses: string[],
+    marketFactoryId: string
 };
 export type OTINFO = {
     address: string,
