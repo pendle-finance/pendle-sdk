@@ -14,6 +14,10 @@ export const decimalFactor = (decimal: number): string => {
     .toString();
 };
 
+export const isSameAddress = (address1: string, address2: string): boolean => {
+  return address1.toLowerCase() == address2.toLowerCase()
+}
+
 export const indexRange = (start: number, end: number): number[] => {
   const arr = [];
   for (let i = start; i < end; i++) {

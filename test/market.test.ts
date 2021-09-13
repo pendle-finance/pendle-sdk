@@ -29,8 +29,8 @@ const ETHUSDCYTToken = new Token(
     EXP_2022.toNumber()
 )
 const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDCYTToken }
-const PendleEthMarket = new PendleMarket('0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE', [tokens.PENDLEETHYTToken, tokens.PENDLEToken]);
-const ETHUSDCMarket = new PendleMarket('0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0', [tokens.ETHUSDCYTToken, tokens.USDCToken])
+const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
+const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
 
 
 const markets = { PendleEthMarket, ETHUSDCMarket };
@@ -54,19 +54,21 @@ describe("Market", () => {
         console.log(marketDetails);
     })
 
-    it('PendleMarket.swapExactInDetails', async () => {
-        const swapExactInDetails = await market.methods(signer).swapExactInDetails(0.01, new TokenAmount(
-            tokens.USDCToken,
+    it.only('PendleMarket.swapExactInDetails', async () => {
+        const swapExactInDetails = await market.methods(signer).swapExactInDetails(new TokenAmount(
+            market.tokens[1],
             BN.from(10).pow(12).toString()
-        ));
+        ),
+        0.01);
         console.log(swapExactInDetails);
     })
 
-    it('PendleMarket.swapExactOutDetails', async () => {
-        const swapExactOutDetails = await market.methods(signer).swapExactOutDetails(0.01, new TokenAmount(
-            tokens.PENDLEToken,
-            BN.from(10).pow(22).toString()
-        ));
+    it.only('PendleMarket.swapExactOutDetails', async () => {
+        const swapExactOutDetails = await market.methods(signer).swapExactOutDetails(new TokenAmount(
+            market.tokens[1],
+            BN.from(10).pow(12).toString()
+        ),
+        0.01);
         console.log(swapExactOutDetails);
     })
 

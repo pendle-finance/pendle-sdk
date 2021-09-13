@@ -10,13 +10,13 @@ export type NetworkContractAddresses = {
     YTs: YTINFO[],
     OTs: OTINFO[],
     markets: MARKETNFO[],
-    misc: Record<string, string> ,
+    misc: Record<string, string>,
     forges: Record<string, string>
 }
 export type LMINFO = {
     address: string,
     inputTokenAddress: string,
-    contractType: string,
+    contractType: StakingPoolType,
     rewardTokenAddresses: string[],
     interestTokensAddresses: string[],
     expiry?: BN
@@ -24,7 +24,8 @@ export type LMINFO = {
 export type YTINFO = {
     address: string,
     rewardTokenAddresses: string[],
-    forgeId: string
+    forgeId: string,
+    expiry: BN
 };
 export type MARKETNFO = {
     address: string,
@@ -35,6 +36,12 @@ export type MARKETNFO = {
 export type OTINFO = {
     address: string,
     yieldTokenAddress: string
+}
+
+export enum StakingPoolType {
+    LmV1 = 'PendleLiquidityMining',
+    LmV2 = 'PendleLiquidityMiningV2',
+    PendleSingleSided = 'PendleSingleStaking',
 }
 
 export * from './mainnet';

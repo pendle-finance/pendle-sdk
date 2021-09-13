@@ -10,6 +10,7 @@ YtOrMarketInterest: {
   interest: TokenAmount;
 };
 
+Yt.find(address, chainId?) => Yt
 Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
 
@@ -17,6 +18,7 @@ Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarke
 
 ### Static Methods:
 ```
+PendleMarket.find(address, chainId?) => PendleMarket
 PendleMarket.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
 
@@ -135,6 +137,7 @@ PoolVestedRewards = {
   vestedRewards: FutureEpochRewards[];
 };
 
+StakingPool.find(adddress, inputTokenAddress, chainId?) => StakingPool
 StakingPool.methods(JsonRpcSigner, chainId?).fetchClaimableYields(address) => Promise<PoolYields[]>
 StakingPool.methods(JsonRpcSigner, chainId?).fetchAccruingRewards(address) => Promise<PoolAccruingRewards[]>
 StakingPool.methods(JsonRpcSigner, chainId?).fetchVestedRewards(address) => Promise<PoolVestedRewards[]>

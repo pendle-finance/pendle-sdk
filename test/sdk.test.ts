@@ -28,7 +28,6 @@ describe('Sdk', () => {
   });
 
   it('Market.methods.fetchInterests', async () => {
-
     const userInterests = await PendleMarket.methods(signer).fetchInterests(
       dummyUser
     );
@@ -41,6 +40,11 @@ describe('Sdk', () => {
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
+
+  it.only('YT.find', async() => {
+    const xyt: Yt = Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9');
+    console.log(JSON.stringify(xyt, null, '  '))
+  })
 
   it('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(

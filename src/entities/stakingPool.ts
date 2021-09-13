@@ -1,9 +1,9 @@
 import { providers, Contract } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
+import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork, isSameAddress } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
 import { Token, TokenAmount } from '../entities'
-import { NetworkInfo, LMINFO } from '../networks';
+import { NetworkInfo, LMINFO, StakingPoolType } from '../networks';
 
 export interface StakingPoolId {
   address: string;
@@ -45,11 +45,7 @@ export type FutureEpochRewards = {
   rewards: TokenAmount[];
 };
 
-export enum StakingPoolType {
-  LmV1 = 'PendleLiquidityMining',
-  LmV2 = 'PendleLiquidityMiningV2',
-  PendleSingleSided = 'PendleSingleStaking',
-}
+const STAKINGPOOL_NOT_EXIST = new Error("No Staking pool is found at the given address and input token.")
 
 export class StakingPool {
   public readonly address: string;
@@ -71,6 +67,36 @@ export class StakingPool {
     this.interestTokens = interestTokens;
     this.contractType = contractType;
   }
+  
+  public static find(address: string, inputTokenAddress: string, chainId?: number): StakingPool {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const lmInfo: LMINFO | undefined = networkInfo.contractAddresses.stakingPools.find((s: LMINFO) => {
+      return isSameAddress(s.address, address) && isSameAddress(s.inputTokenAddress, inputTokenAddress);
+    })
+    if (lmInfo === undefined) {
+      throw STAKINGPOOL_NOT_EXIST;
+    }
+    return new StakingPool(
+      address.toLowerCase(),
+      new Token(
+        inputTokenAddress.toLowerCase(),
+        networkInfo.decimalsRecord[inputTokenAddress.toLowerCase()]
+      ),
+      lmInfo.rewardTokenAddresses.map((s: string) => {
+        return new Token(
+          s.toLowerCase(),
+          networkInfo.decimalsRecord[s.toLowerCase()]
+        )
+      }),
+      lmInfo.interestTokensAddresses.map((s: string) => {
+        return new Token(
+          s.toLowerCase(),
+          networkInfo.decimalsRecord[s.toLowerCase()]
+        )
+      }),
+      lmInfo.contractType 
+    )
+}
 
   public static methods(provider: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
 
@@ -92,10 +118,10 @@ export class StakingPool {
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
-      return stakingPoolInfo.contractType == "PendleLiquidityMining";
+      return stakingPoolInfo.contractType == StakingPoolType.LmV1;
     })
     const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
-      return stakingPoolInfo.contractType == "PendleLiquidityMiningV2";
+      return stakingPoolInfo.contractType == StakingPoolType.LmV2;
     })
 
     const fetchClaimableYields = async (

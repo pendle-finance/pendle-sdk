@@ -3,7 +3,7 @@ import { Contract, providers, BigNumber as BN } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest } from './token';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
-import { distributeConstantsByNetwork, getDecimal, getGasLimit, xor } from '../helpers'
+import { distributeConstantsByNetwork, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
 import { dummyCurrencyAmount, CurrencyAmount } from '..';
 import { YieldContract } from './yieldContract';
 import { calAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
@@ -69,6 +69,7 @@ const SlippageMaxDecimals: number = 6;
 const SlippageRONE: BN = BN.from(10).pow(SlippageMaxDecimals);
 
 const WRONG_TOKEN: Error = new Error("Input Token not part of this market");
+const MARKET_NOT_EXIST: Error = new Error("No Market is found at the given address");
 
 type TokenDetailsRelative = {
   inReserve: BN,
@@ -104,6 +105,26 @@ export class PendleMarket extends Market {
 
   public constructor(marketAddress: string, tokens: Token[]) {
     super(marketAddress, [tokens[0], tokens[1]]);
+  }
+
+  public static find(address: string, chainId?: number): PendleMarket {
+    address = address.toLowerCase();
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const marketInfo: MARKETNFO | undefined = networkInfo.contractAddresses.markets.find((m: MARKETNFO) => {
+      return isSameAddress(m.address, address);
+    })
+    if (marketInfo === undefined) {
+      throw MARKET_NOT_EXIST;
+    }
+    return new PendleMarket(
+      address,
+      marketInfo.pair.map((tokenAddress: string) => {
+        return new Token(
+          tokenAddress.toLowerCase(),
+          networkInfo.decimalsRecord[tokenAddress.toLowerCase()]
+        )
+      })
+    )
   }
 
   public yieldContract(chainId?: number): YieldContract {
@@ -412,7 +433,7 @@ export class PendleMarket extends Market {
         await getMarketFactoryId(),
         this.tokens[0].address,
         this.tokens[1].address,
-        tokenAmount.token.address.toLowerCase() == this.tokens[0].address,
+        isSameAddress(tokenAmount.token.address, this.tokens[0].address),
         tokenAmount.rawAmount(),
         minOutLp
       ];
@@ -543,7 +564,7 @@ export class PendleMarket extends Market {
     if (tokenAddress != this.tokens[0].address && tokenAddress != this.tokens[1].address) {
       throw WRONG_TOKEN;
     }
-    if (xor(tokenAddress == this.tokens[0].address, isInToken)) {
+    if (xor(isSameAddress(tokenAddress, this.tokens[0].address), isInToken)) {
       inReserve = marketReserves.tokenBalance;
       inWeight = marketReserves.tokenWeight;
       inToken = this.tokens[1];

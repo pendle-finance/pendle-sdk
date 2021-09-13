@@ -1,5 +1,5 @@
 import BigNumberjs from 'bignumber.js';
-import { decimalFactor, distributeConstantsByNetwork } from '../helpers';
+import { decimalFactor, distributeConstantsByNetwork, isSameAddress } from '../helpers';
 import { providers, Contract } from 'ethers';
 import { NetworkInfo, YTINFO } from '../networks';
 import { contracts } from '../contracts';
@@ -22,11 +22,29 @@ export class Token {
   }
 }
 
+const YT_NOT_EXIST = new Error("No YT is found at the given address");
+
 export class Yt extends Token {
+  public static find(address: string, chainId?: number):Yt {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const ytInfo: YTINFO | undefined = networkInfo.contractAddresses.YTs.find((y: YTINFO) => {
+      return isSameAddress(address, y.address);
+    })
+    if (ytInfo === undefined) {
+      throw YT_NOT_EXIST;
+    }
+    return new Yt(
+      address.toLowerCase(),
+      networkInfo.decimalsRecord[address.toLowerCase()],
+      ytInfo.expiry.toNumber()
+    )
+  }
+
   public static methods(
     provider: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
+
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const redeemProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleRedeemProxy,
