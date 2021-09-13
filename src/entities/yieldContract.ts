@@ -4,8 +4,8 @@ import { dummyAddress } from "..";
 import { contracts } from '../contracts';
 import { forgeIds } from "../constants";
 import { NetworkInfo, OTINFO } from '../networks'
-import { distributeConstantsByNetwork, getABIByForgeId } from '../helpers'
-import { rmul, rdiv } from "../math";
+import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
+import { rmul, rdiv } from "../math/mathLib";
 
 export type RedeemDetails = {
     redeemableAmount: TokenAmount
@@ -31,13 +31,13 @@ export class YieldContract {
         }
         // const PendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, provider);
         const forgeAddress = networkInfo.contractAddresses.forges[this.forgeId];
-        const PendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.forgeId).abi, signer.provider);
-        const PendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
-        const PendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
+        const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.forgeId).abi, signer.provider);
+        const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
+        const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
 
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeId !== forgeIds.SUSHISWAP_COMPLEX) {
-                const response = await PendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
+                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 return [
                     new TokenAmount(
                         new Token(
@@ -57,9 +57,9 @@ export class YieldContract {
                     ),
                 ]
             } else {
-                const exchangeRate: BN = await PendleForgeContract.connect(signer.provider).callStatic.getExchangeRate(this.underlyingAsset.address, { from: networkInfo.contractAddresses.misc.PendleRouter });
-                const ot: string = (await PendleDataContract.callStatic.otTokens(this.forgeId, this.underlyingAsset.address, this.expiry)).toLowerCase();
-                const yt: string = (await PendleDataContract.callStatic.xytTokens(this.forgeId, this.underlyingAsset.address, this.expiry)).toLowerCase();
+                const exchangeRate: BN = await pendleForgeContract.connect(signer.provider).callStatic.getExchangeRate(this.underlyingAsset.address, { from: networkInfo.contractAddresses.misc.PendleRouter });
+                const ot: string = (await pendleDataContract.callStatic.otTokens(this.forgeId, this.underlyingAsset.address, this.expiry)).toLowerCase();
+                const yt: string = (await pendleDataContract.callStatic.xytTokens(this.forgeId, this.underlyingAsset.address, this.expiry)).toLowerCase();
                 const amountToMint = rmul(BN.from(toMint.rawAmount()), exchangeRate);
                 return [
                     new TokenAmount(
@@ -82,10 +82,12 @@ export class YieldContract {
             }
         }
         const mint = async (toMint: TokenAmount): Promise<providers.TransactionResponse> => {
-            return PendleRouterContract.connect(signer).tokenizeYield(this.forgeId, this.underlyingAsset.address, this.expiry, toMint.rawAmount(), signer.getAddress());
+            const args = [this.forgeId, this.underlyingAsset.address, this.expiry, toMint.rawAmount(), signer.getAddress()];
+            const gasEstimate: BN = await pendleRouterContract.estimateGas.tokenizeYield(...args);
+            return pendleRouterContract.connect(signer).tokenizeYield(...args, getGasLimit(gasEstimate));
         }
         const redeemDetails = async (amountToRedeem: TokenAmount, userAddress: string): Promise<RedeemDetails> => {
-            const interestRedeemed: BN = await PendleForgeContract.connect(signer.provider).callStatic.redeemDueInterests(userAddress, this.underlyingAsset.address, this.expiry, { from: networkInfo.contractAddresses.misc.PendleRouter });
+            const interestRedeemed: BN = await pendleForgeContract.connect(signer.provider).callStatic.redeemDueInterests(userAddress, this.underlyingAsset.address, this.expiry, { from: networkInfo.contractAddresses.misc.PendleRouter });
             const yTokenAddress: string = networkInfo.contractAddresses.OTs.find((OtInfo: OTINFO) => OtInfo.address == amountToRedeem.token.address)!.yieldTokenAddress;
             var amountRedeemed: BN = BN.from(0);
             switch (this.forgeId) {
@@ -95,15 +97,15 @@ export class YieldContract {
                 }
 
                 case forgeIds.COMPOUND: {
-                    const initialRate: BN = await PendleForgeContract.callStatic.initialRate(this.underlyingAsset.address);
-                    const currentRate: BN = await PendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
+                    const initialRate: BN = await pendleForgeContract.callStatic.initialRate(this.underlyingAsset.address);
+                    const currentRate: BN = await pendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
                     amountRedeemed = BN.from(amountToRedeem.rawAmount()).mul(initialRate).div(currentRate);
                     break;
                 }
 
-                case forgeIds.SUSHISWAP_SIMPLE: 
+                case forgeIds.SUSHISWAP_SIMPLE:
                 case forgeIds.SUSHISWAP_COMPLEX: {
-                    const currentRate: BN = await PendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
+                    const currentRate: BN = await pendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
                     amountRedeemed = rdiv(BN.from(amountToRedeem.rawAmount()), (currentRate));
                     break;
                 }
@@ -119,13 +121,15 @@ export class YieldContract {
                 ),
             }
         }
-        const redeem = async (toRedeem: TokenAmount): Promise<providers.TransactionResponse> => {  
-            return PendleRouterContract.connect(signer).redeemUnderlying(
+        const redeem = async (toRedeem: TokenAmount): Promise<providers.TransactionResponse> => {
+            const args = [
                 this.forgeId,
                 this.underlyingAsset.address,
                 this.expiry,
                 toRedeem.rawAmount()
-            )
+            ];
+            const gasEstimate: BN = await pendleRouterContract.estimateGas.redeemUnderlying(...args);
+            return pendleRouterContract.connect(signer).redeemUnderlying(...args, getGasLimit(gasEstimate))
         }
         return {
             mintDetails,

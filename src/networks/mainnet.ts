@@ -1,5 +1,5 @@
 import { NetworkContractAddresses } from ".";
-import { EXP_2021, EXP_2022, forgeIds } from "../constants";
+import { EXP_2021, EXP_2022, forgeIds, marketFactoryIds } from "../constants";
 
 export const mainnetContracts: NetworkContractAddresses = {
     stakingPools: [
@@ -184,37 +184,43 @@ export const mainnetContracts: NetworkContractAddresses = {
             address: "0xffaf22db1ff7e4983b57ca9632f796f68ededef9",
             rewardTokenAddresses: [
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
-            ]
+            ],
+            forgeId: forgeIds.AAVE
         },
         {
             address: "0xcdb5b940e95c8632decdc806b90dd3fc44e699fe",
             rewardTokenAddresses: [
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
-            ]
+            ],
+            forgeId: forgeIds.AAVE
         },
         {
             address: "0x31654eb46a3a450265c6dfc4fc4fbbfe371e26fe",
             rewardTokenAddresses: [
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
-            ]
+            ],
+            forgeId: forgeIds.COMPOUND
         },
         {
             address: "0xb7defe73528942793649c0a950ec528f66159047",
             rewardTokenAddresses: [
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
-            ]
+            ],
+            forgeId: forgeIds.COMPOUND
         },
         {
             address: "0x311fcb5db45a3a5876975f8108237f20525fa7e0",
             rewardTokenAddresses: [
                 "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
-            ]
+            ],
+            forgeId: forgeIds.SUSHISWAP_COMPLEX
         },
         {
             address: "0x49c8ac20de6409c7e0b8f9867cffd1481d8206c6",
             rewardTokenAddresses: [
                 "0x37922c69b08babcceae735a31235c81f1d1e8e43"
-            ]
+            ],
+            forgeId: forgeIds.SUSHISWAP_SIMPLE
         }
     ],
     OTs: [
@@ -252,7 +258,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: [
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
-            ]
+            ],
+            marketFactoryId: marketFactoryIds.AAVE
         },
         {
             address: '0x8315BcBC2c5C1Ef09B71731ab3827b0808A2D6bD',
@@ -262,7 +269,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: [
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
-            ]
+            ],
+            marketFactoryId: marketFactoryIds.AAVE
         },
         {
             address: '0x944d1727d0b656f497e74044ff589871c330334f',
@@ -272,7 +280,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: [
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
-            ]
+            ],
+            marketFactoryId: marketFactoryIds.COMPOUND
         },
         {
             address: '0xB26C86330FC7F97533051F2F8cD0a90C2E82b5EE',
@@ -282,7 +291,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: [
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
-            ]
+            ],
+            marketFactoryId: marketFactoryIds.COMPOUND
         },
         {
             address: '0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE',
@@ -292,7 +302,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: [
                 "0x37922c69b08babcceae735a31235c81f1d1e8e43"
-            ]
+            ],
+            marketFactoryId: marketFactoryIds.GENERIC
         },
         {
             address: '0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0',
@@ -302,7 +313,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: [
                 "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
-            ]
+            ],
+            marketFactoryId: marketFactoryIds.GENERIC
         },
     ],
     misc: {

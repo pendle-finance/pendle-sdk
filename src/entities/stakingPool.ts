@@ -152,7 +152,7 @@ export class StakingPool {
       const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolAccruingRewards(Lm1s[i], userLm1AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
       });
-      const userLm2AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+      const userLm2AccruingRewardsFormatted = indexRange(0, Lm2s.length).map((i: number) => {
         return populatePoolAccruingRewards(Lm2s[i], userLm2AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
       });
       return userLm1AccruingRewardsFormatted.concat(userLm2AccruingRewardsFormatted);
@@ -179,7 +179,7 @@ export class StakingPool {
       const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolVestedRewards(Lm1s[i], userLm1VestedRewards[i], currentEpochId, decimalsRecord);
       });
-      const userLm2VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+      const userLm2VestedRewardsFormatted = indexRange(0, Lm2s.length).map((i: number) => {
         return populatePoolVestedRewards(Lm2s[i], userLm2VestedRewards[i], currentEpochId, decimalsRecord);
       });
       return userLm1VestedRewardsFormatted.concat(userLm2VestedRewardsFormatted);
