@@ -1,27 +1,39 @@
-import { Sdk, Yt, StakingPool, PendleMarket, dummyAddress } from '../src';
+import { Yt, StakingPool, PendleMarket, dummyAddress } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers } from 'ethers';
-import * as dotenv from 'dotenv';
-dotenv.config();
-jest.setTimeout(30000);
+// import { assert, expect } from 'chai';
+const { waffle } = require('hardhat');
+
+const { provider } = waffle;
+import { evm_revert, evm_snapshot } from './helpers/Evm';
 
 const dummyUser = '0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb'; // Mainnet test account
 
 describe('Sdk', () => {
-  let provider: ethers.providers.JsonRpcProvider;
+  // let provider: ethers.providers.JsonRpcProvider;
   let signer: any;
+  let globalSnapshotId: string, snapshotId: string;
 
-  beforeAll(async () => {
-    const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
+  before(async () => {
+    // const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
 
     // const providerUrl = `http://127.0.0.1:8545`;
-    provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    // provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
+    globalSnapshotId = await evm_snapshot();
+    snapshotId = await evm_snapshot();
   });
 
-  it('fetchPendleMarketData', async () => {
-    const sdk = new Sdk(provider);
-    const market = await sdk.fetchPendleMarketData(
+  after(async () => {
+    await evm_revert(globalSnapshotId);
+  });
+
+  beforeEach(async () => {
+    await evm_revert(snapshotId);
+    snapshotId = await evm_snapshot();
+  });
+
+  it('PendleMarket.find', async () => {
+    const market = await PendleMarket.find(
       '0x944d1727d0b656f497e74044ff589871c330334f'
     );
     console.log(JSON.stringify(market, null, '  '));
@@ -41,7 +53,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('YT.find', async() => {
+  it('YT.find', async() => {
     const xyt: Yt = Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9');
     console.log(JSON.stringify(xyt, null, '  '))
   })

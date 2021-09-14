@@ -101,7 +101,7 @@ export class Market {
 }
 
 export class PendleMarket extends Market {
-  public marketFactoryId: string = "";
+  private marketFactoryId: string = "";
 
   public constructor(marketAddress: string, tokens: Token[]) {
     super(marketAddress, [tokens[0], tokens[1]]);
@@ -161,9 +161,7 @@ export class PendleMarket extends Market {
     const fetchInterests = async (
       userAddress: string,
     ): Promise<YtOrMarketInterest[]> => {
-
       const formattedResult: YtOrMarketInterest[] = [];
-
       const userInterests = await redeemProxyContract.callStatic.redeemMarkets(
         markets.map((marketInfo: any) => marketInfo.address),
         { from: userAddress }

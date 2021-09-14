@@ -10,12 +10,6 @@ export class Sdk {
     this.provider = provider;
   }
 
-  public async fetchPendleMarketData(
-    marketAddress: string
-  ): Promise<PendleMarket> {
-    return await fetchPendleMarketData(this.provider, marketAddress);
-  }
-
   public async fetchTokenBalances(
     // should be  in Token.contract
     tokens: Token[],

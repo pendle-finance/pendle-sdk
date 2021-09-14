@@ -13,20 +13,10 @@
     "node": ">=10"
   },
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint",
-    "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
   "peerDependencies": {},
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
-  },
   "prettier": {
     "printWidth": 80,
     "semi": true,
@@ -48,16 +38,24 @@
     "@size-limit/preset-small-lib": "^5.0.3",
     "husky": "^7.0.1",
     "size-limit": "^5.0.3",
-    "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
     "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-truffle5": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@pendle/core": "1.1.1",
+    "@types/mocha": "^9.0.0",
     "bignumber.js": "^9.0.1",
+    "chai": "^4.3.4",
     "dotenv": "^10.0.0",
+    "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.6",
+    "hardhat": "^2.6.4",
     "js-big-decimal": "^1.3.4",
+    "mocha": "^9.1.1",
     "ts-node": "^10.2.1"
   }
 }
