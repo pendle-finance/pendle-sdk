@@ -1,5 +1,5 @@
 import BigNumberjs from 'bignumber.js';
-import { decimalFactor, distributeConstantsByNetwork, isSameAddress } from '../helpers';
+import { decimalFactor, distributeConstantsByNetwork, getDecimal, isSameAddress } from '../helpers';
 import { providers, Contract } from 'ethers';
 import { NetworkInfo, YTINFO } from '../networks';
 import { contracts } from '../contracts';
@@ -41,7 +41,7 @@ export class Yt extends Token {
   }
 
   public static methods(
-    provider: providers.JsonRpcSigner,
+    signer: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
 
@@ -49,7 +49,7 @@ export class Yt extends Token {
     const redeemProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleRedeemProxy,
       contracts.PendleRedeemProxy.abi,
-      provider.provider
+      signer.provider
     );
 
     const YTs: YTINFO[] = networkInfo.contractAddresses.YTs;
@@ -70,7 +70,7 @@ export class Yt extends Token {
         formattedResult.push({
           address: YTInfo.address,
           interest: new TokenAmount(
-            new Token(YTInfo.rewardTokenAddresses[0], decimalsRecord[YTInfo.rewardTokenAddresses[0]]),
+            new Token(YTInfo.rewardTokenAddresses[0], await getDecimal(decimalsRecord, YTInfo.rewardTokenAddresses[0], signer.provider)),
             userInterests[i].toString()
           ),
         });

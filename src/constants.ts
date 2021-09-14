@@ -1,6 +1,5 @@
 import { BigNumber as BN, utils } from 'ethers';
-import fs from 'fs';
-import path from 'path';
+const mainnetDecimals = require('./decimals/mainnet.json')
 
 export type CurrencyAmount = {
   currency: string,
@@ -38,9 +37,6 @@ export const EXP_2021 = BN.from("1640822400");
 export const LMStartTime = BN.from("1623888000");
 export const LMEpochDuration = BN.from("604800");
 export const VestingEpoches = 5;
-
-const filePath = path.resolve(__dirname, `./decimals/mainnet.json`);
-const mainnetDecimals: Record<string, number> = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
 export const decimalsRecords: Record<string, Record<string, number>> = {
   mainnet: mainnetDecimals

@@ -4,9 +4,6 @@ import { LMINFO, mainnetContracts, NetworkInfo } from './networks'
 import { decimalsRecords, forgeIds, gasBuffer } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
-import path from 'path';
-import fs from 'fs';
-
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)
@@ -145,7 +142,7 @@ export const getCurrentEpochId = (currentTime: number | BN, startTime: number | 
   return BN.from(currentTime).sub(startTime).div(epochDuration).add(1).toNumber();
 }
 
-export const getDecimal = async (chainId: number | undefined, decimalsRecord: Record<string, number>, address: string, provider?: JsonRpcProvider): Promise<number> => {
+export const getDecimal = async (decimalsRecord: Record<string, number>, address: string, provider?: JsonRpcProvider): Promise<number> => {
   address = address.toLowerCase();
   if (decimalsRecord[address] === undefined) {
     if (provider === undefined) {
@@ -154,13 +151,6 @@ export const getDecimal = async (chainId: number | undefined, decimalsRecord: Re
     const tokenContract = new Contract(address, contracts.IERC20.abi, provider!);
     const d: BN = await tokenContract.decimals();
     decimalsRecord[address] = d.toNumber();
-    var filePath: string = "";
-    if (chainId == 1 || chainId === undefined) {
-      filePath = path.resolve(__dirname, `./decimals/mainnet.json`);
-    } else {
-      throw Error("Unsupported network")
-    }
-    fs.writeFileSync(filePath, JSON.stringify(decimalsRecord, null, '  '), 'utf8');
   }
   return decimalsRecord[address];
 }

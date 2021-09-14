@@ -129,7 +129,7 @@ export class PendleMarket extends Market {
 
   public yieldContract(chainId?: number): YieldContract {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const ytInfo: YTINFO []= networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => yt.address == this.tokens[0].address);
+    const ytInfo: YTINFO []= networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => isSameAddress(yt.address, this.tokens[0].address));
     if (ytInfo.length === 0) {
       throw Error(`YT with address ${this.tokens[0].address} not found on this network`);
     }
@@ -173,7 +173,7 @@ export class PendleMarket extends Market {
         formattedResult.push({
           address: marketInfo.address,
           interest: new TokenAmount(
-            new Token(marketInfo.rewardTokenAddresses[0], await getDecimal(chainId, decimalsRecord, marketInfo.rewardTokenAddresses[0], signer.provider)),
+            new Token(marketInfo.rewardTokenAddresses[0], await getDecimal(decimalsRecord, marketInfo.rewardTokenAddresses[0], signer.provider)),
             userInterests[i].toString()
           ),
         });

@@ -1,6 +1,6 @@
-import { dummyToken, dummyTokenAmount, EXP_2022, PendleMarket, Token, TokenAmount } from '../src';
+import { dummyToken, dummyTokenAmount, EXP_2022, PendleMarket, Token, TokenAmount, YieldContract } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers, BigNumber as BN } from 'ethers';
+import { ethers, BigNumber as BN, utils } from 'ethers';
 import * as dotenv from 'dotenv';
 dotenv.config();
 jest.setTimeout(30000);
@@ -46,7 +46,7 @@ describe("Market", () => {
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
         console.log(signer);
-        market = markets.ETHUSDCMarket;
+        market = markets.PendleEthMarket;
     });
 
     it("PendleMarket.readMarketDetails", async () => {
@@ -54,7 +54,12 @@ describe("Market", () => {
         console.log(marketDetails);
     })
 
-    it.only('PendleMarket.swapExactInDetails', async () => {
+    it.only('PendleMarket.yieldContract', async() => {
+        const yieldContract: YieldContract = market.yieldContract();
+        console.log(JSON.stringify(utils.toUtf8String(yieldContract.forgeId), null, '  '));
+    })
+
+    it('PendleMarket.swapExactInDetails', async () => {
         const swapExactInDetails = await market.methods(signer).swapExactInDetails(new TokenAmount(
             market.tokens[1],
             BN.from(10).pow(12).toString()
@@ -63,7 +68,7 @@ describe("Market", () => {
         console.log(swapExactInDetails);
     })
 
-    it.only('PendleMarket.swapExactOutDetails', async () => {
+    it('PendleMarket.swapExactOutDetails', async () => {
         const swapExactOutDetails = await market.methods(signer).swapExactOutDetails(new TokenAmount(
             market.tokens[1],
             BN.from(10).pow(12).toString()
@@ -118,7 +123,7 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it.only('PendleMarket.removeSingleDetails', async () => {
+    it('PendleMarket.removeSingleDetails', async () => {
         const response = await market.methods(signer).removeSingleDetails(0.05, tokens.USDCToken, 0.001);
         console.log(JSON.stringify(response, null, '  '));
     })
