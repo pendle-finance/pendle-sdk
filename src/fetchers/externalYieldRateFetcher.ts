@@ -1,13 +1,15 @@
 import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
-import fetch from 'node-fetch';
+const axios = require('axios');
 
 export const fetchAaveYield = async (underlyingAddress: string) => {
   const url =
     'https://aave-api-v2.aave.com/data/markets-data/0xb53c1a33016b2dc2ff3653530bff1848a515c8c5'
 
-  const yieldInPercentage = await fetch(url)
-    .then((res: any) => res.json())
+  const yieldInPercentage = await axios.get(url)
+    .then((res: any) => {
+      return res.data;
+    })
     .then((data: any) => {
       const underlyingData = data.reserves.find(
         (data: any) => data.underlyingAsset.toLowerCase() === underlyingAddress
@@ -23,8 +25,8 @@ export const fetchAaveYield = async (underlyingAddress: string) => {
 
 export const fetchCompoundYield = async (yieldBearingAddress: string) => {
   const url = 'https://api.compound.finance/api/v2/ctoken'
-  const yieldInPercentage = await fetch(url)
-    .then((res: any) => res.json())
+  const yieldInPercentage = await axios.get(url)
+    .then((res: any) => res.data)
     .then((data: any) => {
       const underlyingData = data.cToken.find(
         (data: any) => data.token_address.toLowerCase() === yieldBearingAddress
