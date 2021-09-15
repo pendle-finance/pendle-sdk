@@ -1,9 +1,11 @@
-import { providers, Contract } from 'ethers';
+import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork } from '../helpers'
-import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
-import { Token, TokenAmount } from '../entities'
-import { NetworkInfo, LMINFO } from '../networks';
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress } from '../helpers'
+import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches } from '../constants';
+import { contracts } from '../contracts';
+import { Token } from './token';
+import { TokenAmount } from './tokenAmount';
+import { NetworkInfo, LMINFO, StakingPoolType } from '../networks';
 
 export interface StakingPoolId {
   address: string;
@@ -28,11 +30,70 @@ export type PoolYields = {
   yields: YieldInfo[];
 };
 
+export const populatePoolYields = (LmInfo: LMINFO, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolYields => {
+  const yields: YieldInfo[] = [
+    {
+      yield: new TokenAmount(
+        new Token(
+          LmInfo.rewardTokenAddresses[0],
+          decimalsRecord[LmInfo.rewardTokenAddresses[0]]
+        ),
+        rewardAmount
+      ),
+      yieldType: YieldType.REWARDS
+    }
+  ];
+  if (LmInfo.interestTokensAddresses.length > 0) {
+    yields.push({
+      yield: new TokenAmount(
+        new Token(
+          LmInfo.interestTokensAddresses[0],
+          decimalsRecord[LmInfo.interestTokensAddresses[0]]
+        ),
+        interestAmount
+      ),
+      yieldType: YieldType.INTEREST
+    })
+  }
+  return {
+    address: LmInfo.address,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
+    yields: yields
+  }
+}
+
 export type PoolAccruingRewards = {
   address: string;
   inputToken: Token;
   accruingRewards: FutureEpochRewards[];
 };
+
+export const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
+  return {
+    address: LmInfo.address,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
+    accruingRewards: indexRange(0, vestingEpoches).map((i: number): FutureEpochRewards => {
+      return {
+        epochId: i + currentEpochId,
+        rewards: [
+          new TokenAmount(
+            new Token(
+              LmInfo.rewardTokenAddresses[0],
+              decimalsRecord[LmInfo.rewardTokenAddresses[0]],
+            ),
+            tentativeReward.div(vestingEpoches).toString()
+          )
+        ]
+      }
+    })
+  }
+}
 
 export type PoolVestedRewards = {
   address: string;
@@ -40,16 +101,37 @@ export type PoolVestedRewards = {
   vestedRewards: FutureEpochRewards[];
 };
 
+export const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
+  return {
+    address: LmInfo.address,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
+    vestedRewards: indexRange(0, vestedRewards.length).map((i: number): FutureEpochRewards => {
+      return {
+        epochId: i + currentEpochId,
+        rewards: [
+          new TokenAmount(
+            new Token(
+              LmInfo.rewardTokenAddresses[0],
+              decimalsRecord[LmInfo.rewardTokenAddresses[0]],
+            ),
+            vestedRewards[i].toString()
+          )
+        ]
+      }
+    })
+  }
+}
+
+
 export type FutureEpochRewards = {
   epochId: number;
   rewards: TokenAmount[];
 };
 
-export enum StakingPoolType {
-  LmV1 = 'PendleLiquidityMining',
-  LmV2 = 'PendleLiquidityMiningV2',
-  PendleSingleSided = 'PendleSingleStaking',
-}
+const STAKINGPOOL_NOT_EXIST = new Error("No Staking pool is found at the given address and input token.")
 
 export class StakingPool {
   public readonly address: string;
@@ -71,6 +153,36 @@ export class StakingPool {
     this.interestTokens = interestTokens;
     this.contractType = contractType;
   }
+  
+  public static find(address: string, inputTokenAddress: string, chainId?: number): StakingPool {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const lmInfo: LMINFO | undefined = networkInfo.contractAddresses.stakingPools.find((s: LMINFO) => {
+      return isSameAddress(s.address, address) && isSameAddress(s.inputTokenAddress, inputTokenAddress);
+    })
+    if (lmInfo === undefined) {
+      throw STAKINGPOOL_NOT_EXIST;
+    }
+    return new StakingPool(
+      address.toLowerCase(),
+      new Token(
+        inputTokenAddress.toLowerCase(),
+        networkInfo.decimalsRecord[inputTokenAddress.toLowerCase()]
+      ),
+      lmInfo.rewardTokenAddresses.map((s: string) => {
+        return new Token(
+          s.toLowerCase(),
+          networkInfo.decimalsRecord[s.toLowerCase()]
+        )
+      }),
+      lmInfo.interestTokensAddresses.map((s: string) => {
+        return new Token(
+          s.toLowerCase(),
+          networkInfo.decimalsRecord[s.toLowerCase()]
+        )
+      }),
+      lmInfo.contractType 
+    )
+}
 
   public static methods(provider: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
 
@@ -92,10 +204,10 @@ export class StakingPool {
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
-      return stakingPoolInfo.contractType == "PendleLiquidityMining";
+      return stakingPoolInfo.contractType == StakingPoolType.LmV1;
     })
     const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
-      return stakingPoolInfo.contractType == "PendleLiquidityMiningV2";
+      return stakingPoolInfo.contractType == StakingPoolType.LmV2;
     })
 
     const fetchClaimableYields = async (
@@ -152,7 +264,7 @@ export class StakingPool {
       const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolAccruingRewards(Lm1s[i], userLm1AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
       });
-      const userLm2AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+      const userLm2AccruingRewardsFormatted = indexRange(0, Lm2s.length).map((i: number) => {
         return populatePoolAccruingRewards(Lm2s[i], userLm2AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
       });
       return userLm1AccruingRewardsFormatted.concat(userLm2AccruingRewardsFormatted);
@@ -179,7 +291,7 @@ export class StakingPool {
       const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolVestedRewards(Lm1s[i], userLm1VestedRewards[i], currentEpochId, decimalsRecord);
       });
-      const userLm2VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
+      const userLm2VestedRewardsFormatted = indexRange(0, Lm2s.length).map((i: number) => {
         return populatePoolVestedRewards(Lm2s[i], userLm2VestedRewards[i], currentEpochId, decimalsRecord);
       });
       return userLm1VestedRewardsFormatted.concat(userLm2VestedRewardsFormatted);

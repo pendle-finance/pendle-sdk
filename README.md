@@ -10,6 +10,7 @@ YtOrMarketInterest: {
   interest: TokenAmount;
 };
 
+Yt.find(address, chainId?) => Yt
 Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
 
@@ -17,6 +18,7 @@ Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarke
 
 ### Static Methods:
 ```
+PendleMarket.find(address, chainId?) => PendleMarket
 PendleMarket.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
 
@@ -27,6 +29,11 @@ CurrencyAmount = {
   amount: string
 }
 
+TokenReserveDetails = {
+  reserves: TokenAmount
+  weights: string
+}
+
 MarketDetails = {
   tokenReserves: TokenReserveDetails[],
   otherDetails: { 
@@ -35,14 +42,16 @@ MarketDetails = {
     liquidity: CurrencyAmount,
     liquidity24HChange: string,
     swapFeeApr: string,
-    impliedYield: string
+    impliedYield: string,
+    underlyingYieldRate: number
   }
 }
 
 SwapDetails = {
   inAmount: TokenAmount,
   outAmount: TokenAmount,
-  minReceived: TokenAmount,
+  minReceived?: TokenAmount,
+  maxInput?: TokenAmount
   priceImpact: string,
   swapFee: TokenAmount
 }
@@ -70,19 +79,19 @@ RemoveSingleLiquidityDetails = {
 
 pendleMarket.methods(JsonRpcSigner, chainId?).readMarketDetails() => Promise<MarketDetails>
 
-pendleMarket.methods(JsonRpcSigner, chainId?).swapExactInDetails(slippage: number, inAmount: TokenAmount) => Promise<SwapDetails>
-pendleMarket.methods(JsonRpcSigner, chainId?).swapExactOutDetails(slippage: number, outAmount: TokenAmount) => Promise<SwapDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactInDetails(inAmount: TokenAmount, slippage: number) => Promise<SwapDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactOutDetails(outAmount: TokenAmount, slippage: number) => Promise<SwapDetails>
 
-pendleMarket.methods(JsonRpcSigner, chainId?).swapExactIn(slippage: number, inAmount: TokenAmount) => Promise<TransactionResponse>
-pendleMarket.methods(JsonRpcSigner, chainId?).swapExactOut(slippage: number, outAmount: TokenAmount) => Promise<TransactionResponse>
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactIn(inAmount: TokenAmount, slippage: number) => Promise<TransactionResponse>
+pendleMarket.methods(JsonRpcSigner, chainId?).swapExactOut(outAmount: TokenAmount, slippage: number) => Promise<TransactionResponse>
 
-pendleMarket.methods(JsonRpcSigner, chainId?).addDualDetails(tokenAmount: TokenAmount) => Promise<AddDualLiquidityDetails>
-pendleMarket.methods(JsonRpcSigner, chainId?).addDual(tokenAmounts: TokenAmount[], slippage: number | string) => Promise<TransactionResponse>
+pendleMarket.methods(JsonRpcSigner, chainId?).addDualDetails(tokenAmount: TokenAmount, slippage: number) => Promise<AddDualLiquidityDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).addDual(tokenAmounts: TokenAmount[], slippage: number) => Promise<TransactionResponse> // tokenAmounts is assumed be xyt amount followed by baseToken amount
 
 pendleMarket.methods(JsonRpcSigner, chainId?).addSingleDetails(tokenAmount: TokenAmount) => Promise<AddSingleLiquidityDetails>
-pendleMarket.methods(JsonRpcSigner, chainId?).addSingle(tokenAmount: TokenAmount, slippage: number | string) => Promise<TransactionResponse>
+pendleMarket.methods(JsonRpcSigner, chainId?).addSingle(tokenAmount: TokenAmount, slippage: number) => Promise<TransactionResponse>
 
-pendleMarket.methods(JsonRpcSigner, chainId?).removeDualDetails(percentage: number) => Promise<RemoveDualLiquidityDetails>
+pendleMarket.methods(JsonRpcSigner, chainId?).removeDualDetails(percentage: number, slippage: number) => Promise<RemoveDualLiquidityDetails>
 pendleMarket.methods(JsonRpcSigner, chainId?).removeDual(percentage: number, slippage: number) => Promise<TransactionResponse>
 
 pendleMarket.methods(JsonRpcSigner, chainId?).removeSingleDetails(percentage: number, outToken: Token, slippage: number) => Promise<RemoveSingleLiquidityDetails>
@@ -129,6 +138,7 @@ PoolVestedRewards = {
   vestedRewards: FutureEpochRewards[];
 };
 
+StakingPool.find(adddress, inputTokenAddress, chainId?) => StakingPool
 StakingPool.methods(JsonRpcSigner, chainId?).fetchClaimableYields(address) => Promise<PoolYields[]>
 StakingPool.methods(JsonRpcSigner, chainId?).fetchAccruingRewards(address) => Promise<PoolAccruingRewards[]>
 StakingPool.methods(JsonRpcSigner, chainId?).fetchVestedRewards(address) => Promise<PoolVestedRewards[]>

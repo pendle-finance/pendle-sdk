@@ -1,6 +1,6 @@
-import { dummyTokenAmount, EXP_2022, Token, TokenAmount, YieldContract, forgeIds, contracts } from '../src';
+import { dummyTokenAmount, EXP_2022, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers, BigNumber as BN, Contract } from 'ethers';
+import { ethers, BigNumber as BN, Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
 import { mainnetContracts } from '../src/networks';
 dotenv.config();
@@ -58,7 +58,7 @@ describe("Yiled Contract", () => {
     signer = provider.getSigner();
     console.log(signer);
     yContract = new YieldContract(
-      forgeIds.COMPOUND,
+      utils.parseBytes32String(forgeIdsInBytes.COMPOUND),
       Tokens.DAIToken,
       EXP_2022.toNumber()
     );
@@ -66,13 +66,13 @@ describe("Yiled Contract", () => {
 
   it('yieldContract.mintDetails', async () => {
     const response = await yContract.methods(signer).mintDetails(new TokenAmount(
-      Tokens.PENDLEETHSLPToken,
-      BN.from(10).pow(15).toString()
+      Tokens.cDAIToken,
+      BN.from(10).pow(12).toString()
     ));
     console.log(response);
   })
 
-  it.only('yieldContract.mint', async () => {
+  it.skip('yieldContract.mint', async () => {
     const cDAIContract = new Contract(Tokens.cDAIToken.address, contracts.IERC20.abi, provider);
     await cDAIContract.connect(signer).approve(mainnetContracts.misc.PendleRouter, BN.from(10).pow(40));
     const response = await yContract.methods(signer).mint(new TokenAmount(
@@ -85,12 +85,12 @@ describe("Yiled Contract", () => {
   it('yieldContract.redeemDetails', async () => {
     const response = await yContract.methods(signer).redeemDetails(new TokenAmount(
       Tokens.OTcDAIToken,
-      BN.from(10).pow(15).toString()
+      BN.from(10).pow(12).toString()
     ), dummyUser);
     console.log(response);
   })
 
-  it('yieldContract.redeem', async () => {
+  it.skip('yieldContract.redeem', async () => {
     const response = await yContract.methods(signer).redeem(dummyTokenAmount);
     console.log(response);
   })
