@@ -31,9 +31,10 @@ const ETHUSDCYTToken = new Token(
 const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDCYTToken }
 const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
 const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
+const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
 
 
-const markets = { PendleEthMarket, ETHUSDCMarket };
+const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market };
 describe("Market", () => {
     let provider: ethers.providers.JsonRpcProvider;
     let signer: any;
@@ -45,16 +46,15 @@ describe("Market", () => {
         const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        console.log(signer);
-        market = markets.PendleEthMarket;
+        market = markets.aUSDC2022Market;
     });
 
-    it("PendleMarket.readMarketDetails", async () => {
+    it.only("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods(signer).readMarketDetails();
         console.log(marketDetails);
     })
 
-    it.only('PendleMarket.yieldContract', async() => {
+    it('PendleMarket.yieldContract', async() => {
         const yieldContract: YieldContract = market.yieldContract();
         console.log(JSON.stringify(utils.toUtf8String(yieldContract.forgeId), null, '  '));
     })
@@ -77,25 +77,25 @@ describe("Market", () => {
         console.log(swapExactOutDetails);
     })
 
-    it('PendleMarket.swapExactIn', async () => {
+    it.skip('PendleMarket.swapExactIn', async () => {
         const response = await market.methods(signer).swapExactIn(0.01, dummyTokenAmount);
         console.log(response);
     })
 
-    it('PendleMarket.swapExactOut', async () => {
+    it.skip('PendleMarket.swapExactOut', async () => {
         const response = await market.methods(signer).swapExactOut(0.01, dummyTokenAmount);
         console.log(response);
     });
 
     it('PendleMarket.addDualDetails', async () => {
         const response = await market.methods(signer).addDualDetails(new TokenAmount(
-            tokens.PENDLEToken,
-            BN.from(10).pow(22).toString()
+            tokens.USDCToken,
+            BN.from(10).pow(11).toString()
         ));
         console.log(response);
     })
 
-    it('PendleMarket.addDual', async () => {
+    it.skip('PendleMarket.addDual', async () => {
         const response = await market.methods(signer).addDual([dummyTokenAmount, dummyTokenAmount], 0.001);
         console.log(response);
     })
@@ -108,7 +108,7 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it('PendleMarket.addSingle', async () => {
+    it.skip('PendleMarket.addSingle', async () => {
         const response = await market.methods(signer).addSingle(dummyTokenAmount, 0.001);
         console.log(response);
     })
@@ -118,7 +118,7 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it('PendleMarket.removeDual', async () => {
+    it.skip('PendleMarket.removeDual', async () => {
         const response = await market.methods(signer).removeDual(0.5, 0.001);
         console.log(response);
     })
@@ -128,7 +128,7 @@ describe("Market", () => {
         console.log(JSON.stringify(response, null, '  '));
     })
 
-    it('PendleMarket.removeSingle', async () => {
+    it.skip('PendleMarket.removeSingle', async () => {
         const response = await market.methods(signer).removeSingle(0.5, dummyToken, 0.001);
         console.log(response);
     })

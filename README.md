@@ -43,7 +43,7 @@ MarketDetails = {
     liquidity24HChange: string,
     swapFeeApr: string,
     impliedYield: string,
-    yieldRate: string
+    underlyingYieldRate: number
   }
 }
 

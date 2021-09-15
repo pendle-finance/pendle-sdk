@@ -1,14 +1,17 @@
-import { TokenAmount, Token } from './token';
-import { Contract, providers, BigNumber as BN } from 'ethers';
+import { Token } from './token';
+import { TokenAmount } from './tokenAmount';
+import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
-import { YtOrMarketInterest } from './token';
+import { YtOrMarketInterest } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
 import { distributeConstantsByNetwork, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
-import { dummyCurrencyAmount, CurrencyAmount } from '..';
+import { dummyCurrencyAmount, CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import { calAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
 import bigDecimal from 'js-big-decimal';
-
+import { forgeIdsInBytes } from '../constants';
+import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
+import { Yt } from './yt';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -23,7 +26,8 @@ export type MarketDetails = {
     liquidity: CurrencyAmount,
     liquidity24HChange: string,
     swapFeeApr: string,
-    impliedYield: string
+    impliedYield: string,
+    underlyingYieldRate: number
   }
 }
 
@@ -129,14 +133,14 @@ export class PendleMarket extends Market {
 
   public yieldContract(chainId?: number): YieldContract {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const ytInfo: YTINFO []= networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => isSameAddress(yt.address, this.tokens[0].address));
+    const ytInfo: YTINFO[] = networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => isSameAddress(yt.address, this.tokens[0].address));
     if (ytInfo.length === 0) {
       throw Error(`YT with address ${this.tokens[0].address} not found on this network`);
     }
     return new YieldContract(
-      ytInfo[0].forgeId,
+      utils.parseBytes32String(ytInfo[0].forgeIdInBytes),
       new Token(
-        ytInfo[0].rewardTokenAddresses[0],
+        ytInfo[0].underlyingAssetAddress,
         networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
       ),
       this.tokens[0].expiry!
@@ -217,6 +221,29 @@ export class PendleMarket extends Market {
         ),
         weights: marketReserves.tokenWeight.toString()
       }
+
+      var underlyingYieldRate: number = 0;
+      if (chainId !== undefined && chainId !== 1) {
+        underlyingYieldRate = 0;
+      } else {
+        const yieldContract: YieldContract = this.yieldContract();
+        const yieldBearingAddress: string = Yt.find(this.tokens[0].address).yieldBearingAddress;
+        switch (yieldContract.forgeIdInBytes) {
+          case forgeIdsInBytes.AAVE:
+            underlyingYieldRate = await fetchAaveYield(yieldContract.underlyingAsset.address);
+            break;
+
+          case forgeIdsInBytes.COMPOUND:
+            underlyingYieldRate = await fetchCompoundYield(yieldBearingAddress);
+            break;
+
+          case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+          case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+            underlyingYieldRate = await fetchSushiYield(yieldBearingAddress);
+            break;
+        }
+      }
+
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],
         otherDetails: {
@@ -225,7 +252,8 @@ export class PendleMarket extends Market {
           liquidity: dummyCurrencyAmount,
           liquidity24HChange: "0.5",
           swapFeeApr: "0.5",
-          impliedYield: "0.5"
+          impliedYield: "0.5",
+          underlyingYieldRate
         }
       };
     };

@@ -1,19 +1,8 @@
 import { BigNumber as BN, utils } from 'ethers';
-const mainnetDecimals = require('./decimals/mainnet.json')
-
-export type CurrencyAmount = {
-  currency: string,
-  amount: string
-}
+import { mainnetDecimals } from './decimals';
 
 export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
-
-export const dummyCurrencyAmount: CurrencyAmount = {
-  currency: "USD",
-  amount: "10000"
-}
-
-export const forgeIds = {
+export const forgeIdsInBytes = {
   COMPOUND: utils.formatBytes32String('CompoundV2'),
   COMPOUND_UPGRADED: utils.formatBytes32String('CompoundV2Upgraded'),
   AAVE: utils.formatBytes32String('AaveV2'),
