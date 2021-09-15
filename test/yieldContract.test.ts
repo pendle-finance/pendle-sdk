@@ -1,6 +1,6 @@
 import { dummyTokenAmount, EXP_2022, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers, BigNumber as BN, Contract } from 'ethers';
+import { ethers, BigNumber as BN, Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
 import { mainnetContracts } from '../src/networks';
 dotenv.config();
@@ -58,7 +58,7 @@ describe("Yiled Contract", () => {
     signer = provider.getSigner();
     console.log(signer);
     yContract = new YieldContract(
-      forgeIdsInBytes.COMPOUND,
+      utils.parseBytes32String(forgeIdsInBytes.COMPOUND),
       Tokens.DAIToken,
       EXP_2022.toNumber()
     );

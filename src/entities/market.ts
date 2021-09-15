@@ -2,21 +2,25 @@ import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
-import { YtOrMarketInterest } from './yt';
+import { YtOrMarketInterest, Yt } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
 import { distributeConstantsByNetwork, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
 import { dummyCurrencyAmount, CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
-import { calAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
-import bigDecimal from 'js-big-decimal';
+import {
+  Transaction as SubgraphTransactions,
+  PendleAmmQuery,
+} from './transactions';
+import { calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
 import { forgeIdsInBytes } from '../constants';
 import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
-import { Yt } from './yt';
+
+import bigDecimal from 'js-big-decimal';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
   weights: string
-}
+};
 
 export type MarketDetails = {
   tokenReserves: TokenReserveDetails[],
@@ -41,25 +45,25 @@ export type SwapDetails = {
 }
 
 export type AddDualLiquidityDetails = {
-  otherTokenAmount: TokenAmount
-  shareOfPool: string
-}
+  otherTokenAmount: TokenAmount;
+  shareOfPool: string;
+};
 
 export type AddSingleLiquidityDetails = {
-  shareOfPool: string
-  priceImpact: string
-  swapFee: TokenAmount
-}
+  shareOfPool: string;
+  priceImpact: string;
+  swapFee: TokenAmount;
+};
 
 export type RemoveDualLiquidityDetails = {
-  tokenAmounts: TokenAmount[],
+  tokenAmounts: TokenAmount[];
 }
 
 export type RemoveSingleLiquidityDetails = {
-  outAmount: TokenAmount
-  priceImpact?: string
-  swapFee?: TokenAmount
-}
+  outAmount: TokenAmount;
+  priceImpact?: string;
+  swapFee?: TokenAmount;
+};
 
 type MarketReservesRaw = {
   xytBalance: BN,
@@ -72,8 +76,9 @@ type MarketReservesRaw = {
 const SlippageMaxDecimals: number = 6;
 const SlippageRONE: BN = BN.from(10).pow(SlippageMaxDecimals);
 
-const WRONG_TOKEN: Error = new Error("Input Token not part of this market");
-const MARKET_NOT_EXIST: Error = new Error("No Market is found at the given address");
+const WRONG_TOKEN: string = "Input Token not part of this market";
+const MARKET_NOT_EXIST: string = "No Market is found at the given address";
+const ZERO_AMOUNT: string = "Zero redeem amount";
 
 type TokenDetailsRelative = {
   inReserve: BN,
@@ -101,7 +106,6 @@ export class Market {
     // TODO
     return '1';
   }
-
 }
 
 export class PendleMarket extends Market {
@@ -118,7 +122,7 @@ export class PendleMarket extends Market {
       return isSameAddress(m.address, address);
     })
     if (marketInfo === undefined) {
-      throw MARKET_NOT_EXIST;
+      throw new Error(MARKET_NOT_EXIST);
     }
     return new PendleMarket(
       address,
@@ -146,11 +150,11 @@ export class PendleMarket extends Market {
       this.tokens[0].expiry!
     )
   }
+
   public static methods(
     signer: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
-
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const markets: MARKETNFO[] = networkInfo.contractAddresses.markets;
 
@@ -163,9 +167,8 @@ export class PendleMarket extends Market {
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const fetchInterests = async (
-      userAddress: string,
+      userAddress: string
     ): Promise<YtOrMarketInterest[]> => {
-
       const formattedResult: YtOrMarketInterest[] = [];
 
       const userInterests = await redeemProxyContract.callStatic.redeemMarkets(
@@ -184,10 +187,23 @@ export class PendleMarket extends Market {
       }
       return formattedResult;
     };
+    const getSwapTransactions = (query: PendleAmmQuery) => {
+      return new SubgraphTransactions(networkInfo.chainId).getSwapTransactions(
+        query
+      );
+    };
+
+    const getLiquidityTransactions = (query: PendleAmmQuery) => {
+      return new SubgraphTransactions(
+        networkInfo.chainId
+      ).getLiquidityTransactions(query);
+    };
     return {
-      fetchInterests
+      fetchInterests,
+      getSwapTransactions,
+      getLiquidityTransactions
     }
-  };
+  }
 
   public methods(signer: providers.JsonRpcSigner,
     chainId?: number): Record<string, any> {
@@ -248,8 +264,8 @@ export class PendleMarket extends Market {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],
         otherDetails: {
           dailyVolume: dummyCurrencyAmount,
-          volume24hChange: "0.5",
-          liquidity: dummyCurrencyAmount,
+          volume24hChange: '0.5',
+          liquidity: dummyCurrencyAmount,          
           liquidity24HChange: "0.5",
           swapFeeApr: "0.5",
           impliedYield: "0.5",
@@ -273,7 +289,7 @@ export class PendleMarket extends Market {
         swapFee
       );
       const minReceived: BN = outAmount.mul(SlippageRONE.sub(slippage)).div(SlippageRONE);
-      const avgRate: BN = calAvgRate(inAmount, outAmount, inTokenAmount.token.decimals);
+      const avgRate: BN = calcAvgRate(inAmount, outAmount, inTokenAmount.token.decimals);
       const currentRateWithSwapFee: BN = calcRateWithSwapFee(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -316,7 +332,7 @@ export class PendleMarket extends Market {
         swapFee
       );
       const maxInput: BN = inAmount.mul(SlippageRONE.add(slippage)).div(SlippageRONE);
-      const avgRate: BN = calAvgRate(inAmount, outAmount, tokenDetailsRelative.inToken.decimals);
+      const avgRate: BN = calcAvgRate(inAmount, outAmount, tokenDetailsRelative.inToken.decimals);
       const currentRateWithSwapFee: BN = calcRateWithSwapFee(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -419,7 +435,7 @@ export class PendleMarket extends Market {
         totalSupplyLp
       );
       console.log(details);
-      const avgRate: BN = calAvgRate(details.inAmountSwapped, details.outAmountSwapped, tokenAmount.token.decimals);
+      const avgRate: BN = calcAvgRate(details.inAmountSwapped, details.outAmountSwapped, tokenAmount.token.decimals);
       const currentRate: BN = calcRate(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -480,6 +496,9 @@ export class PendleMarket extends Market {
 
     const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
       const redeemAmount: BN = await getLpAmountByFraction(percentage);
+      if (redeemAmount.eq(0)) {
+        throw new Error(ZERO_AMOUNT);
+      }
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const xytRedeemAmout: BN = marketReserves.xytBalance.mul(redeemAmount).div(totalSupplyLp);
@@ -517,6 +536,9 @@ export class PendleMarket extends Market {
 
     const removeSingleDetails = async (percentage: number, outToken: Token, _: number): Promise<RemoveSingleLiquidityDetails> => {
       const redeemAmount: BN = await getLpAmountByFraction(percentage);
+      if (redeemAmount.eq(0)) {
+        throw new Error(ZERO_AMOUNT);
+      }
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const tokenDetailsRelative = this.getTokenDetailsRelative(outToken, marketReserves, false);
@@ -530,7 +552,7 @@ export class PendleMarket extends Market {
         redeemAmount,
         swapFee
       )
-      const avgRate: BN = calAvgRate(details.inAmountSwapped, details.outAmountSwapped, tokenDetailsRelative.inToken.decimals);
+      const avgRate: BN = calcAvgRate(details.inAmountSwapped, details.outAmountSwapped, tokenDetailsRelative.inToken.decimals);
       const currentRate: BN = calcRate(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -583,14 +605,14 @@ export class PendleMarket extends Market {
       removeDual,
       removeSingleDetails,
       removeSingle,
-    }
+    };
   }
 
   private getTokenDetailsRelative(token: Token, marketReserves: MarketReservesRaw, isInToken: boolean): TokenDetailsRelative {
     var inReserve: BN, inWeight: BN, outReserve: BN, outWeight: BN, inToken: Token, outToken: Token;
     const tokenAddress = token.address.toLowerCase();
     if (tokenAddress != this.tokens[0].address && tokenAddress != this.tokens[1].address) {
-      throw WRONG_TOKEN;
+      throw new Error(WRONG_TOKEN);
     }
     if (xor(isSameAddress(tokenAddress, this.tokens[0].address), isInToken)) {
       inReserve = marketReserves.tokenBalance;

@@ -6,11 +6,14 @@ import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
 import { rmul, rdiv } from "../math/mathLib";
-
+import {
+    Transaction as SubgraphTransactions,
+    ForgeQuery,
+} from './transactions';
 export type RedeemDetails = {
-    redeemableAmount: TokenAmount
-    interestAmount: TokenAmount
-}
+    redeemableAmount: TokenAmount;
+    interestAmount: TokenAmount;
+};
 
 export class YieldContract {
     public readonly forgeIdInBytes: string;
@@ -25,8 +28,10 @@ export class YieldContract {
         this.forgeId = _forgeId
     }
 
-    public methods(signer: providers.JsonRpcSigner,
-        chainId?: number): Record<string, any> {
+    public methods(
+        signer: providers.JsonRpcSigner,
+        chainId?: number
+    ): Record<string, any> {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
         if (networkInfo.contractAddresses.forges[this.forgeIdInBytes] === undefined) {
             return Error(`No such forge with forgeId ${this.forgeIdInBytes} in this network.`)
@@ -133,11 +138,26 @@ export class YieldContract {
             const gasEstimate: BN = await pendleRouterContract.estimateGas.redeemUnderlying(...args);
             return pendleRouterContract.connect(signer).redeemUnderlying(...args, getGasLimit(gasEstimate))
         }
+
+        const getMintTransactions = (query: ForgeQuery) => {
+            return new SubgraphTransactions(networkInfo.chainId).getMintTransactions(
+                query
+            );
+        };
+
+        const getRedeemTransactions = (query: ForgeQuery) => {
+            return new SubgraphTransactions(
+                networkInfo.chainId
+            ).getRedeemTransactions(query);
+        };
+
         return {
             mintDetails,
             mint,
             redeemDetails,
-            redeem
-        }
+            redeem,
+            getMintTransactions,
+            getRedeemTransactions,
+        };
     }
 }

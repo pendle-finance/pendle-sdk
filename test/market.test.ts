@@ -1,6 +1,6 @@
 import { dummyToken, dummyTokenAmount, EXP_2022, PendleMarket, Token, TokenAmount, YieldContract } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers, BigNumber as BN, utils } from 'ethers';
+import { ethers, BigNumber as BN } from 'ethers';
 import * as dotenv from 'dotenv';
 dotenv.config();
 jest.setTimeout(30000);
@@ -50,14 +50,14 @@ describe("Market", () => {
         market = markets.cDAI2022Market;
     });
 
-    it.only("PendleMarket.readMarketDetails", async () => {
+    it("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods(signer).readMarketDetails();
         console.log(marketDetails);
     })
 
     it('PendleMarket.yieldContract', async() => {
         const yieldContract: YieldContract = market.yieldContract();
-        console.log(JSON.stringify(utils.toUtf8String(yieldContract.forgeId), null, '  '));
+        console.log(JSON.stringify(yieldContract, null, '  '));
     })
 
     it('PendleMarket.swapExactInDetails', async () => {
@@ -103,8 +103,8 @@ describe("Market", () => {
 
     it('PendleMarket.addSingleDetails', async () => {
         const response = await market.methods(signer).addSingleDetails(new TokenAmount(
-            tokens.ETHUSDCYTToken,
-            BN.from(10).pow(18).toString()
+            tokens.USDCToken,
+            BN.from(10).pow(12).toString()
         ));
         console.log(response);
     })
