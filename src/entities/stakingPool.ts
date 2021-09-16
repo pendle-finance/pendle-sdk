@@ -1,8 +1,10 @@
-import { providers, Contract } from 'ethers';
+import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork, isSameAddress } from '../helpers'
-import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
-import { Token, TokenAmount } from '../entities'
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress } from '../helpers'
+import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches } from '../constants';
+import { contracts } from '../contracts';
+import { Token } from './token';
+import { TokenAmount } from './tokenAmount';
 import { NetworkInfo, LMINFO, StakingPoolType } from '../networks';
 
 export interface StakingPoolId {
@@ -28,17 +30,101 @@ export type PoolYields = {
   yields: YieldInfo[];
 };
 
+export const populatePoolYields = (LmInfo: LMINFO, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolYields => {
+  const yields: YieldInfo[] = [
+    {
+      yield: new TokenAmount(
+        new Token(
+          LmInfo.rewardTokenAddresses[0],
+          decimalsRecord[LmInfo.rewardTokenAddresses[0]]
+        ),
+        rewardAmount
+      ),
+      yieldType: YieldType.REWARDS
+    }
+  ];
+  if (LmInfo.interestTokensAddresses.length > 0) {
+    yields.push({
+      yield: new TokenAmount(
+        new Token(
+          LmInfo.interestTokensAddresses[0],
+          decimalsRecord[LmInfo.interestTokensAddresses[0]]
+        ),
+        interestAmount
+      ),
+      yieldType: YieldType.INTEREST
+    })
+  }
+  return {
+    address: LmInfo.address,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
+    yields: yields
+  }
+}
+
 export type PoolAccruingRewards = {
   address: string;
   inputToken: Token;
   accruingRewards: FutureEpochRewards[];
 };
 
+export const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
+  return {
+    address: LmInfo.address,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
+    accruingRewards: indexRange(0, vestingEpoches).map((i: number): FutureEpochRewards => {
+      return {
+        epochId: i + currentEpochId,
+        rewards: [
+          new TokenAmount(
+            new Token(
+              LmInfo.rewardTokenAddresses[0],
+              decimalsRecord[LmInfo.rewardTokenAddresses[0]],
+            ),
+            tentativeReward.div(vestingEpoches).toString()
+          )
+        ]
+      }
+    })
+  }
+}
+
 export type PoolVestedRewards = {
   address: string;
   inputToken: Token;
   vestedRewards: FutureEpochRewards[];
 };
+
+export const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
+  return {
+    address: LmInfo.address,
+    inputToken: new Token(
+      LmInfo.inputTokenAddress,
+      decimalsRecord[LmInfo.inputTokenAddress]
+    ),
+    vestedRewards: indexRange(0, vestedRewards.length).map((i: number): FutureEpochRewards => {
+      return {
+        epochId: i + currentEpochId,
+        rewards: [
+          new TokenAmount(
+            new Token(
+              LmInfo.rewardTokenAddresses[0],
+              decimalsRecord[LmInfo.rewardTokenAddresses[0]],
+            ),
+            vestedRewards[i].toString()
+          )
+        ]
+      }
+    })
+  }
+}
+
 
 export type FutureEpochRewards = {
   epochId: number;

@@ -67,11 +67,11 @@ describe('Sdk', () => {
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchAccruingRewards', async () => {
+  it.only('StakingPool.methods.fetchAccruingRewards', async () => {
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(
-      dummyAddress
+      dummyUser
     );
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });

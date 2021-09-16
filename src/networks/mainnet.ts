@@ -1,5 +1,5 @@
-import { NetworkContractAddresses, StakingPoolType } from ".";
-import { EXP_2021, EXP_2022, forgeIds, marketFactoryIds } from "../constants";
+import { NetworkContractAddresses, StakingPoolType } from "./types";
+import { EXP_2021, EXP_2022, forgeIdsInBytes, marketFactoryIds } from "../constants";
 
 export const mainnetContracts: NetworkContractAddresses = {
     stakingPools: [
@@ -185,7 +185,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
             ],
-            forgeId: forgeIds.AAVE,
+            underlyingAssetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            forgeIdInBytes: forgeIdsInBytes.AAVE,
             expiry: EXP_2021
         },
         {
@@ -193,7 +194,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
             ],
-            forgeId: forgeIds.AAVE,
+            underlyingAssetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            forgeIdInBytes: forgeIdsInBytes.AAVE,
             expiry: EXP_2022
         },
         {
@@ -201,7 +203,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
             ],
-            forgeId: forgeIds.COMPOUND,
+            underlyingAssetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
+            forgeIdInBytes: forgeIdsInBytes.COMPOUND,
             expiry: EXP_2021
         },
         {
@@ -209,7 +212,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
             ],
-            forgeId: forgeIds.COMPOUND,
+            underlyingAssetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
+            forgeIdInBytes: forgeIdsInBytes.COMPOUND,
             expiry: EXP_2022
         },
         {
@@ -217,7 +221,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
             ],
-            forgeId: forgeIds.SUSHISWAP_COMPLEX,
+            underlyingAssetAddress: "0x397ff1542f962076d0bfe58ea045ffa2d347aca0",
+            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_COMPLEX,
             expiry: EXP_2022
         },
         {
@@ -225,7 +230,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 "0x37922c69b08babcceae735a31235c81f1d1e8e43"
             ],
-            forgeId: forgeIds.SUSHISWAP_SIMPLE,
+            underlyingAssetAddress: "0x37922c69b08babcceae735a31235c81f1d1e8e43",
+            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_SIMPLE,
             expiry: EXP_2022
         }
     ],
@@ -332,10 +338,10 @@ export const mainnetContracts: NetworkContractAddresses = {
         PENDLE: '0x808507121b80c02388fad14726482e061b8da827'
     },
     forges: {
-        [forgeIds.AAVE]: "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",
-        [forgeIds.COMPOUND]: "0xc02ac197a4d32d93d473779fbea2dca1fb313ed5",
-        [forgeIds.SUSHISWAP_SIMPLE]: "0x6b0e6b4c0ee4b6460e5cd35a3625a172fe9d3930",
-        [forgeIds.SUSHISWAP_COMPLEX]: "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251"
+        [forgeIdsInBytes.AAVE]: "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",
+        [forgeIdsInBytes.COMPOUND]: "0xc02ac197a4d32d93d473779fbea2dca1fb313ed5",
+        [forgeIdsInBytes.SUSHISWAP_SIMPLE]: "0x6b0e6b4c0ee4b6460e5cd35a3625a172fe9d3930",
+        [forgeIdsInBytes.SUSHISWAP_COMPLEX]: "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251"
     }
 }
 

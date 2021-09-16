@@ -1,4 +1,4 @@
-{
+export const mainnetDecimals = {
   "0x808507121b80c02388fad14726482e061b8da827": 18,
   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 6,
   "0xbcca60bb61934080951369a648fb03df4f96263c": 6,

@@ -1,20 +1,8 @@
 import { BigNumber as BN, utils } from 'ethers';
-import fs from 'fs';
-import path from 'path';
-
-export type CurrencyAmount = {
-  currency: string,
-  amount: string
-}
+import { mainnetDecimals } from './decimals';
 
 export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
-
-export const dummyCurrencyAmount: CurrencyAmount = {
-  currency: "USD",
-  amount: "10000"
-}
-
-export const forgeIds = {
+export const forgeIdsInBytes = {
   COMPOUND: utils.formatBytes32String('CompoundV2'),
   COMPOUND_UPGRADED: utils.formatBytes32String('CompoundV2Upgraded'),
   AAVE: utils.formatBytes32String('AaveV2'),
@@ -38,9 +26,6 @@ export const EXP_2021 = BN.from("1640822400");
 export const LMStartTime = BN.from("1623888000");
 export const LMEpochDuration = BN.from("604800");
 export const VestingEpoches = 5;
-
-const filePath = path.resolve(__dirname, `./decimals/mainnet.json`);
-const mainnetDecimals: Record<string, number> = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
 export const decimalsRecords: Record<string, Record<string, number>> = {
   mainnet: mainnetDecimals
