@@ -1,4 +1,4 @@
-import { Sdk, Yt, StakingPool, PendleMarket, dummyAddress } from '../src';
+import { Sdk, Yt, StakingPool, PendleMarket } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -55,11 +55,11 @@ describe('Sdk', () => {
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchAccruingRewards', async () => {
+  it.only('StakingPool.methods.fetchAccruingRewards', async () => {
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(
-      dummyAddress
+      dummyUser
     );
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
