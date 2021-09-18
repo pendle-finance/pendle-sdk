@@ -1,3 +1,5 @@
+import { Contract } from "ethers"
+
 export enum Mode {
     AAVE_V2 = 1,
     COMPOUND,
@@ -11,10 +13,15 @@ export type StakeingPoolSpec = {
 }
 
 export interface TestEnv {
+    chainId: number;
+    router: Contract;
+    forge: Contract;
+    data: Contract;
     YTs: string[],
     markets: string[],
     stakingPools: StakeingPoolSpec[],
     user: string,
-    mintYt: (string) => string,
-    mintBaseToken: (string) => string,
 }
+
+// mintYt: (string, Contract) => string, // mintYt(userAddress, router) => YtAddress
+// mintBaseToken: (string) => string, // mintBaseToken(userAddress) => BaseTokenAddress

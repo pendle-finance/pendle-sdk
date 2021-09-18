@@ -488,7 +488,7 @@ export class PendleMarket extends Market {
       if (percentage <= 0 || percentage > 1) {
         throw Error("Invalid Percentage");
       }
-      const userLpBalance: BN = await marketContract.balanceOf(signer.getAddress());
+      const userLpBalance: BN = await marketContract.balanceOf(await signer.getAddress());
       const redeemAmount: BN = BN.from(Math.trunc(userLpBalance.toNumber() * percentage));
       return redeemAmount;
     }
@@ -524,7 +524,7 @@ export class PendleMarket extends Market {
       const minXytOut: BN = BN.from(Math.trunc(desiredXytOut.toNumber() * (1 - slippage)));
       const minTokenOut: BN = BN.from(Math.trunc(desiredTokenOut.toNumber() * (1 - slippage)));
       const args: any[] = [
-        signer.getAddress(),
+        await signer.getAddress(),
         getLpAmountByFraction(percentage),
         minXytOut,
         minTokenOut
@@ -561,8 +561,6 @@ export class PendleMarket extends Market {
       );
       const priceImpact: bigDecimal = calcPriceImpact(currentRate, avgRate);
 
-      // const userLpBalance: BN = await marketContract.balanceOf(signer.getAddress());
-      // const redeemAmount: BN = BN.from(Math.trunc(userLpBalance.toNumber() * percentage));
       return {
         outAmount: new TokenAmount(
           outToken,
@@ -581,7 +579,7 @@ export class PendleMarket extends Market {
       const exactOutAmount: BN = BN.from(details.outAmount.rawAmount());
       const minOutAmount: BN = BN.from(Math.trunc(exactOutAmount.toNumber() * (1 - slippage)));
       const args: any[] = [
-        signer.getAddress(),
+        await signer.getAddress(),
         outToken.address,
         getLpAmountByFraction(percentage),
         minOutAmount

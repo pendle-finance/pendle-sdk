@@ -8,7 +8,12 @@ export type Token = {
     source?: string;
 };
 
-type TokenMap = Record<number, Record<string, Token>>; // TokenMap[chainId][Name]
+export enum Network {
+    Mainnet = 1,
+    Polygon = 137
+}
+
+type TokenMap = Record<Network, Record<string, Token>>; // TokenMap[chainId][Name]
 
 const ONE_E_12 = BN.from(10).pow(12);
 const ONE_E_18 = BN.from(10).pow(18);
@@ -20,10 +25,6 @@ export const consts = {
     DUMMY_GOVERNANCE_ADDRESS: '0xdac17f958d2ee523a2206206994597c13d831ec7',
     RONE: BN.from(2).pow(40),
 
-    COMPOUND_COMPTROLLER_ADDRESS: '0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b',
-    AAVE_V2_LENDING_POOL_ADDRESS: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
-    MASTERCHEF_V1_ADDRESS: '0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd',
-    SUSHISWAP_ROUTER_ADDRESS: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
     AAVE_DUMMY_REFERRAL_CODE: 0,
     FORGE_AAVE_V2: utils.formatBytes32String('AaveV2'),
     MARKET_FACTORY_AAVE_V2: utils.formatBytes32String('AaveV2'),
@@ -84,12 +85,19 @@ export const consts = {
     INITIAL_WEEKLY_EMISSION: BN.from(1200000).mul(ONE_E_18),
     ONE_QUARTER: BN.from(7884000),
 
-    // COMP/StkAAVE/SUSHI rewards related
-    STKAAVE_ADDRESS: '0x4da27a545c0c5b758a6ba100e3a049001de870f5',
-    COMP_ADDRESS: '0xc00e94cb662c3520282e6f5717214004a7f26888',
-    AAVE_INCENTIVES_CONTROLLER: '0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5',
-    COMP_ETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
-    SUSHI_ADDRESS: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2',
+    address: {
+        [Network.Mainnet]: {
+            STKAAVE_ADDRESS: '0x4da27a545c0c5b758a6ba100e3a049001de870f5',
+            COMP_ADDRESS: '0xc00e94cb662c3520282e6f5717214004a7f26888',
+            AAVE_INCENTIVES_CONTROLLER: '0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5',
+            COMP_ETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
+            SUSHI_ADDRESS: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2',
+            COMPOUND_COMPTROLLER_ADDRESS: '0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b',
+            AAVE_V2_LENDING_POOL_ADDRESS: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
+            MASTERCHEF_V1_ADDRESS: '0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd',
+            SUSHISWAP_ROUTER_ADDRESS: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F'
+        }
+    },
     SUSHI_USDT_WETH_PID: 0,
 };
 
@@ -97,8 +105,10 @@ export const consts = {
 //   consts.T0 = time;
 // }
 
+
+
 export const tokens: TokenMap = {
-    1: {
+    [Network.Mainnet]: {
         USDT: {
             address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
             decimal: 6,
@@ -125,5 +135,6 @@ export const tokens: TokenMap = {
             address: '0x06da0fd433c1a5d7a4faa01111c044910a184553',
             decimal: 12,
         },
-    }
+    },
+    [Network.Polygon]: {}
 };

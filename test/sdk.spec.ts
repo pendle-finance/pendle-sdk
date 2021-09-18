@@ -39,7 +39,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(market, null, '  '));
   });
 
-  it('Market.methods.fetchInterests', async () => {
+  it.only('Market.methods.fetchInterests', async () => {
     const userInterests = await PendleMarket.methods(signer).fetchInterests(
       dummyUser
     );

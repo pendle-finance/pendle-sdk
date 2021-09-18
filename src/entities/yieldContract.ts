@@ -1,7 +1,7 @@
 import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { providers, Contract, BigNumber as BN, utils } from "ethers"
-import { dummyAddress, forgeIdsInBytes } from "../constants";
+import { forgeIdsInBytes } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
@@ -44,7 +44,7 @@ export class YieldContract {
 
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeIdInBytes !== forgeIdsInBytes.SUSHISWAP_COMPLEX) {
-                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
+                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), await signer.getAddress(), { from: networkInfo.contractAddresses.misc.PendleRouter });
                 return [
                     new TokenAmount(
                         new Token(
@@ -89,8 +89,9 @@ export class YieldContract {
             }
         }
         const mint = async (toMint: TokenAmount): Promise<providers.TransactionResponse> => {
-            const args = [this.forgeIdInBytes, this.underlyingAsset.address, this.expiry, toMint.rawAmount(), signer.getAddress()];
-            const gasEstimate: BN = await pendleRouterContract.estimateGas.tokenizeYield(...args);
+            const args = [this.forgeIdInBytes, this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), await signer.getAddress()];
+            console.log(args);
+            const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.tokenizeYield(...args);
             return pendleRouterContract.connect(signer).tokenizeYield(...args, getGasLimit(gasEstimate));
         }
         const redeemDetails = async (amountToRedeem: TokenAmount, userAddress: string): Promise<RedeemDetails> => {
@@ -135,7 +136,7 @@ export class YieldContract {
                 this.expiry,
                 toRedeem.rawAmount()
             ];
-            const gasEstimate: BN = await pendleRouterContract.estimateGas.redeemUnderlying(...args);
+            const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.redeemUnderlying(...args);
             return pendleRouterContract.connect(signer).redeemUnderlying(...args, getGasLimit(gasEstimate))
         }
 
