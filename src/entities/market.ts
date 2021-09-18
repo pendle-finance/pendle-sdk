@@ -124,14 +124,21 @@ export class PendleMarket extends Market {
     if (marketInfo === undefined) {
       throw new Error(MARKET_NOT_EXIST);
     }
+    const ytInfo: YTINFO = networkInfo.contractAddresses.YTs.find((m: YTINFO) => isSameAddress(m.address, marketInfo.pair[0]))!;
+    const pair: Token[] = [
+      new Token(
+        marketInfo.pair[0],
+        networkInfo.decimalsRecord[marketInfo.pair[0]],
+        ytInfo.expiry.toNumber()
+      ),
+      new Token(
+        marketInfo.pair[1],
+        networkInfo.decimalsRecord[marketInfo.pair[1]],
+      )
+    ];
     return new PendleMarket(
       address,
-      marketInfo.pair.map((tokenAddress: string) => {
-        return new Token(
-          tokenAddress.toLowerCase(),
-          networkInfo.decimalsRecord[tokenAddress.toLowerCase()]
-        )
-      })
+      pair
     )
   }
 
@@ -265,7 +272,7 @@ export class PendleMarket extends Market {
         otherDetails: {
           dailyVolume: dummyCurrencyAmount,
           volume24hChange: '0.5',
-          liquidity: dummyCurrencyAmount,          
+          liquidity: dummyCurrencyAmount,
           liquidity24HChange: "0.5",
           swapFeeApr: "0.5",
           impliedYield: "0.5",
@@ -323,6 +330,9 @@ export class PendleMarket extends Market {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
       const tokenDetailsRelative = this.getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
+      if (outAmount.gte(tokenDetailsRelative.outReserve)) {
+        throw Error("Out Amount Too Large");
+      }
       const inAmount: BN = calcExactIn(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -331,6 +341,7 @@ export class PendleMarket extends Market {
         outAmount,
         swapFee
       );
+      console.log("In Amount is", inAmount.toString())
       const maxInput: BN = inAmount.mul(SlippageRONE.add(slippage)).div(SlippageRONE);
       const avgRate: BN = calcAvgRate(inAmount, outAmount, tokenDetailsRelative.inToken.decimals);
       const currentRateWithSwapFee: BN = calcRateWithSwapFee(
