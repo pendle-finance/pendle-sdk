@@ -2,7 +2,7 @@ import{ Address, TokenAmount } from '../'
 
 export type CurrencyAmount = {
     currency: 'USD',
-    amount: number
+    amount: string
 }
 
 export type TRANSACTION = {
@@ -12,5 +12,6 @@ export type TRANSACTION = {
     amount: CurrencyAmount,
     paid: [TokenAmount, TokenAmount],
     received: [TokenAmount, TokenAmount],
-	network: 'mainnet' //TBD
+	network: 'mainnet' //TBD,
+    timestamp?: number
 }

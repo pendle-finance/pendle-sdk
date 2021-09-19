@@ -3,7 +3,7 @@ import { TokenAmount } from "./tokenAmount";
 import { NetworkInfo, YTINFO } from "../networks";
 import { distributeConstantsByNetwork, isSameAddress, getDecimal } from "../helpers";
 import { providers, Contract } from "ethers";
-import { contracts } from "../contracts";
+import { contracts } from "../../contracts";
 
 export type YtOrMarketInterest = {
     address: string;

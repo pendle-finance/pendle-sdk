@@ -1,8 +1,8 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress } from '../helpers'
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches } from '../constants';
-import { contracts } from '../contracts';
+import { contracts } from '../../contracts';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import { NetworkInfo, LMINFO, StakingPoolType } from '../networks';
@@ -257,8 +257,7 @@ export class StakingPool {
           .catch(() => ZERO);
       }))
 
-      const latestBlockNumber = await provider.provider.getBlockNumber();
-      const currentTime: number = (await provider.provider.getBlock(latestBlockNumber)).timestamp;
+      const currentTime: number = await getCurrentTimestamp(provider.provider);
       const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
 
       const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
@@ -284,8 +283,7 @@ export class StakingPool {
           .catch(() => Array(VestingEpoches - 1).fill(ZERO));
       }));
 
-      const latestBlockNumber = await provider.provider.getBlockNumber();
-      const currentTime: number = (await provider.provider.getBlock(latestBlockNumber)).timestamp;
+      const currentTime: number = await getCurrentTimestamp(provider.provider);
       const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
 
       const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {

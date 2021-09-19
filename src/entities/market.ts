@@ -1,21 +1,22 @@
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
-import { contracts } from '../contracts';
+import { contracts } from '../../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
-import { distributeConstantsByNetwork, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
+import { distributeConstantsByNetwork, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
 import { dummyCurrencyAmount, CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
-  Transaction as SubgraphTransactions,
+  TransactionFetcher as SubgraphTransactions,
   PendleAmmQuery,
 } from './transactions';
 import { calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
-import { forgeIdsInBytes } from '../constants';
+import { forgeIdsInBytes, ONE_DAY } from '../constants';
 import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
 
 import bigDecimal from 'js-big-decimal';
+import { TRANSACTION } from './transactions/types';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -51,6 +52,7 @@ export type AddDualLiquidityDetails = {
 
 export type AddSingleLiquidityDetails = {
   shareOfPool: string;
+  rate: string;
   priceImpact: string;
   swapFee: TokenAmount;
 };
@@ -109,7 +111,7 @@ export class Market {
 }
 
 export class PendleMarket extends Market {
-  public marketFactoryId: string = "";
+  private marketFactoryId: string = "";
 
   public constructor(marketAddress: string, tokens: Token[]) {
     super(marketAddress, [tokens[0], tokens[1]]);
@@ -177,7 +179,6 @@ export class PendleMarket extends Market {
       userAddress: string
     ): Promise<YtOrMarketInterest[]> => {
       const formattedResult: YtOrMarketInterest[] = [];
-
       const userInterests = await redeemProxyContract.callStatic.redeemMarkets(
         markets.map((marketInfo: any) => marketInfo.address),
         { from: userAddress }
@@ -219,6 +220,7 @@ export class PendleMarket extends Market {
     const marketContract = new Contract(this.address, contracts.IPendleMarket.abi, signer.provider);
     const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
     const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
+    const transactionFetcher: SubgraphTransactions = new SubgraphTransactions(chainId === undefined ? 1 : chainId);
 
     const getMarketFactoryId = async (): Promise<string> => {
       if (this.marketFactoryId === "") {
@@ -228,7 +230,6 @@ export class PendleMarket extends Market {
     }
 
     const readMarketDetails = async (): Promise<MarketDetails> => {
-
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const ytReserveDetails: TokenReserveDetails = {
         reserves: new TokenAmount(
@@ -267,10 +268,12 @@ export class PendleMarket extends Market {
         }
       }
 
+      const volume: CurrencyAmount = await getVolume();
+
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],
         otherDetails: {
-          dailyVolume: dummyCurrencyAmount,
+          dailyVolume: volume,
           volume24hChange: '0.5',
           liquidity: dummyCurrencyAmount,
           liquidity24HChange: "0.5",
@@ -459,6 +462,7 @@ export class PendleMarket extends Market {
       const shareOfPool: bigDecimal = calcShareOfPool(totalSupplyLp, details.exactOutLp);
       return {
         shareOfPool: shareOfPool.getValue(),
+        rate: avgRate.toString(),
         priceImpact: priceImpact.getValue(),
         swapFee: new TokenAmount(
           tokenAmount.token,
@@ -500,7 +504,7 @@ export class PendleMarket extends Market {
       if (percentage <= 0 || percentage > 1) {
         throw Error("Invalid Percentage");
       }
-      const userLpBalance: BN = await marketContract.balanceOf(signer.getAddress());
+      const userLpBalance: BN = await marketContract.balanceOf(await signer.getAddress());
       const redeemAmount: BN = BN.from(Math.trunc(userLpBalance.toNumber() * percentage));
       return redeemAmount;
     }
@@ -536,7 +540,7 @@ export class PendleMarket extends Market {
       const minXytOut: BN = BN.from(Math.trunc(desiredXytOut.toNumber() * (1 - slippage)));
       const minTokenOut: BN = BN.from(Math.trunc(desiredTokenOut.toNumber() * (1 - slippage)));
       const args: any[] = [
-        signer.getAddress(),
+        await signer.getAddress(),
         getLpAmountByFraction(percentage),
         minXytOut,
         minTokenOut
@@ -573,8 +577,6 @@ export class PendleMarket extends Market {
       );
       const priceImpact: bigDecimal = calcPriceImpact(currentRate, avgRate);
 
-      // const userLpBalance: BN = await marketContract.balanceOf(signer.getAddress());
-      // const redeemAmount: BN = BN.from(Math.trunc(userLpBalance.toNumber() * percentage));
       return {
         outAmount: new TokenAmount(
           outToken,
@@ -593,13 +595,44 @@ export class PendleMarket extends Market {
       const exactOutAmount: BN = BN.from(details.outAmount.rawAmount());
       const minOutAmount: BN = BN.from(Math.trunc(exactOutAmount.toNumber() * (1 - slippage)));
       const args: any[] = [
-        signer.getAddress(),
+        await signer.getAddress(),
         outToken.address,
         getLpAmountByFraction(percentage),
         minOutAmount
       ]
       const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquiditySingle(...args);
       return pendleRouterContract.connect(signer).removeMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
+    }
+
+    const getVolume = async (): Promise<CurrencyAmount> => {
+      let volume: CurrencyAmount = {
+        currency: "USD",
+        amount: "0"
+      };
+      let amount: number = 0, page: number = 1;
+      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      let f: boolean = true;
+      while (f) {
+        const result: TRANSACTION[] = await transactionFetcher.getSwapTransactions({
+          page: page,
+          limit: 100,
+          marketAddress: this.address,
+        });
+        for (let i: number = 0; i < result.length; i ++) {
+          if (result[i].timestamp! > currentTime) {
+            return volume;
+          }
+          if (result[i].timestamp! >= currentTime - ONE_DAY.toNumber()) {
+            console.log(i, typeof amount, typeof parseFloat(result[i].amount.amount));
+            amount = amount + parseFloat(result[i].amount.amount);
+          } else {
+            f = false;
+            break;
+          }
+        }
+      }
+      volume.amount = amount.toString();
+      return volume;
     }
 
     return {
