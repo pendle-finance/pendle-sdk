@@ -2,12 +2,12 @@ import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { providers, Contract, BigNumber as BN, utils } from "ethers"
 import { forgeIdsInBytes } from "../constants";
-import { contracts } from '../contracts';
+import { contracts } from '../../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
 import { rmul, rdiv } from "../math/mathLib";
 import {
-    Transaction as SubgraphTransactions,
+    TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
 } from './transactions';
 export type RedeemDetails = {

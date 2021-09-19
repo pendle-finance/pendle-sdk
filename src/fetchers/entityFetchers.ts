@@ -1,5 +1,5 @@
 import { Contract, providers, BigNumber as BN } from 'ethers';
-import { contracts } from '../contracts';
+import { contracts } from '../../contracts';
 import { Token, PendleMarket } from '../entities';
 
 export async function fetchPendleMarketData(

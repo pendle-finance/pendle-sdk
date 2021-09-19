@@ -28,7 +28,7 @@ const chainIdToNetworkMapping: Record<number, string> = {
   42: 'kovan',
 };
 
-export class Transaction {
+export class TransactionFetcher {
   private network = 1;
 
   constructor(_network: number | string = 1) {
@@ -193,7 +193,7 @@ export class Transaction {
     }));
   }
 
-  public async getSwapTransactions(queryObj: PendleAmmQuery) {
+  public async getSwapTransactions(queryObj: PendleAmmQuery): Promise<TRANSACTION[]> {
     const query = gql`
     {
       swaps
@@ -247,6 +247,7 @@ export class Transaction {
           swapObj.outAmount
         ),
       ],
+      timestamp: swapObj.timestamp,
       network: chainIdToNetworkMapping[this.network],
       chainId: this.network,
     }));

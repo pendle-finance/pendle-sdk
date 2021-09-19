@@ -1,7 +1,7 @@
 import { BigNumber as BN, Contract } from 'ethers';
 import { mainnetContracts, NetworkInfo } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer } from './constants'
-import { contracts } from "./contracts";
+import { contracts } from "../contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
 
 export const decimalFactor = (decimal: number): string => {
@@ -52,6 +52,12 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
       throw Error("Unsupported Forge Id");
     }
   }
+}
+
+export const getCurrentTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
+  const latestBlockNumber = await provider.getBlockNumber();
+  const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
+  return currentTime;
 }
 
 export const getCurrentEpochId = (currentTime: number | BN, startTime: number | BN, epochDuration: number | BN): number => {

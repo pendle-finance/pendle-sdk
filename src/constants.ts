@@ -23,6 +23,7 @@ export const INF = BN.from(2)
   .sub(1);
 export const EXP_2022 = BN.from("1672272000");
 export const EXP_2021 = BN.from("1640822400");
+export const ONE_DAY = BN.from("86400");
 export const LMStartTime = BN.from("1623888000");
 export const LMEpochDuration = BN.from("604800");
 export const VestingEpoches = 5;
