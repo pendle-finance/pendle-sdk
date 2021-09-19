@@ -540,7 +540,9 @@ export class PendleMarket extends Market {
       const minXytOut: BN = BN.from(Math.trunc(desiredXytOut.toNumber() * (1 - slippage)));
       const minTokenOut: BN = BN.from(Math.trunc(desiredTokenOut.toNumber() * (1 - slippage)));
       const args: any[] = [
-        await signer.getAddress(),
+        await getMarketFactoryId(),
+        this.tokens[0].address,
+        this.tokens[1].address,
         getLpAmountByFraction(percentage),
         minXytOut,
         minTokenOut
@@ -595,11 +597,13 @@ export class PendleMarket extends Market {
       const exactOutAmount: BN = BN.from(details.outAmount.rawAmount());
       const minOutAmount: BN = BN.from(Math.trunc(exactOutAmount.toNumber() * (1 - slippage)));
       const args: any[] = [
-        await signer.getAddress(),
-        outToken.address,
+        await getMarketFactoryId(),
+        this.tokens[0].address,
+        this.tokens[1].address,
+        isSameAddress(outToken.address, this.tokens[0].address),
         getLpAmountByFraction(percentage),
         minOutAmount
-      ]
+      ];
       const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquiditySingle(...args);
       return pendleRouterContract.connect(signer).removeMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
     }
