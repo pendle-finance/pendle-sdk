@@ -47,10 +47,10 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        market = markets.PendleEthMarket;
+        market = markets.aUSDC2022Market;
     });
 
-    it.only("PendleMarket.readMarketDetails", async () => {
+    it("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods(signer).readMarketDetails();
         console.log(marketDetails);
     })

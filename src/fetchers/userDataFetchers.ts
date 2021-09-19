@@ -1,5 +1,5 @@
 import { Contract, providers } from 'ethers';
-import { contracts } from '../../contracts';
+import { contracts } from '../contracts';
 import { Token, TokenAmount } from '../entities';
 
 export async function fetchTokenBalances(

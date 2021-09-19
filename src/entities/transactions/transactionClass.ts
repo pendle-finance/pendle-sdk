@@ -1,5 +1,8 @@
 import { request, gql } from 'graphql-request';
-import { PendleSubgraphUrlMapping, TokenAmount, Token, Address } from '../';
+import { PendleSubgraphUrlMapping } from "../mappings"
+import { TokenAmount } from '../tokenAmount';
+import { Token } from '../token';
+import { Address } from '../types';
 import { TRANSACTION } from './types';
 
 type SubgraphQuery = {

@@ -1,7 +1,7 @@
 import { BigNumber as BN, Contract } from 'ethers';
 import { mainnetContracts, NetworkInfo } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer } from './constants'
-import { contracts } from "../contracts";
+import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
 
 export const decimalFactor = (decimal: number): string => {

@@ -2,7 +2,7 @@ import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
 import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches } from '../constants';
-import { contracts } from '../../contracts';
+import { contracts } from '../contracts';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import { NetworkInfo, LMINFO, StakingPoolType } from '../networks';

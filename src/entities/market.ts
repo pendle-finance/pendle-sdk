@@ -1,7 +1,7 @@
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
-import { contracts } from '../../contracts';
+import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
 import { distributeConstantsByNetwork, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
@@ -344,7 +344,7 @@ export class PendleMarket extends Market {
         outAmount,
         swapFee
       );
-      console.log("In Amount is", inAmount.toString())
+      console.log("inAmount", inAmount.toString())
       const maxInput: BN = inAmount.mul(SlippageRONE.add(slippage)).div(SlippageRONE);
       const avgRate: BN = calcAvgRate(inAmount, outAmount, tokenDetailsRelative.inToken.decimals);
       const currentRateWithSwapFee: BN = calcRateWithSwapFee(
