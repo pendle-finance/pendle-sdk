@@ -1,9 +1,8 @@
 import { BigNumber as BN, Contract } from 'ethers';
 import { mainnetContracts, NetworkInfo } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE } from './constants'
+import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { ONE_DAY } from '.';
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)

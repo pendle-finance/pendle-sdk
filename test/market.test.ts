@@ -60,19 +60,19 @@ describe("Market", () => {
         console.log(JSON.stringify(yieldContract, null, '  '));
     })
 
-    it('PendleMarket.swapExactInDetails', async () => {
+    it.only('PendleMarket.swapExactInDetails', async () => {
         const swapExactInDetails = await market.methods(signer).swapExactInDetails(new TokenAmount(
             market.tokens[1],
-            BN.from(10).pow(12).toString()
+            BN.from(10).pow(11).toString()
         ),
         0.01);
         console.log(swapExactInDetails);
     })
 
-    it('PendleMarket.swapExactOutDetails', async () => {
+    it.only('PendleMarket.swapExactOutDetails', async () => {
         const swapExactOutDetails = await market.methods(signer).swapExactOutDetails(new TokenAmount(
             market.tokens[1],
-            BN.from(10).pow(12).toString()
+            BN.from(10).pow(11).toString()
         ),
         0.01);
         console.log(swapExactOutDetails);
