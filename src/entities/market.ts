@@ -4,19 +4,20 @@ import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
-import { distributeConstantsByNetwork, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor } from '../helpers'
-import { dummyCurrencyAmount, CurrencyAmount } from './currencyAmount';
+import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId } from '../helpers'
+import { CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
   TransactionFetcher as SubgraphTransactions,
   PendleAmmQuery,
 } from './transactions';
-import { calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken } from '../math/marketMath';
+import { calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat } from '../math/marketMath';
 import { forgeIdsInBytes, ONE_DAY } from '../constants';
 import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
-
-import bigDecimal from 'js-big-decimal';
 import { TRANSACTION } from './transactions/types';
+import { fetchTokenPrice } from '../fetchers/priceFetcher';
+
+import BigNumber from 'bignumber.js';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -32,7 +33,8 @@ export type MarketDetails = {
     liquidity24HChange: string,
     swapFeeApr: string,
     impliedYield: string,
-    underlyingYieldRate: number
+    underlyingYieldRate: number,
+    YTPrice: CurrencyAmount
   }
 }
 
@@ -112,7 +114,7 @@ export class Market {
 
 export class PendleMarket extends Market {
   private marketFactoryId: string = "";
-
+  public ytInfo: YTINFO = {} as YTINFO;
   public constructor(marketAddress: string, tokens: Token[]) {
     super(marketAddress, [tokens[0], tokens[1]]);
   }
@@ -150,6 +152,7 @@ export class PendleMarket extends Market {
     if (ytInfo.length === 0) {
       throw Error(`YT with address ${this.tokens[0].address} not found on this network`);
     }
+    this.ytInfo = ytInfo[0];
     return new YieldContract(
       utils.parseBytes32String(ytInfo[0].forgeIdInBytes),
       new Token(
@@ -221,6 +224,10 @@ export class PendleMarket extends Market {
     const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
     const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
     const transactionFetcher: SubgraphTransactions = new SubgraphTransactions(chainId === undefined ? 1 : chainId);
+    const underlyingAsset: string = networkInfo.contractAddresses.YTs.find((ytInfo: YTINFO) => isSameAddress(ytInfo.address, this.tokens[0].address))!.underlyingAssetAddress;
+    const yieldContract: YieldContract = this.yieldContract();
+    const forgeAddress = networkInfo.contractAddresses.forges[yieldContract.forgeIdInBytes];
+    const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(yieldContract.forgeIdInBytes).abi, signer.provider);
 
     const getMarketFactoryId = async (): Promise<string> => {
       if (this.marketFactoryId === "") {
@@ -250,7 +257,6 @@ export class PendleMarket extends Market {
       if (chainId !== undefined && chainId !== 1) {
         underlyingYieldRate = 0;
       } else {
-        const yieldContract: YieldContract = this.yieldContract();
         const yieldBearingAddress: string = Yt.find(this.tokens[0].address).yieldBearingAddress;
         switch (yieldContract.forgeIdInBytes) {
           case forgeIdsInBytes.AAVE:
@@ -268,17 +274,34 @@ export class PendleMarket extends Market {
         }
       }
 
-      const volume: CurrencyAmount = await getVolume();
+      const currentTime: number = await getCurrentTimestamp(signer.provider);
+
+      const volumeToday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.toNumber(), currentTime);
+      const volumeYesterday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.mul(2).toNumber(), currentTime - ONE_DAY.toNumber())
+
+      var liquidityToday: CurrencyAmount = await getLiquidityValue(marketReserves);
+      var liquidityYesterday: CurrencyAmount = await getPastLiquidityValue();
+      const swapFee: BN = await pendleDataContract.swapFee();
+      const protocolFee: BN = await pendleDataContract.protocolSwapFee();
+      const swapFeeForLP: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
+
+      const {ytPrice, impliedYield}: {ytPrice: number ,impliedYield: number} = await getYTPriceAndImpliedYield(marketReserves); 
 
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],
         otherDetails: {
-          dailyVolume: volume,
-          volume24hChange: '0.5',
-          liquidity: dummyCurrencyAmount,
-          liquidity24HChange: "0.5",
-          swapFeeApr: "0.5",
-          impliedYield: "0.5",
+          dailyVolume: volumeToday,
+          volume24hChange: volumeYesterday.amount === 0
+            ? volumeToday.amount === 0 ? '0' : '1'
+            : ((volumeToday.amount - volumeYesterday.amount) / volumeYesterday.amount).toString(),
+          liquidity: liquidityToday,
+          liquidity24HChange: ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
+          swapFeeApr: swapFeeForLP.toFixed(DecimalsPrecision),
+          impliedYield: impliedYield.toString(),
+          YTPrice: {
+            currency: 'USD',
+            amount: ytPrice
+          },
           underlyingYieldRate
         }
       };
@@ -308,7 +331,7 @@ export class PendleMarket extends Market {
         inTokenAmount.token.decimals,
         swapFee
       );
-      const priceImpact: bigDecimal = calcPriceImpact(currentRateWithSwapFee, avgRate);
+      const priceImpact: BigNumber = calcPriceImpact(currentRateWithSwapFee, avgRate);
       return {
         inAmount: inTokenAmount,
         outAmount: new TokenAmount(
@@ -319,7 +342,7 @@ export class PendleMarket extends Market {
           tokenDetailsRelative.outToken,
           minReceived.toString()
         ),
-        priceImpact: priceImpact.getValue(),
+        priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           inTokenAmount.token,
           calcSwapFee(inAmount, swapFee).toString()
@@ -355,7 +378,7 @@ export class PendleMarket extends Market {
         tokenDetailsRelative.inToken.decimals,
         swapFee
       );
-      const priceImpact: bigDecimal = calcPriceImpact(currentRateWithSwapFee, avgRate);
+      const priceImpact: BigNumber = calcPriceImpact(currentRateWithSwapFee, avgRate);
       return {
         inAmount: new TokenAmount(
           tokenDetailsRelative.inToken,
@@ -366,7 +389,7 @@ export class PendleMarket extends Market {
           tokenDetailsRelative.inToken,
           maxInput.toString()
         ),
-        priceImpact: priceImpact.getValue(),
+        priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           tokenDetailsRelative.inToken,
           calcSwapFee(inAmount, swapFee).toString()
@@ -405,13 +428,13 @@ export class PendleMarket extends Market {
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
       const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
-      const shareOfPool: bigDecimal = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
+      const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
       return {
         otherTokenAmount: new TokenAmount(
           tokenDetailsRelative.outToken,
           otherAmount.toString()
         ),
-        shareOfPool: shareOfPool.getValue()
+        shareOfPool: shareOfPool.toFixed(DecimalsPrecision)
       }
     }
 
@@ -458,12 +481,12 @@ export class PendleMarket extends Market {
         tokenAmount.token.decimals
       );
       console.log(currentRate.toString(), avgRate.toString())
-      const priceImpact: bigDecimal = calcPriceImpact(currentRate, avgRate);
-      const shareOfPool: bigDecimal = calcShareOfPool(totalSupplyLp, details.exactOutLp);
+      const priceImpact: BigNumber = calcPriceImpact(currentRate, avgRate);
+      const shareOfPool: BigNumber = calcShareOfPool(totalSupplyLp, details.exactOutLp);
       return {
-        shareOfPool: shareOfPool.getValue(),
+        shareOfPool: shareOfPool.toFixed(DecimalsPrecision),
         rate: avgRate.toString(),
-        priceImpact: priceImpact.getValue(),
+        priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           tokenAmount.token,
           details.swapFee.toString()
@@ -577,14 +600,14 @@ export class PendleMarket extends Market {
         tokenDetailsRelative.outWeight,
         tokenDetailsRelative.inToken.decimals
       );
-      const priceImpact: bigDecimal = calcPriceImpact(currentRate, avgRate);
+      const priceImpact: BigNumber = calcPriceImpact(currentRate, avgRate);
 
       return {
         outAmount: new TokenAmount(
           outToken,
           details.exactOutToken.toString()
         ),
-        priceImpact: priceImpact.getValue(),
+        priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           outToken,
           details.swapFee.toString()
@@ -608,13 +631,12 @@ export class PendleMarket extends Market {
       return pendleRouterContract.connect(signer).removeMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
     }
 
-    const getVolume = async (): Promise<CurrencyAmount> => {
+    const getVolume = async (leftBound: number, rightBound: number): Promise<CurrencyAmount> => {
       let volume: CurrencyAmount = {
         currency: "USD",
-        amount: "0"
+        amount: 0
       };
       let amount: number = 0, page: number = 1;
-      const currentTime: number = await getCurrentTimestamp(signer.provider);
       let f: boolean = true;
       while (f) {
         const result: TRANSACTION[] = await transactionFetcher.getSwapTransactions({
@@ -622,21 +644,83 @@ export class PendleMarket extends Market {
           limit: 100,
           marketAddress: this.address,
         });
-        for (let i: number = 0; i < result.length; i ++) {
-          if (result[i].timestamp! > currentTime) {
-            return volume;
-          }
-          if (result[i].timestamp! >= currentTime - ONE_DAY.toNumber()) {
-            console.log(i, typeof amount, typeof parseFloat(result[i].amount.amount));
-            amount = amount + parseFloat(result[i].amount.amount);
-          } else {
+        for (let i: number = 0; i < result.length; i++) {
+          if (result[i].timestamp! > leftBound && result[i].timestamp! <= rightBound) {
+            amount = amount + (result[i].amount.amount);
+          } else if (result[i].timestamp! <= leftBound) {
             f = false;
             break;
           }
         }
       }
-      volume.amount = amount.toString();
+      volume.amount = amount;
       return volume;
+    }
+
+    const getLiquidityValue = async (marketReserve: MarketReservesRaw): Promise<CurrencyAmount> => {
+      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address);
+      const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
+
+      return {
+        currency: 'USD',
+        amount: parseFloat(totalLiquidityUSD.toFixed(DecimalsPrecision))
+      };
+    }
+
+    const getPastLiquidityValue = async (): Promise<CurrencyAmount> => {
+      const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
+      if (pastBlockNumber === undefined) {
+        console.error("Unable to get block that is 1 day old");
+        return {
+          currency: "USD",
+          amount: 0
+        }
+      }
+      const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
+      return getLiquidityValue(pastMarketReserves);
+    }
+
+    const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ytPrice: number ,impliedYield: number}> => {
+      const underlyingPrice: BigNumber = await fetchTokenPrice(underlyingAsset, chainId);
+      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
+      const ytDecimal: number = networkInfo.decimalsRecord[this.tokens[0].address];
+      const rate: BN = calcRate(marketReserves.xytBalance, marketReserves.xytWeight, marketReserves.tokenBalance, marketReserves.tokenWeight, ytDecimal);
+      const ytPrice: BigNumber = calcTokenPriceByMarket(baseTokenPrice, rate, networkInfo.decimalsRecord[this.tokens[1].address]);
+
+      var principalPerYT: BN = BN.from(10).pow(18);
+      switch (yieldContract.forgeIdInBytes) {
+        case forgeIdsInBytes.AAVE:
+          principalPerYT = BN.from(10).pow(18);
+          break;
+
+        case forgeIdsInBytes.COMPOUND:
+          principalPerYT = await pendleForgeContract.initialRate(underlyingAsset);
+          break;
+
+        case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+        case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+          principalPerYT = calcPrincipalForSLPYT(await pendleForgeContract.callStatic.getExchangeRate(underlyingAsset));
+          break
+      }
+      const principalPerYTFloat: BigNumber = calcPrincipalFloat(principalPerYT, ytDecimal, networkInfo.decimalsRecord[underlyingAsset]);
+      const p: BigNumber = ytPrice.dividedBy(underlyingPrice.multipliedBy(principalPerYTFloat));
+      
+      // means yield is infinite
+      if (p.isGreaterThanOrEqualTo(ONE)) {
+        return {
+          ytPrice: ytPrice.toNumber(),
+          impliedYield: 999999999
+        };
+      }
+      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      const daysLeft: BigNumber = new BigNumber(yieldContract.expiry - currentTime).dividedBy(24 * 3600);
+
+      const y_annum: number = calcImpliedYield(p, daysLeft);
+
+      return {
+        ytPrice: ytPrice.toNumber(),
+        impliedYield: y_annum
+      };
     }
 
     return {

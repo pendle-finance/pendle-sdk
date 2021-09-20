@@ -99,7 +99,7 @@ export class TransactionFetcher {
     return response.mintYieldTokens.map((mintObj: any) => ({
       action: 'Mint',
       hash: mintObj.id,
-      amount: { currency: 'USD', amount: mintObj.mintedValueUSD },
+      amount: { currency: 'USD', amount: parseFloat(mintObj.mintedValueUSD) },
       paid: [
         new TokenAmount(
           new Token(
@@ -171,7 +171,7 @@ export class TransactionFetcher {
     return response.redeemYieldTokens.map((redeemObj: any) => ({
       action: 'Redeem',
       hash: redeemObj.id,
-      amount: { currency: 'USD', amount: redeemObj.redeemedValueUSD },
+      amount: { currency: 'USD', amount: parseFloat(redeemObj.redeemedValueUSD) },
       paid: [
         new TokenAmount(
           new Token(redeemObj.xytAsset.id, redeemObj.xytAsset.decimals),
@@ -237,7 +237,7 @@ export class TransactionFetcher {
     return response.swaps.map((swapObj: any) => ({
       action: 'Swap',
       hash: swapObj.id,
-      amount: { currency: 'USD', amount: swapObj.amountUSD },
+      amount: { currency: 'USD', amount: parseFloat(swapObj.amountUSD) },
       paid: [
         new TokenAmount(
           new Token(swapObj.inToken.id, swapObj.inToken.decimals),
@@ -299,7 +299,7 @@ export class TransactionFetcher {
     return response.liquidityPools.map((liquidityObj: any) => ({
       action: liquidityObj.type,
       hash: liquidityObj.id,
-      amount: { currency: 'USD', amount: liquidityObj.amountUSD },
+      amount: { currency: 'USD', amount: parseFloat(liquidityObj.amountUSD) },
       paid: [
         new TokenAmount(
           new Token(liquidityObj.inToken0.id, liquidityObj.inToken0.decimals),

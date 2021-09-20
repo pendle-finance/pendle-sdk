@@ -50,9 +50,9 @@ describe("Market", () => {
         market = markets.aUSDC2022Market;
     });
 
-    it("PendleMarket.readMarketDetails", async () => {
+    it.only("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods(signer).readMarketDetails();
-        console.log(marketDetails);
+        console.log(JSON.stringify(marketDetails, null, '  '));
     })
 
     it('PendleMarket.yieldContract', async() => {

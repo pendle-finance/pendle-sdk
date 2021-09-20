@@ -1,9 +1,9 @@
 import { rdiv, rpow, RONE, rmul } from './mathLib'
 import { BigNumber as BN } from 'ethers';
-import bigDecimal from 'js-big-decimal';
-
+import BigNumber from 'bignumber.js';
 
 export const DecimalsPrecision: number = 10;
+export const ONE = new BigNumber(1);
 
 export function calcExactOut(
     inTokenReserve: BN,
@@ -114,13 +114,13 @@ export function calcOutAmountLp(
     }
 }
 
-export function calcPriceImpact(idealRate: BN, actualRate: BN): bigDecimal {
-    const priceImpact: bigDecimal = new bigDecimal(idealRate.sub(actualRate).toString()).divide(new bigDecimal(idealRate.toString()), DecimalsPrecision);
+export function calcPriceImpact(idealRate: BN, actualRate: BN): BigNumber {
+    const priceImpact: BigNumber = new BigNumber(idealRate.sub(actualRate).toString()).div(idealRate.toString());
     return priceImpact;
 }
 
-export function calcShareOfPool(originalBalance: BN, deltaInBalance: BN): bigDecimal {
-    return new bigDecimal(deltaInBalance.toString()).divide(new bigDecimal(deltaInBalance.add(originalBalance).toString()), DecimalsPrecision);
+export function calcShareOfPool(originalBalance: BN, deltaInBalance: BN): BigNumber {
+    return new BigNumber(deltaInBalance.toString()).div(deltaInBalance.add(originalBalance).toString());
 }
 
 export function calcOutAmountToken(
@@ -152,4 +152,31 @@ export function calcOutAmountToken(
         inAmountSwapped,
         outAmountSwapped
     };
+}
+
+export function calcReserveUSDValue(baseTokenAmount: BN, baseTokenDecimal: number, baseTokenPrice: BigNumber, baseTokenWeight: BN): BigNumber {
+    return new BigNumber(baseTokenAmount.mul(RONE).div(baseTokenWeight).toString())
+        .multipliedBy(baseTokenPrice).div(Math.pow(10, baseTokenDecimal).toString());
+}
+
+export function calcSwapFeeAPR(volume: number, swapFee: BN, protocolFee: BN, liquidity: number): BigNumber {
+    return new BigNumber(rmul(swapFee, RONE.sub(protocolFee)).toString()).multipliedBy(volume)
+        .multipliedBy(365).dividedBy(new BigNumber(RONE.toString()).multipliedBy(liquidity));
+}
+
+export function calcTokenPriceByMarket(knownPrice: BigNumber, rate: BN, otherDecimal: number): BigNumber {
+    return knownPrice.multipliedBy(rate.toString()).dividedBy(Math.pow(10, otherDecimal));
+}
+
+export function calcPrincipalForSLPYT(exchangeRate: BN): BN {
+    return rdiv(BN.from(10).pow(18), exchangeRate);
+}
+
+export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): number {
+    return Math.pow((ONE.plus(p.dividedBy(ONE.minus(p)))).toNumber(), (new BigNumber(365).dividedBy(daysLeft)).toNumber()) - 1 ;
+}
+
+export function calcPrincipalFloat(principalPerYT: BN, ytDecimal: number, underlyingDecimal: number): BigNumber {
+    return new BigNumber(principalPerYT.mul(BN.from(10).pow(ytDecimal)).toString())
+        .div(new BigNumber(BN.from(10).pow(18 + underlyingDecimal).toString()));
 }

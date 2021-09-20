@@ -1,9 +1,5 @@
 import{ Address, TokenAmount } from '../'
-
-export type CurrencyAmount = {
-    currency: 'USD',
-    amount: string
-}
+import { CurrencyAmount } from '../currencyAmount'
 
 export type TRANSACTION = {
     action: 'Mint' | 'Redeem' | 'Swap',

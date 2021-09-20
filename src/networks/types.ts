@@ -11,6 +11,7 @@ export type NetworkContractAddresses = {
     OTs: OTINFO[],
     markets: MARKETNFO[],
     misc: Record<string, string>,
+    tokens: Record<string, string>,
     forges: Record<string, string>
 }
 export type LMINFO = {
