@@ -396,7 +396,7 @@ export class PendleMarket extends Market {
         details.minReceived!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.estimateGas.swapExactIn(...args);
+      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args);
       return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
     }
 
@@ -409,8 +409,8 @@ export class PendleMarket extends Market {
         details.maxInput!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.estimateGas.swapExactIn(...args);
-      return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
+      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args);
+      return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimit(gasEstimate));
     }
 
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
@@ -442,7 +442,7 @@ export class PendleMarket extends Market {
         xytMinAmount,
         tokenMinAmount
       ]
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.addMarketLiquidityDual(...args);
+      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquidityDual(...args);
       return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimit(gasEstimate));
     }
 
@@ -507,7 +507,7 @@ export class PendleMarket extends Market {
         tokenAmount.rawAmount(),
         minOutLp
       ];
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.addMarketLiquiditySingle(...args);
+      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquiditySingle(...args);
       return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
     }
 
@@ -569,7 +569,7 @@ export class PendleMarket extends Market {
         minXytOut,
         minTokenOut
       ]
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquidityDual(...args);
+      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.removeMarketLiquidityDual(...args);
       return pendleRouterContract.connect(signer).removeMarketLiquidityDual(...args, getGasLimit(gasEstimate));
     }
 
@@ -639,7 +639,7 @@ export class PendleMarket extends Market {
         getLpAmountByFraction(percentage),
         minOutAmount
       ];
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquiditySingle(...args);
+      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.removeMarketLiquiditySingle(...args);
       return pendleRouterContract.connect(signer).removeMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
     }
 
