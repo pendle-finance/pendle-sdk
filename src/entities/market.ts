@@ -4,7 +4,7 @@ import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
-import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId } from '../helpers'
+import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH } from '../helpers'
 import { CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
@@ -264,6 +264,8 @@ export class PendleMarket extends Market {
           case forgeIdsInBytes.SUSHISWAP_SIMPLE:
             underlyingYieldRate = await fetchSushiYield(yieldBearingAddress);
             break;
+
+          // TODO: add Uniswap support here
         }
       }
 
@@ -406,8 +408,12 @@ export class PendleMarket extends Market {
         details.minReceived!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.estimateGas.swapExactIn(...args);
-      return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
+      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args);
+      if (isSameAddress(details.inAmount.token.address, ETHAddress)) {
+        return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimitWithETH(gasEstimate, BN.from(details.inAmount.rawAmount())));
+      } else {
+        return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const swapExactOut = async (outTokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
@@ -419,8 +425,12 @@ export class PendleMarket extends Market {
         details.maxInput!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.estimateGas.swapExactIn(...args);
-      return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
+      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args);
+      if (isSameAddress(details.inAmount.token.address, ETHAddress)) {
+        return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimitWithETH(gasEstimate, BN.from(details.maxInput!.rawAmount())));
+      } else {
+        return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
@@ -429,6 +439,11 @@ export class PendleMarket extends Market {
       const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
+
+      if (isSameAddress(tokenDetailsRelative.outToken.address, networkInfo.contractAddresses.tokens.WETH)) {
+        tokenDetailsRelative.outToken = ETHToken;
+      }
+
       return {
         otherTokenAmount: new TokenAmount(
           tokenDetailsRelative.outToken,
