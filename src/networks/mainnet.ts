@@ -340,7 +340,8 @@ export const mainnetContracts: NetworkContractAddresses = {
         PENDLE: '0x808507121b80c02388fad14726482e061b8da827',
         DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
         PENDLEETH_SLP: '0x37922c69b08babcceae735a31235c81f1d1e8e43',
-        ETHUSDC_SLP: '0x397ff1542f962076d0bfe58ea045ffa2d347aca0'
+        ETHUSDC_SLP: '0x397ff1542f962076d0bfe58ea045ffa2d347aca0',
+        WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
     },
     forges: {
         [forgeIdsInBytes.AAVE]: "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",

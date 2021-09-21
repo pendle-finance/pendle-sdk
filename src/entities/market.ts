@@ -1,4 +1,4 @@
-import { Token } from './token';
+import { Token, ETHToken } from './token';
 import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
@@ -12,7 +12,7 @@ import {
   PendleAmmQuery,
 } from './transactions';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount } from '../math/marketMath';
-import { forgeIdsInBytes, ONE_DAY } from '../constants';
+import { forgeIdsInBytes, ONE_DAY, ETHAddress } from '../constants';
 import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactions/types';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
@@ -304,7 +304,7 @@ export class PendleMarket extends Market {
       const inAmount: BN = BN.from(inTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative = this.getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative = getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
       const outAmount: BN = calcExactOut(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -324,6 +324,11 @@ export class PendleMarket extends Market {
         swapFee
       );
       const priceImpact: BigNumber = calcPriceImpact(currentRateWithSwapFee, avgRate);
+
+      if (isSameAddress(tokenDetailsRelative.outToken.address, networkInfo.contractAddresses.tokens.WETH)) {
+        tokenDetailsRelative.outToken = ETHToken;
+      }
+
       return {
         inAmount: inTokenAmount,
         outAmount: new TokenAmount(
@@ -346,7 +351,7 @@ export class PendleMarket extends Market {
       const outAmount: BN = BN.from(outTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative = this.getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
+      const tokenDetailsRelative = getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
       if (outAmount.gte(tokenDetailsRelative.outReserve)) {
         throw Error("Out Amount Too Large");
       }
@@ -369,6 +374,11 @@ export class PendleMarket extends Market {
         swapFee
       );
       const priceImpact: BigNumber = calcPriceImpact(currentRateWithSwapFee, avgRate);
+
+      if (isSameAddress(tokenDetailsRelative.inToken.address, networkInfo.contractAddresses.tokens.WETH)) {
+        tokenDetailsRelative.inToken = ETHToken;
+      }
+
       return {
         inAmount: new TokenAmount(
           tokenDetailsRelative.inToken,
@@ -416,7 +426,7 @@ export class PendleMarket extends Market {
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
       return {
@@ -451,7 +461,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -487,7 +497,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -591,7 +601,7 @@ export class PendleMarket extends Market {
       }
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
-      const tokenDetailsRelative = this.getTokenDetailsRelative(outToken, marketReserves, false);
+      const tokenDetailsRelative = getTokenDetailsRelative(outToken, marketReserves, false);
       const swapFee: BN = await pendleDataContract.swapFee();
 
       const details = calcOutAmountToken(
@@ -735,6 +745,41 @@ export class PendleMarket extends Market {
       };
     }
 
+
+    const getTokenDetailsRelative = (token: Token, marketReserves: MarketReservesRaw, isInToken: boolean): TokenDetailsRelative => {
+      var tokenAddress = token.address;
+      if (isSameAddress(tokenAddress, ETHAddress)) {
+        tokenAddress = networkInfo.contractAddresses.tokens.WETH;
+      }
+      var inReserve: BN, inWeight: BN, outReserve: BN, outWeight: BN, inToken: Token, outToken: Token;
+      if (!isSameAddress(tokenAddress, this.tokens[0].address) && !isSameAddress(tokenAddress, this.tokens[1].address)) {
+        throw new Error(WRONG_TOKEN);
+      }
+      if (xor(isSameAddress(tokenAddress, this.tokens[0].address), isInToken)) {
+        inReserve = marketReserves.tokenBalance;
+        inWeight = marketReserves.tokenWeight;
+        inToken = this.tokens[1];
+        outReserve = marketReserves.xytBalance;
+        outWeight = marketReserves.xytWeight;
+        outToken = this.tokens[0];
+      } else {
+        inReserve = marketReserves.xytBalance;
+        inWeight = marketReserves.xytWeight;
+        inToken = this.tokens[0];
+        outReserve = marketReserves.tokenBalance;
+        outWeight = marketReserves.tokenWeight;
+        outToken = this.tokens[1];
+      }
+      return {
+        inReserve,
+        inWeight,
+        inToken,
+        outReserve,
+        outWeight,
+        outToken
+      }
+    }
+
     return {
       readMarketDetails,
       swapExactInDetails,
@@ -750,36 +795,5 @@ export class PendleMarket extends Market {
       removeSingleDetails,
       removeSingle,
     };
-  }
-
-  private getTokenDetailsRelative(token: Token, marketReserves: MarketReservesRaw, isInToken: boolean): TokenDetailsRelative {
-    var inReserve: BN, inWeight: BN, outReserve: BN, outWeight: BN, inToken: Token, outToken: Token;
-    const tokenAddress = token.address.toLowerCase();
-    if (tokenAddress != this.tokens[0].address && tokenAddress != this.tokens[1].address) {
-      throw new Error(WRONG_TOKEN);
-    }
-    if (xor(isSameAddress(tokenAddress, this.tokens[0].address), isInToken)) {
-      inReserve = marketReserves.tokenBalance;
-      inWeight = marketReserves.tokenWeight;
-      inToken = this.tokens[1];
-      outReserve = marketReserves.xytBalance;
-      outWeight = marketReserves.xytWeight;
-      outToken = this.tokens[0];
-    } else {
-      inReserve = marketReserves.xytBalance;
-      inWeight = marketReserves.xytWeight;
-      inToken = this.tokens[0];
-      outReserve = marketReserves.tokenBalance;
-      outWeight = marketReserves.tokenWeight;
-      outToken = this.tokens[1];
-    }
-    return {
-      inReserve,
-      inWeight,
-      inToken,
-      outReserve,
-      outWeight,
-      outToken
-    }
   }
 }
