@@ -408,10 +408,11 @@ export class PendleMarket extends Market {
         details.minReceived!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args);
       if (isSameAddress(details.inAmount.token.address, ETHAddress)) {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args, { value: BN.from(details.inAmount.rawAmount()) });
         return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimitWithETH(gasEstimate, BN.from(details.inAmount.rawAmount())));
       } else {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args);
         return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
       }
     }
@@ -425,10 +426,11 @@ export class PendleMarket extends Market {
         details.maxInput!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args);
       if (isSameAddress(details.inAmount.token.address, ETHAddress)) {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args, { value: BN.from(details.maxInput!.rawAmount()) });
         return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimitWithETH(gasEstimate, BN.from(details.maxInput!.rawAmount())));
       } else {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args);
         return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimit(gasEstimate));
       }
     }
@@ -454,21 +456,29 @@ export class PendleMarket extends Market {
     }
 
     const addDual = async (tokenAmounts: TokenAmount[], slippage: number): Promise<providers.TransactionResponse> => {
-      const desiredXytAmount: BN = BN.from(tokenAmounts[0].rawAmount());
-      const desiredTokenAmount: BN = BN.from(tokenAmounts[1].rawAmount());
+      const xytTokenAmount: TokenAmount = isSameAddress(tokenAmounts[0].token.address, this.tokens[0].address) ? tokenAmounts[0] : tokenAmounts[1];
+      const baseTokenAmount: TokenAmount = isSameAddress(tokenAmounts[0].token.address, this.tokens[0].address) ? tokenAmounts[1] : tokenAmounts[0];
+
+      const desiredXytAmount: BN = BN.from(xytTokenAmount.rawAmount());
+      const desiredTokenAmount: BN = BN.from(baseTokenAmount.rawAmount());
       const xytMinAmount: BN = calcSlippedDownAmount(desiredXytAmount, slippage);
       const tokenMinAmount: BN = calcSlippedDownAmount(desiredTokenAmount, slippage);
       const args: any[] = [
         await getMarketFactoryId(),
-        this.tokens[0].address,
-        this.tokens[1].address,
+        xytTokenAmount.token.address,
+        baseTokenAmount.token.address,
         desiredXytAmount,
         desiredTokenAmount,
         xytMinAmount,
         tokenMinAmount
       ]
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.addMarketLiquidityDual(...args);
-      return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimit(gasEstimate));
+      if (isSameAddress(baseTokenAmount.token.address, ETHAddress)) {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquidityDual(...args, { value: desiredTokenAmount });
+        return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimitWithETH(gasEstimate, desiredTokenAmount));
+      } else {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquidityDual(...args);
+        return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const addSingleDetails = async (tokenAmount: TokenAmount): Promise<AddSingleLiquidityDetails> => {
@@ -524,16 +534,27 @@ export class PendleMarket extends Market {
       );
       const exactOutLp: BN = details.exactOutLp;
       const minOutLp: BN = calcSlippedDownAmount(exactOutLp, slippage);
+
+      const isForXyt: boolean = isSameAddress(tokenAmount.token.address, this.tokens[0].address);
+
       const args: any[] = [
         await getMarketFactoryId(),
         this.tokens[0].address,
-        this.tokens[1].address,
-        isSameAddress(tokenAmount.token.address, this.tokens[0].address),
+        isForXyt
+          ? this.tokens[1].address
+          : tokenAmount.token.address,
+        isForXyt,
         tokenAmount.rawAmount(),
         minOutLp
       ];
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.addMarketLiquiditySingle(...args);
-      return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
+
+      if (!isForXyt && isSameAddress(tokenAmount.token.address, ETHAddress)) {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquiditySingle(...args, { value: BN.from(tokenAmount.rawAmount()) });
+        return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimitWithETH(gasEstimate, BN.from(tokenAmount.rawAmount())));
+      } else {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquiditySingle(...args);
+        return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const getLpAmountByFraction = async (percentage: number): Promise<BN> => {
@@ -547,6 +568,7 @@ export class PendleMarket extends Market {
     }
 
     const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
+      const outBaseToken: Token = isSameAddress(this.tokens[1].address, ETHAddress) ? ETHToken : this.tokens[1];
       const redeemAmount: BN = await getLpAmountByFraction(percentage);
       if (redeemAmount.eq(0)) {
         return {
@@ -556,12 +578,13 @@ export class PendleMarket extends Market {
               "0"
             ),
             new TokenAmount(
-              this.tokens[1],
+              outBaseToken,
               "0"
             )
           ]
         }
       }
+
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const xytRedeemAmout: BN = marketReserves.xytBalance.mul(redeemAmount).div(totalSupplyLp);
@@ -573,7 +596,7 @@ export class PendleMarket extends Market {
             xytRedeemAmout.toString()
           ),
           new TokenAmount(
-            this.tokens[1],
+            outBaseToken,
             baseTokenRedeemAmount.toString()
           )
         ]
@@ -581,6 +604,7 @@ export class PendleMarket extends Market {
     }
 
     const removeDual = async (percentage: number, slippage: number): Promise<providers.TransactionResponse> => {
+
       const details: RemoveDualLiquidityDetails = await removeDualDetails(percentage, slippage);
       const desiredXytOut: BN = BN.from(details.tokenAmounts[0].rawAmount());
       const desiredTokenOut: BN = BN.from(details.tokenAmounts[1].rawAmount());
@@ -588,13 +612,13 @@ export class PendleMarket extends Market {
       const minTokenOut: BN = calcSlippedDownAmount(desiredTokenOut, slippage);
       const args: any[] = [
         await getMarketFactoryId(),
-        this.tokens[0].address,
-        this.tokens[1].address,
+        details.tokenAmounts[0].token.address,
+        details.tokenAmounts[1].token.address,
         getLpAmountByFraction(percentage),
         minXytOut,
         minTokenOut
       ]
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquidityDual(...args);
+      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.removeMarketLiquidityDual(...args);
       return pendleRouterContract.connect(signer).removeMarketLiquidityDual(...args, getGasLimit(gasEstimate));
     }
 
@@ -656,15 +680,19 @@ export class PendleMarket extends Market {
       const exactOutAmount: BN = BN.from(details.outAmount.rawAmount());
       const minOutAmount: BN = calcSlippedDownAmount(exactOutAmount, slippage);
 
+      const isForXyt: boolean = isSameAddress(outToken.address, this.tokens[0].address);
+
       const args: any[] = [
         await getMarketFactoryId(),
         this.tokens[0].address,
-        this.tokens[1].address,
-        isSameAddress(outToken.address, this.tokens[0].address),
+        isForXyt
+          ? this.tokens[1].address
+          : outToken.address,
+        isForXyt,
         getLpAmountByFraction(percentage),
         minOutAmount
       ];
-      const gasEstimate: BN = await pendleRouterContract.estimateGas.removeMarketLiquiditySingle(...args);
+      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.removeMarketLiquiditySingle(...args);
       return pendleRouterContract.connect(signer).removeMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
     }
 
