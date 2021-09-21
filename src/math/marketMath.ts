@@ -117,7 +117,7 @@ export function calcOutAmountLp(
 }
 
 export function calcPriceImpact(idealRate: BN, actualRate: BN): BigNumber {
-    const priceImpact: BigNumber = new BigNumber(idealRate.sub(actualRate).toString()).div(idealRate.toString());
+    const priceImpact: BigNumber = BigNumber.max(new BigNumber(0), new BigNumber(idealRate.sub(actualRate).toString()).div(idealRate.toString()));
     return priceImpact;
 }
 
