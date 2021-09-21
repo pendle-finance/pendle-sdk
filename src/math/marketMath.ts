@@ -3,6 +3,8 @@ import { BigNumber as BN } from 'ethers';
 import BigNumber from 'bignumber.js';
 
 export const DecimalsPrecision: number = 10;
+export const PercentageMaxDecimals: number = 6;
+export const PONE: BN = BN.from(10).pow(PercentageMaxDecimals);
 export const ONE = new BigNumber(1);
 
 export function calcExactOut(
@@ -179,4 +181,14 @@ export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): number {
 export function calcPrincipalFloat(principalPerYT: BN, ytDecimal: number, underlyingDecimal: number): BigNumber {
     return new BigNumber(principalPerYT.mul(BN.from(10).pow(ytDecimal)).toString())
         .div(new BigNumber(BN.from(10).pow(18 + underlyingDecimal).toString()));
+}
+
+export function calcSlippedDownAmount(amount: BN, slippage: number) {
+    slippage = Math.trunc(slippage * Math.pow(10, PercentageMaxDecimals));
+    return amount.mul(PONE.sub(BN.from(slippage))).div(PONE);
+}
+
+export function calcSlippedUpAmount(amount: BN, slippage: number) {
+    slippage = Math.trunc(slippage * Math.pow(10, PercentageMaxDecimals));
+    return amount.mul(PONE.add(BN.from(slippage))).div(PONE);
 }

@@ -32,7 +32,7 @@ export async function fetchSLPPrice(address: string): Promise<BigNumber> {
     })
     .catch((err) => {
       console.error(
-        'Something went wrong fetching PENDLE/ETH (SLP) price, default to 1 USD',
+        'Something went wrong fetching SLP price, default to 1 USD',
         err
       )
       return new BigNumber(1);

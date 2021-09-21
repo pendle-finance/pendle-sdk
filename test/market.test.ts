@@ -71,8 +71,8 @@ describe("Market", () => {
 
     it.only('PendleMarket.swapExactOutDetails', async () => {
         const swapExactOutDetails = await market.methods(signer).swapExactOutDetails(new TokenAmount(
-            market.tokens[1],
-            BN.from(10).pow(11).toString()
+            market.tokens[0],
+            BN.from(10).pow(6).toString()
         ),
         0.01);
         console.log(swapExactOutDetails);
@@ -88,7 +88,7 @@ describe("Market", () => {
         console.log(response);
     });
 
-    it('PendleMarket.addDualDetails', async () => {
+    it.only('PendleMarket.addDualDetails', async () => {
         const response = await market.methods(signer).addDualDetails(new TokenAmount(
             tokens.USDCToken,
             BN.from(10).pow(11).toString()
@@ -101,7 +101,7 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it('PendleMarket.addSingleDetails', async () => {
+    it.only('PendleMarket.addSingleDetails', async () => {
         const response = await market.methods(signer).addSingleDetails(new TokenAmount(
             tokens.USDCToken,
             BN.from(10).pow(12).toString()
