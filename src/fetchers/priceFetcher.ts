@@ -2,11 +2,14 @@ import { distributeConstantsByNetwork } from "../helpers"
 import { NetworkInfo } from "../networks";
 import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
+const axios = require('axios')
 
 export async function fetchPendleUsdPrice(): Promise<BigNumber> {
-  const price = await fetch(
+  const price = await axios.get(
     'https://api.coingecko.com/api/v3/simple/price?ids=pendle&vs_currencies=usd'
-  ).then((res) => res.json())
+  ).then((res: any) => {
+    return res.data
+  })
 
   return new BigNumber(price?.pendle?.usd)
 }
