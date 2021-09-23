@@ -54,7 +54,7 @@ export type AddDualLiquidityDetails = {
 
 export type AddSingleLiquidityDetails = {
   shareOfPool: string;
-  rate: string;
+  rate: TokenAmount;
   priceImpact: string;
   swapFee: TokenAmount;
 };
@@ -65,7 +65,7 @@ export type RemoveDualLiquidityDetails = {
 
 export type RemoveSingleLiquidityDetails = {
   outAmount: TokenAmount;
-  rate: string;
+  rate: TokenAmount;
   priceImpact?: string;
   swapFee?: TokenAmount;
 };
@@ -306,7 +306,7 @@ export class PendleMarket extends Market {
       const inAmount: BN = BN.from(inTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative = this.getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
       const outAmount: BN = calcExactOut(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -348,7 +348,7 @@ export class PendleMarket extends Market {
       const outAmount: BN = BN.from(outTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative = this.getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
+      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
       if (outAmount.gte(tokenDetailsRelative.outReserve)) {
         throw Error("Out Amount Too Large");
       }
@@ -418,7 +418,7 @@ export class PendleMarket extends Market {
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
       return {
@@ -453,7 +453,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -475,7 +475,10 @@ export class PendleMarket extends Market {
       const shareOfPool: BigNumber = calcShareOfPool(totalSupplyLp, details.exactOutLp);
       return {
         shareOfPool: shareOfPool.toFixed(DecimalsPrecision),
-        rate: avgRate.toString(),
+        rate: new TokenAmount (
+          tokenDetailsRelative.outToken,
+          avgRate.toString()
+        ),
         priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           tokenAmount.token,
@@ -489,7 +492,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -583,7 +586,10 @@ export class PendleMarket extends Market {
             outToken,
             "0"
           ),
-          rate: "0",
+          rate: new TokenAmount(
+            outToken,
+            "0"
+          ),
           priceImpact: "0",
           swapFee: new TokenAmount(
             outToken,
@@ -593,7 +599,7 @@ export class PendleMarket extends Market {
       }
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
-      const tokenDetailsRelative = this.getTokenDetailsRelative(outToken, marketReserves, false);
+      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(outToken, marketReserves, false);
       const swapFee: BN = await pendleDataContract.swapFee();
 
       const details = calcOutAmountToken(
@@ -619,7 +625,10 @@ export class PendleMarket extends Market {
           outToken,
           details.exactOutToken.toString()
         ),
-        rate: avgRate.toString(),
+        rate: new TokenAmount(
+          tokenDetailsRelative.outToken,
+          avgRate.toString()
+        ),
         priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           outToken,

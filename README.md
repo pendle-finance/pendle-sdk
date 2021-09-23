@@ -65,6 +65,7 @@ AddDualLiquidityDetails = {
 AddSingleLiquidityDetails = {
   shareOfPool: string,
   priceImpact: string,
+  rate: TokenAmount,
   swapFee: TokenAmount
 }
 
@@ -75,6 +76,7 @@ RemoveDualLiquidityDetails = {
 RemoveSingleLiquidityDetails = {
   outAmount: TokenAmount
   priceImpact?: string
+  rate: TokenAmount
   swapFee?: TokenAmount
 }
 
