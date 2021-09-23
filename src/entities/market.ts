@@ -570,7 +570,7 @@ export class PendleMarket extends Market {
     }
 
     const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
-      const outBaseToken: Token = isSameAddress(this.tokens[1].address, ETHAddress) ? ETHToken : this.tokens[1];
+      const outBaseToken: Token = isSameAddress(this.tokens[1].address, networkInfo.contractAddresses.tokens.WETH) ? ETHToken : this.tokens[1];
       const redeemAmount: BN = await getLpAmountByFraction(percentage);
       if (redeemAmount.eq(0)) {
         return {
