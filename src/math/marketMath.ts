@@ -81,10 +81,12 @@ export function calcSwapFee(inAmount: BN, swapFee: BN) {
 
 export function calcOtherTokenAmount(
     inTokenReserve: BN,
+    inTokenWeight: BN,
     outTokenReserve: BN,
+    outTokenWeight: BN,
     inAmount: BN
 ): BN {
-    return inAmount.mul(outTokenReserve).div(inTokenReserve);
+    return inAmount.mul(outTokenReserve).mul(inTokenWeight).div(outTokenWeight).div(inTokenReserve);
 }
 
 export function calcOutAmountLp(
@@ -117,7 +119,7 @@ export function calcOutAmountLp(
 }
 
 export function calcPriceImpact(idealRate: BN, actualRate: BN): BigNumber {
-    const priceImpact: BigNumber = new BigNumber(idealRate.sub(actualRate).toString()).div(idealRate.toString());
+    const priceImpact: BigNumber = BigNumber.max(new BigNumber(0), new BigNumber(idealRate.sub(actualRate).toString()).div(idealRate.toString()));
     return priceImpact;
 }
 

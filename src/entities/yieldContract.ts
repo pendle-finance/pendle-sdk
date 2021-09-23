@@ -90,7 +90,6 @@ export class YieldContract {
         }
         const mint = async (toMint: TokenAmount): Promise<providers.TransactionResponse> => {
             const args = [this.forgeIdInBytes, this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), await signer.getAddress()];
-            console.log(args);
             const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.tokenizeYield(...args);
             return pendleRouterContract.connect(signer).tokenizeYield(...args, getGasLimit(gasEstimate));
         }
