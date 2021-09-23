@@ -288,7 +288,9 @@ export class PendleMarket extends Market {
             ? volumeToday.amount === 0 ? '0' : '1'
             : ((volumeToday.amount - volumeYesterday.amount) / volumeYesterday.amount).toString(),
           liquidity: liquidityToday,
-          liquidity24HChange: ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
+          liquidity24HChange: liquidityYesterday.amount === 0
+          ? liquidityToday.amount === 0 ? '0' : '1'
+          : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
           swapFeeApr: swapFeeForLP.toFixed(DecimalsPrecision),
           impliedYield: impliedYield.toString(),
           YTPrice: {
