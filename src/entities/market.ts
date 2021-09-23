@@ -419,7 +419,7 @@ export class PendleMarket extends Market {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
       const tokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
-      const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.inWeight, tokenDetailsRelative.outReserve, tokenDetailsRelative.outWeight, inAmount);
+      const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
       return {
         otherTokenAmount: new TokenAmount(

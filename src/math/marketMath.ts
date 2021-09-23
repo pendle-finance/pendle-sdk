@@ -81,12 +81,10 @@ export function calcSwapFee(inAmount: BN, swapFee: BN) {
 
 export function calcOtherTokenAmount(
     inTokenReserve: BN,
-    inTokenWeight: BN,
     outTokenReserve: BN,
-    outTokenWeight: BN,
     inAmount: BN
 ): BN {
-    return inAmount.mul(outTokenReserve).mul(inTokenWeight).div(outTokenWeight).div(inTokenReserve);
+    return inAmount.mul(outTokenReserve).div(inTokenReserve);
 }
 
 export function calcOutAmountLp(
