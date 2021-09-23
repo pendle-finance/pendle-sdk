@@ -330,7 +330,7 @@ export const mainnetContracts: NetworkContractAddresses = {
         },
     ],
     misc: {
-        PendleRedeemProxy: '0x6231986eed646d24152f3529d815fd85c295f06c',
+        PendleRedeemProxy: '0xc956845c51c83b41d2705b5c9f31e86746d9af5b',
         PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b',
         PendleRouter: '0x1b6d3e5da9004668e14ca39d1553e9a46fe842b3',
         PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6'

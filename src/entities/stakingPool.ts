@@ -224,7 +224,7 @@ export class StakingPool {
         userAddress
       )
       const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
-        return populatePoolYields(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
+        return populatePoolYields(Lm1s[i], userLm1Interests.lmInterests[i].toString(), userLm1Rewards.lmRewards[i].toString(), decimalsRecord);
       });
 
       const userLm2Interests = await redeemProxyContract.callStatic.redeemLmV2Interests(

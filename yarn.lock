@@ -1473,10 +1473,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@pendle/core@1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.1.1.tgz#96592b105221bda394834486de6529c7eb308ce2"
-  integrity sha512-HfflNp2/kc8usUnffluMe1ExqvvUtzY/DNUAlUOfmYFyrIrEqfjS/LQEumDCULsRxMYuQMk/ZAvoiGRuW9HGug==
+"@pendle/core@1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.1.3.tgz#4d8e8675c7e03dba3867ccab96f1042d047aa59f"
+  integrity sha512-xtyIWV7cY+qw+aaV30YtoH1lOu/ABmy4gRtAkaj67wu9bCiurkuYBfqNVyUQr/WWO2KEsRvpeG7Z+uCk8XdIuA==
   dependencies:
     bignumber.js "^9.0.1"
 
