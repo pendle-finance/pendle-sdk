@@ -2,16 +2,17 @@ import { distributeConstantsByNetwork } from "../helpers"
 import { NetworkInfo } from "../networks";
 import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
+import { ETHAddress } from "../constants";
 const axios = require('axios')
 
-export async function fetchPendleUsdPrice(): Promise<BigNumber> {
+export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
   const price = await axios.get(
-    'https://api.coingecko.com/api/v3/simple/price?ids=pendle&vs_currencies=usd'
+    `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`
   ).then((res: any) => {
     return res.data
   })
 
-  return new BigNumber(price?.pendle?.usd)
+  return new BigNumber(price[id].usd)
 }
 
 const sushiswapReservesQuery = (slpAddress: string) => gql`{
@@ -48,13 +49,17 @@ export async function fetchSLPPrice(address: string): Promise<BigNumber> {
 export async function fetchTokenPrice(address: string, chainId?: number): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
-    switch (address) {
+    switch (address.toLowerCase()) {
       case networkInfo.contractAddresses.tokens.USDC:
       case networkInfo.contractAddresses.tokens.DAI:
         return new BigNumber(1)
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        return fetchPendleUsdPrice();
+        return fetchPriceFromCoingecko('pendle');
+
+      case networkInfo.contractAddresses.tokens.WETH:
+      case ETHAddress.toLowerCase():
+        return fetchPriceFromCoingecko('ethereum');
 
       case networkInfo.contractAddresses.tokens.ETHUSDC_SLP:
       case networkInfo.contractAddresses.tokens.PENDLEETH_SLP:

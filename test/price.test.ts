@@ -1,9 +1,9 @@
-import { fetchPendleUsdPrice } from "../src/fetchers/priceFetcher";
+import { fetchPriceFromCoingecko } from "../src/fetchers/priceFetcher";
 jest.setTimeout(30000);
 
 describe("price fetcher", () => {
     it('Pendle', async() => {
-        const res = await fetchPendleUsdPrice();
+        const res = await fetchPriceFromCoingecko("ethereum");
         console.log(res.toString());
     })
 })
