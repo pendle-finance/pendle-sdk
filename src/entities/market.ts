@@ -681,7 +681,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValue = async (marketReserve: MarketReservesRaw): Promise<CurrencyAmount> => {
-      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address);
+      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
 
       return {
