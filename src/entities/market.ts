@@ -218,7 +218,7 @@ export class PendleMarket extends Market {
     const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
     const transactionFetcher: TransactionFetcher = new TransactionFetcher(chainId === undefined ? 1 : chainId);
     const underlyingAsset: string = networkInfo.contractAddresses.YTs.find((ytInfo: YTINFO) => isSameAddress(ytInfo.address, this.tokens[0].address))!.underlyingAssetAddress;
-    const yieldContract: YieldContract = this.yieldContract();
+    const yieldContract: YieldContract = this.yieldContract(chainId);
     const forgeAddress = networkInfo.contractAddresses.forges[yieldContract.forgeIdInBytes];
     const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(yieldContract.forgeIdInBytes).abi, signer.provider);
 
@@ -289,8 +289,8 @@ export class PendleMarket extends Market {
             : ((volumeToday.amount - volumeYesterday.amount) / volumeYesterday.amount).toString(),
           liquidity: liquidityToday,
           liquidity24HChange: liquidityYesterday.amount === 0
-          ? liquidityToday.amount === 0 ? '0' : '1'
-          : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
+            ? liquidityToday.amount === 0 ? '0' : '1'
+            : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
           swapFeeApr: swapFeeForLP.toFixed(DecimalsPrecision),
           impliedYield: impliedYield.toString(),
           YTPrice: {
@@ -475,7 +475,7 @@ export class PendleMarket extends Market {
       const shareOfPool: BigNumber = calcShareOfPool(totalSupplyLp, details.exactOutLp);
       return {
         shareOfPool: shareOfPool.toFixed(DecimalsPrecision),
-        rate: new TokenAmount (
+        rate: new TokenAmount(
           tokenDetailsRelative.outToken,
           avgRate.toString()
         ),
@@ -681,7 +681,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValue = async (marketReserve: MarketReservesRaw): Promise<CurrencyAmount> => {
-      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address);
+      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
 
       return {
@@ -691,16 +691,23 @@ export class PendleMarket extends Market {
     }
 
     const getPastLiquidityValue = async (): Promise<CurrencyAmount> => {
-      const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
-      if (pastBlockNumber === undefined) {
-        console.error("Unable to get block that is 1 day old");
-        return {
-          currency: "USD",
-          amount: 0
+      if (chainId === undefined || chainId == 1) {
+        const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
+        if (pastBlockNumber === undefined) {
+          console.error("Unable to get block that is 1 day old");
+          return {
+            currency: "USD",
+            amount: 0
+          }
         }
+        const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
+        return getLiquidityValue(pastMarketReserves);
+      } else { // If Kovan, then return 0 since we do not have access to achived state
+        return {
+          currency: 'USD',
+          amount: 0
+        };
       }
-      const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
-      return getLiquidityValue(pastMarketReserves);
     }
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: number, impliedYield: number }> => {

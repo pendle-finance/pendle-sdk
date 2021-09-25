@@ -45,7 +45,7 @@ export async function fetchSLPPrice(address: string): Promise<BigNumber> {
 
 }
 
-export async function fetchTokenPrice(address: string, chainId?: number): Promise<BigNumber> {
+export async function fetchTokenPrice(address: string, chainId: number | undefined): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
     switch (address) {
@@ -63,6 +63,8 @@ export async function fetchTokenPrice(address: string, chainId?: number): Promis
       default:
         throw Error("Unsupporrted token in fetchTokenPrice");
     }
+  } else if (chainId == 42) {
+    return new BigNumber(1); // returning dummy data since it's kovan
   } else {
     throw Error("Unsupported network in fetchTokenPrice");
   }

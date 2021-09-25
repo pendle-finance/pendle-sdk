@@ -120,7 +120,6 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            expiry: EXP_2022
         },
         {
             address: "0xfc3468da89cb5bdf893242ece0324b51ea6482c6",

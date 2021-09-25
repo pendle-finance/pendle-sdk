@@ -2,16 +2,22 @@ import { dummyTokenAmount, EXP_2022, EXP_2021, Token, TokenAmount, YieldContract
 // import { Market } from '../src/entities/market';
 import { ethers, BigNumber as BN, Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
-import { mainnetContracts } from '../src/networks';
+import { NetworkInfo } from '../src/networks';
+import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
 
+const chainId: number = 42;
+
 const dummyUser = '0x186e446fbd41dD51Ea2213dB2d3ae18B05A05ba8'; // local alice account
+
+const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+
 const DAIToken: Token = new Token(
   '0x6b175474e89094c44da98b954eedeac495271d0f',
   18,
 );
 const cDAIToken: Token = new Token(
-  '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643',
+  chainId == 1 ? '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643' : '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
   8
 )
 const OTcDAIToken: Token = new Token(
@@ -20,7 +26,7 @@ const OTcDAIToken: Token = new Token(
   EXP_2022.toNumber()
 )
 const USDCToken: Token = new Token(
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  networkInfo.contractAddresses.tokens.USDC,
   6
 );
 const OTaUSDCToken: Token = new Token(
@@ -53,13 +59,12 @@ describe("Yiled Contract", () => {
   let signer: any;
   let yContract: YieldContract;
 
-  before(async () => {
-    // const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
+  beforeAll(async () => {
+    const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`;
 
-    const providerUrl = `http://127.0.0.1:8545`;
+    // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
-    console.log(signer);
     yContract = new YieldContract(
       utils.parseBytes32String(forgeIdsInBytes.AAVE),
       Tokens.USDCToken,
@@ -67,8 +72,8 @@ describe("Yiled Contract", () => {
     );
   });
 
-  it.only('yieldContract.mintDetails', async () => {
-    const response = await yContract.methods(signer).mintDetails(new TokenAmount(
+  it('yieldContract.mintDetails', async () => {
+    const response = await yContract.methods(signer, chainId).mintDetails(new TokenAmount(
       Tokens.aUSDCToken,
       BN.from(10).pow(9).toString()
     ));
@@ -77,10 +82,7 @@ describe("Yiled Contract", () => {
 
   it('yieldContract.mint', async () => {
     const cDAIContract = new Contract(Tokens.cDAIToken.address, contracts.IERC20.abi, provider);
-    await cDAIContract.connect(signer).approve(mainnetContracts.misc.PendleRouter, BN.from(10).pow(40));
-    console.log((await cDAIContract.allowance(await signer.getAddress(), mainnetContracts.misc.PendleRouter)).toString());
-    console.log((await cDAIContract.balanceOf(await signer.getAddress())).toString());
-
+    await cDAIContract.connect(signer).approve(networkInfo.contractAddresses.misc.PendleRouter, BN.from(10).pow(40));
     const response = await yContract.methods(signer).mint(new TokenAmount(
       Tokens.cDAIToken,
       BN.from(10).pow(12).toString()
@@ -88,7 +90,7 @@ describe("Yiled Contract", () => {
     console.log(response);
   })
 
-  it('yieldContract.redeemDetails', async () => {
+  it.only('yieldContract.redeemDetails', async () => {
     const response = await yContract.methods(signer).redeemDetails(new TokenAmount(
       Tokens.OTcDAIToken,
       BN.from(10).pow(12).toString()

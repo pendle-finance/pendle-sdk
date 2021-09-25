@@ -10,6 +10,7 @@ import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
 } from './transactions';
+import { dummyAddress } from "..";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
@@ -44,7 +45,7 @@ export class YieldContract {
 
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeIdInBytes !== forgeIdsInBytes.SUSHISWAP_COMPLEX) {
-                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), await signer.getAddress(), { from: networkInfo.contractAddresses.misc.PendleRouter });
+                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 return [
                     new TokenAmount(
                         new Token(
