@@ -214,7 +214,7 @@ export const kovanContracts: NetworkContractAddresses = {
             expiry: EXP_2022
         },
         {
-            address: '0x4835f1f01102ea3c033ae193ec6ec63961863335',
+            address: '0x5fdbb48fced67425ab0598544de1aa63c220ea9d',
             inputTokenAddress: '0x4835f1f01102ea3c033ae193ec6ec63961863335',
             contractType: StakingPoolType.LmV1,
             rewardTokenAddresses: [
