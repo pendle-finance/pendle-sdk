@@ -87,6 +87,8 @@ export const xor = (a: boolean, b: boolean) => a!=b;
 
 export const getGasLimit = (estimate:BN) => { return {gasLimit: Math.trunc(estimate.toNumber() * gasBuffer) }}
 
+export const getGasLimitWithETH = (estimate:BN, value: BN) => { return {gasLimit: Math.trunc(estimate.toNumber() * gasBuffer), value: value }}
+
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
   const margin: number = 30;
   var blockRateUpperBound: number;

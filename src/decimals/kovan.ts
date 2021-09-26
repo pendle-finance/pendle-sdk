@@ -23,5 +23,6 @@ export const kovanDecimals = {
     "0x4835f1f01102ea3c033ae193ec6ec63961863335": 18,
     "0xe22da380ee6b445bb8273c81944adeb6e8450422": 6,
     "0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033": 18,
-    "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa": 18
+    "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa": 18,
+    '0xd0a1e359811322d97991e03f863a0c30c2cf029c': 18
 }

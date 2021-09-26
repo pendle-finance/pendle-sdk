@@ -1,10 +1,10 @@
-import { Token } from './token';
+import { Token, ETHToken } from './token';
 import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
-import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId } from '../helpers'
+import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH } from '../helpers'
 import { CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
@@ -12,7 +12,7 @@ import {
   PendleAmmQuery,
 } from './transactions';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount } from '../math/marketMath';
-import { forgeIdsInBytes, ONE_DAY } from '../constants';
+import { forgeIdsInBytes, ONE_DAY, ETHAddress } from '../constants';
 import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactions/types';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
@@ -264,6 +264,8 @@ export class PendleMarket extends Market {
           case forgeIdsInBytes.SUSHISWAP_SIMPLE:
             underlyingYieldRate = await fetchSushiYield(yieldBearingAddress);
             break;
+
+          // TODO: add Uniswap support here
         }
       }
 
@@ -306,7 +308,7 @@ export class PendleMarket extends Market {
       const inAmount: BN = BN.from(inTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
       const outAmount: BN = calcExactOut(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -326,6 +328,11 @@ export class PendleMarket extends Market {
         swapFee
       );
       const priceImpact: BigNumber = calcPriceImpact(currentRateWithSwapFee, avgRate);
+
+      if (isSameAddress(tokenDetailsRelative.outToken.address, networkInfo.contractAddresses.tokens.WETH)) {
+        tokenDetailsRelative.outToken = ETHToken;
+      }
+
       return {
         inAmount: inTokenAmount,
         outAmount: new TokenAmount(
@@ -348,7 +355,7 @@ export class PendleMarket extends Market {
       const outAmount: BN = BN.from(outTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
       if (outAmount.gte(tokenDetailsRelative.outReserve)) {
         throw Error("Out Amount Too Large");
       }
@@ -371,6 +378,11 @@ export class PendleMarket extends Market {
         swapFee
       );
       const priceImpact: BigNumber = calcPriceImpact(currentRateWithSwapFee, avgRate);
+
+      if (isSameAddress(tokenDetailsRelative.inToken.address, networkInfo.contractAddresses.tokens.WETH)) {
+        tokenDetailsRelative.inToken = ETHToken;
+      }
+
       return {
         inAmount: new TokenAmount(
           tokenDetailsRelative.inToken,
@@ -398,8 +410,13 @@ export class PendleMarket extends Market {
         details.minReceived!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args);
-      return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
+      if (isSameAddress(details.inAmount.token.address, ETHAddress)) {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args, { value: BN.from(details.inAmount.rawAmount()) });
+        return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimitWithETH(gasEstimate, BN.from(details.inAmount.rawAmount())));
+      } else {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactIn(...args);
+        return pendleRouterContract.connect(signer).swapExactIn(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const swapExactOut = async (outTokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
@@ -411,16 +428,26 @@ export class PendleMarket extends Market {
         details.maxInput!.rawAmount(),
         await getMarketFactoryId()
       ];
-      const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args);
-      return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimit(gasEstimate));
+      if (isSameAddress(details.inAmount.token.address, ETHAddress)) {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args, { value: BN.from(details.maxInput!.rawAmount()) });
+        return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimitWithETH(gasEstimate, BN.from(details.maxInput!.rawAmount())));
+      } else {
+        const gasEstimate = await pendleRouterContract.connect(signer).estimateGas.swapExactOut(...args);
+        return pendleRouterContract.connect(signer).swapExactOut(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
+
+      if (isSameAddress(tokenDetailsRelative.outToken.address, networkInfo.contractAddresses.tokens.WETH)) {
+        tokenDetailsRelative.outToken = ETHToken;
+      }
+
       return {
         otherTokenAmount: new TokenAmount(
           tokenDetailsRelative.outToken,
@@ -431,21 +458,29 @@ export class PendleMarket extends Market {
     }
 
     const addDual = async (tokenAmounts: TokenAmount[], slippage: number): Promise<providers.TransactionResponse> => {
-      const desiredXytAmount: BN = BN.from(tokenAmounts[0].rawAmount());
-      const desiredTokenAmount: BN = BN.from(tokenAmounts[1].rawAmount());
+      const xytTokenAmount: TokenAmount = isSameAddress(tokenAmounts[0].token.address, this.tokens[0].address) ? tokenAmounts[0] : tokenAmounts[1];
+      const baseTokenAmount: TokenAmount = isSameAddress(tokenAmounts[0].token.address, this.tokens[0].address) ? tokenAmounts[1] : tokenAmounts[0];
+
+      const desiredXytAmount: BN = BN.from(xytTokenAmount.rawAmount());
+      const desiredTokenAmount: BN = BN.from(baseTokenAmount.rawAmount());
       const xytMinAmount: BN = calcSlippedDownAmount(desiredXytAmount, slippage);
       const tokenMinAmount: BN = calcSlippedDownAmount(desiredTokenAmount, slippage);
       const args: any[] = [
         await getMarketFactoryId(),
-        this.tokens[0].address,
-        this.tokens[1].address,
+        xytTokenAmount.token.address,
+        baseTokenAmount.token.address,
         desiredXytAmount,
         desiredTokenAmount,
         xytMinAmount,
         tokenMinAmount
       ]
-      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquidityDual(...args);
-      return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimit(gasEstimate));
+      if (isSameAddress(baseTokenAmount.token.address, ETHAddress)) {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquidityDual(...args, { value: desiredTokenAmount });
+        return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimitWithETH(gasEstimate, desiredTokenAmount));
+      } else {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquidityDual(...args);
+        return pendleRouterContract.connect(signer).addMarketLiquidityDual(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const addSingleDetails = async (tokenAmount: TokenAmount): Promise<AddSingleLiquidityDetails> => {
@@ -453,7 +488,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -492,7 +527,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -504,16 +539,27 @@ export class PendleMarket extends Market {
       );
       const exactOutLp: BN = details.exactOutLp;
       const minOutLp: BN = calcSlippedDownAmount(exactOutLp, slippage);
+
+      const isForXyt: boolean = isSameAddress(tokenAmount.token.address, this.tokens[0].address);
+
       const args: any[] = [
         await getMarketFactoryId(),
         this.tokens[0].address,
-        this.tokens[1].address,
-        isSameAddress(tokenAmount.token.address, this.tokens[0].address),
+        isForXyt
+          ? this.tokens[1].address
+          : tokenAmount.token.address,
+        isForXyt,
         tokenAmount.rawAmount(),
         minOutLp
       ];
-      const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquiditySingle(...args);
-      return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
+
+      if (!isForXyt && isSameAddress(tokenAmount.token.address, ETHAddress)) {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquiditySingle(...args, { value: BN.from(tokenAmount.rawAmount()) });
+        return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimitWithETH(gasEstimate, BN.from(tokenAmount.rawAmount())));
+      } else {
+        const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.addMarketLiquiditySingle(...args);
+        return pendleRouterContract.connect(signer).addMarketLiquiditySingle(...args, getGasLimit(gasEstimate));
+      }
     }
 
     const getLpAmountByFraction = async (percentage: number): Promise<BN> => {
@@ -527,6 +573,7 @@ export class PendleMarket extends Market {
     }
 
     const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
+      const outBaseToken: Token = isSameAddress(this.tokens[1].address, networkInfo.contractAddresses.tokens.WETH) ? ETHToken : this.tokens[1];
       const redeemAmount: BN = await getLpAmountByFraction(percentage);
       if (redeemAmount.eq(0)) {
         return {
@@ -536,12 +583,13 @@ export class PendleMarket extends Market {
               "0"
             ),
             new TokenAmount(
-              this.tokens[1],
+              outBaseToken,
               "0"
             )
           ]
         }
       }
+
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const xytRedeemAmout: BN = marketReserves.xytBalance.mul(redeemAmount).div(totalSupplyLp);
@@ -553,7 +601,7 @@ export class PendleMarket extends Market {
             xytRedeemAmout.toString()
           ),
           new TokenAmount(
-            this.tokens[1],
+            outBaseToken,
             baseTokenRedeemAmount.toString()
           )
         ]
@@ -561,6 +609,7 @@ export class PendleMarket extends Market {
     }
 
     const removeDual = async (percentage: number, slippage: number): Promise<providers.TransactionResponse> => {
+
       const details: RemoveDualLiquidityDetails = await removeDualDetails(percentage, slippage);
       const desiredXytOut: BN = BN.from(details.tokenAmounts[0].rawAmount());
       const desiredTokenOut: BN = BN.from(details.tokenAmounts[1].rawAmount());
@@ -568,8 +617,8 @@ export class PendleMarket extends Market {
       const minTokenOut: BN = calcSlippedDownAmount(desiredTokenOut, slippage);
       const args: any[] = [
         await getMarketFactoryId(),
-        this.tokens[0].address,
-        this.tokens[1].address,
+        details.tokenAmounts[0].token.address,
+        details.tokenAmounts[1].token.address,
         getLpAmountByFraction(percentage),
         minXytOut,
         minTokenOut
@@ -599,7 +648,7 @@ export class PendleMarket extends Market {
       }
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
-      const tokenDetailsRelative: TokenDetailsRelative = this.getTokenDetailsRelative(outToken, marketReserves, false);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(outToken, marketReserves, false);
       const swapFee: BN = await pendleDataContract.swapFee();
 
       const details = calcOutAmountToken(
@@ -642,11 +691,15 @@ export class PendleMarket extends Market {
       const exactOutAmount: BN = BN.from(details.outAmount.rawAmount());
       const minOutAmount: BN = calcSlippedDownAmount(exactOutAmount, slippage);
 
+      const isForXyt: boolean = isSameAddress(outToken.address, this.tokens[0].address);
+
       const args: any[] = [
         await getMarketFactoryId(),
         this.tokens[0].address,
-        this.tokens[1].address,
-        isSameAddress(outToken.address, this.tokens[0].address),
+        isForXyt
+          ? this.tokens[1].address
+          : outToken.address,
+        isForXyt,
         getLpAmountByFraction(percentage),
         minOutAmount
       ];
@@ -753,6 +806,41 @@ export class PendleMarket extends Market {
       };
     }
 
+
+    const getTokenDetailsRelative = (token: Token, marketReserves: MarketReservesRaw, isInToken: boolean): TokenDetailsRelative => {
+      var tokenAddress = token.address;
+      if (isSameAddress(tokenAddress, ETHAddress)) {
+        tokenAddress = networkInfo.contractAddresses.tokens.WETH;
+      }
+      var inReserve: BN, inWeight: BN, outReserve: BN, outWeight: BN, inToken: Token, outToken: Token;
+      if (!isSameAddress(tokenAddress, this.tokens[0].address) && !isSameAddress(tokenAddress, this.tokens[1].address)) {
+        throw new Error(WRONG_TOKEN);
+      }
+      if (xor(isSameAddress(tokenAddress, this.tokens[0].address), isInToken)) {
+        inReserve = marketReserves.tokenBalance;
+        inWeight = marketReserves.tokenWeight;
+        inToken = this.tokens[1];
+        outReserve = marketReserves.xytBalance;
+        outWeight = marketReserves.xytWeight;
+        outToken = this.tokens[0];
+      } else {
+        inReserve = marketReserves.xytBalance;
+        inWeight = marketReserves.xytWeight;
+        inToken = this.tokens[0];
+        outReserve = marketReserves.tokenBalance;
+        outWeight = marketReserves.tokenWeight;
+        outToken = this.tokens[1];
+      }
+      return {
+        inReserve,
+        inWeight,
+        inToken,
+        outReserve,
+        outWeight,
+        outToken
+      }
+    }
+
     return {
       readMarketDetails,
       swapExactInDetails,
@@ -768,36 +856,5 @@ export class PendleMarket extends Market {
       removeSingleDetails,
       removeSingle,
     };
-  }
-
-  private getTokenDetailsRelative(token: Token, marketReserves: MarketReservesRaw, isInToken: boolean): TokenDetailsRelative {
-    var inReserve: BN, inWeight: BN, outReserve: BN, outWeight: BN, inToken: Token, outToken: Token;
-    const tokenAddress = token.address.toLowerCase();
-    if (tokenAddress != this.tokens[0].address && tokenAddress != this.tokens[1].address) {
-      throw new Error(WRONG_TOKEN);
-    }
-    if (xor(isSameAddress(tokenAddress, this.tokens[0].address), isInToken)) {
-      inReserve = marketReserves.tokenBalance;
-      inWeight = marketReserves.tokenWeight;
-      inToken = this.tokens[1];
-      outReserve = marketReserves.xytBalance;
-      outWeight = marketReserves.xytWeight;
-      outToken = this.tokens[0];
-    } else {
-      inReserve = marketReserves.xytBalance;
-      inWeight = marketReserves.xytWeight;
-      inToken = this.tokens[0];
-      outReserve = marketReserves.tokenBalance;
-      outWeight = marketReserves.tokenWeight;
-      outToken = this.tokens[1];
-    }
-    return {
-      inReserve,
-      inWeight,
-      inToken,
-      outReserve,
-      outWeight,
-      outToken
-    }
   }
 }

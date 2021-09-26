@@ -1,4 +1,4 @@
-import { dummyAddress } from "../constants";
+import { dummyAddress, ETHAddress } from "../constants";
 
 export class Token {
   public readonly address: string;
@@ -11,6 +11,11 @@ export class Token {
     this.expiry = expiry;
   }
 }
+
+export const ETHToken: Token = new Token(
+  ETHAddress,
+  18
+)
 
 export const dummyToken: Token = new Token(
   dummyAddress,

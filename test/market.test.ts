@@ -38,6 +38,7 @@ const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDC
 // const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
 // const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
 // const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
+// const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
 
 const PendleEthMarket = PendleMarket.find("0x4835f1f01102ea3c033ae193ec6ec63961863335", 42);
 const ETHUSDCMarket = PendleMarket.find("0x68fc791abd6339c064146ddc9506774aa142efbe", 42);
@@ -72,7 +73,7 @@ describe("Market", () => {
     it('PendleMarket.swapExactInDetails', async () => {
         const swapExactInDetails = await market.methods(signer, chainId).swapExactInDetails(new TokenAmount(
             market.tokens[1],
-            BN.from(10).pow(11).toString()
+            BN.from(10).pow(6).toString()
         ),
         0.001);
         console.log(swapExactInDetails);

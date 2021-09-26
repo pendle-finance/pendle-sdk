@@ -291,7 +291,8 @@ export const kovanContracts: NetworkContractAddresses = {
         PENDLE: '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033',
         DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
         PENDLEETH_SLP: '0x0db5af4b374e810f6e5a15ccc3d65e28cc4dbec7',
-        ETHUSDC_SLP: '0xcec1967d0ea74e2efe7eda4dfa323e8252e57550'
+        ETHUSDC_SLP: '0xcec1967d0ea74e2efe7eda4dfa323e8252e57550',
+        WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
     },
     forges: {
         [forgeIdsInBytes.AAVE]: "0x08f16a620629be196e72ef91f408bf9ecd0c5e42",

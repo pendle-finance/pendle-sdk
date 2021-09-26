@@ -2,6 +2,7 @@ import { BigNumber as BN, utils } from 'ethers';
 import { mainnetDecimals, kovanDecimals } from './decimals';
 
 export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
+export const ETHAddress: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 export const forgeIdsInBytes = {
   COMPOUND: utils.formatBytes32String('CompoundV2'),
   COMPOUND_UPGRADED: utils.formatBytes32String('CompoundV2Upgraded'),
