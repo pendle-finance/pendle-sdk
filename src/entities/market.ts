@@ -54,7 +54,7 @@ export type AddDualLiquidityDetails = {
 
 export type AddSingleLiquidityDetails = {
   shareOfPool: string;
-  rate: string;
+  rate: TokenAmount;
   priceImpact: string;
   swapFee: TokenAmount;
 };
@@ -65,7 +65,7 @@ export type RemoveDualLiquidityDetails = {
 
 export type RemoveSingleLiquidityDetails = {
   outAmount: TokenAmount;
-  rate: string;
+  rate: TokenAmount;
   priceImpact?: string;
   swapFee?: TokenAmount;
 };
@@ -218,7 +218,7 @@ export class PendleMarket extends Market {
     const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
     const transactionFetcher: TransactionFetcher = new TransactionFetcher(chainId === undefined ? 1 : chainId);
     const underlyingAsset: string = networkInfo.contractAddresses.YTs.find((ytInfo: YTINFO) => isSameAddress(ytInfo.address, this.tokens[0].address))!.underlyingAssetAddress;
-    const yieldContract: YieldContract = this.yieldContract();
+    const yieldContract: YieldContract = this.yieldContract(chainId);
     const forgeAddress = networkInfo.contractAddresses.forges[yieldContract.forgeIdInBytes];
     const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(yieldContract.forgeIdInBytes).abi, signer.provider);
 
@@ -291,8 +291,8 @@ export class PendleMarket extends Market {
             : ((volumeToday.amount - volumeYesterday.amount) / volumeYesterday.amount).toString(),
           liquidity: liquidityToday,
           liquidity24HChange: liquidityYesterday.amount === 0
-          ? liquidityToday.amount === 0 ? '0' : '1'
-          : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
+            ? liquidityToday.amount === 0 ? '0' : '1'
+            : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
           swapFeeApr: swapFeeForLP.toFixed(DecimalsPrecision),
           impliedYield: impliedYield.toString(),
           YTPrice: {
@@ -308,7 +308,7 @@ export class PendleMarket extends Market {
       const inAmount: BN = BN.from(inTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative = getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
       const outAmount: BN = calcExactOut(
         tokenDetailsRelative.inReserve,
         tokenDetailsRelative.inWeight,
@@ -355,7 +355,7 @@ export class PendleMarket extends Market {
       const outAmount: BN = BN.from(outTokenAmount.rawAmount());
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
-      const tokenDetailsRelative = getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
       if (outAmount.gte(tokenDetailsRelative.outReserve)) {
         throw Error("Out Amount Too Large");
       }
@@ -440,8 +440,8 @@ export class PendleMarket extends Market {
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
-      const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.inWeight, tokenDetailsRelative.outReserve, tokenDetailsRelative.outWeight, inAmount);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
 
       if (isSameAddress(tokenDetailsRelative.outToken.address, networkInfo.contractAddresses.tokens.WETH)) {
@@ -488,7 +488,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -510,7 +510,10 @@ export class PendleMarket extends Market {
       const shareOfPool: BigNumber = calcShareOfPool(totalSupplyLp, details.exactOutLp);
       return {
         shareOfPool: shareOfPool.toFixed(DecimalsPrecision),
-        rate: avgRate.toString(),
+        rate: new TokenAmount(
+          tokenDetailsRelative.outToken,
+          avgRate.toString()
+        ),
         priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           tokenAmount.token,
@@ -524,7 +527,7 @@ export class PendleMarket extends Market {
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
-      const tokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
 
       const details: Record<string, BN> = calcOutAmountLp(
         inAmount,
@@ -632,7 +635,10 @@ export class PendleMarket extends Market {
             outToken,
             "0"
           ),
-          rate: "0",
+          rate: new TokenAmount(
+            outToken,
+            "0"
+          ),
           priceImpact: "0",
           swapFee: new TokenAmount(
             outToken,
@@ -642,7 +648,7 @@ export class PendleMarket extends Market {
       }
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
-      const tokenDetailsRelative = getTokenDetailsRelative(outToken, marketReserves, false);
+      const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(outToken, marketReserves, false);
       const swapFee: BN = await pendleDataContract.swapFee();
 
       const details = calcOutAmountToken(
@@ -668,7 +674,10 @@ export class PendleMarket extends Market {
           outToken,
           details.exactOutToken.toString()
         ),
-        rate: avgRate.toString(),
+        rate: new TokenAmount(
+          tokenDetailsRelative.outToken,
+          avgRate.toString()
+        ),
         priceImpact: priceImpact.toFixed(DecimalsPrecision),
         swapFee: new TokenAmount(
           outToken,
@@ -725,7 +734,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValue = async (marketReserve: MarketReservesRaw): Promise<CurrencyAmount> => {
-      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address);
+      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
 
       return {
@@ -735,16 +744,23 @@ export class PendleMarket extends Market {
     }
 
     const getPastLiquidityValue = async (): Promise<CurrencyAmount> => {
-      const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
-      if (pastBlockNumber === undefined) {
-        console.error("Unable to get block that is 1 day old");
-        return {
-          currency: "USD",
-          amount: 0
+      if (chainId === undefined || chainId == 1) {
+        const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
+        if (pastBlockNumber === undefined) {
+          console.error("Unable to get block that is 1 day old");
+          return {
+            currency: "USD",
+            amount: 0
+          }
         }
+        const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
+        return getLiquidityValue(pastMarketReserves);
+      } else { // If Kovan, then return 0 since we do not have access to achived state
+        return {
+          currency: 'USD',
+          amount: 0
+        };
       }
-      const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
-      return getLiquidityValue(pastMarketReserves);
     }
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: number, impliedYield: number }> => {

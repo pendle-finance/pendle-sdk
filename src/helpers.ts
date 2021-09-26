@@ -1,5 +1,5 @@
 import { BigNumber as BN, Contract } from 'ethers';
-import { mainnetContracts, NetworkInfo } from './networks'
+import { mainnetContracts, kovanContracts,NetworkInfo } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -28,6 +28,12 @@ export const distributeConstantsByNetwork = (chainId?: number): NetworkInfo => {
       chainId: 1,
       contractAddresses: mainnetContracts,
       decimalsRecord: decimalsRecords.mainnet
+    }
+  } else if (chainId == 42) {
+    return {
+      chainId: 42,
+      contractAddresses: kovanContracts,
+      decimalsRecord: decimalsRecords.kovan
     }
   } else {
     throw Error("Unsupported Network");
@@ -85,23 +91,29 @@ export const getGasLimitWithETH = (estimate:BN, value: BN) => { return {gasLimit
 
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
   const margin: number = 30;
+  var blockRateUpperBound: number;
   if (chainId === undefined || chainId == 1) {
-    const latestBlockNumber = await provider.getBlockNumber();
-    const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
-    const targetTime: number = currentTime - ONE_DAY.toNumber();
-    var l: number = latestBlockNumber - ONE_DAY.div(7).toNumber();
-    var r: number = latestBlockNumber - ONE_DAY.div(30).toNumber();
-    while (l < r) {
-      var mid: number = Math.trunc((l + r) / 2);
-      const block = await provider.getBlock(mid);
-      if (block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() && block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()) {
-        return mid;
-      }
-      if (block.timestamp > targetTime) {
-        r = mid - 1;
-      } else if (block.timestamp < targetTime) {
-        l = mid + 1;
-      }
+    blockRateUpperBound = 7;
+  } else if (chainId == 42) {
+    blockRateUpperBound = 3;
+  } else {
+    throw Error("Unsupported network in getBlockOneDayEarlier");
+  }
+  const latestBlockNumber = await provider.getBlockNumber();
+  const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
+  const targetTime: number = currentTime - ONE_DAY.toNumber();
+  var l: number = latestBlockNumber - ONE_DAY.div(blockRateUpperBound).toNumber();
+  var r: number = latestBlockNumber - ONE_DAY.div(30).toNumber();
+  while (l < r) {
+    var mid: number = Math.trunc((l + r) / 2);
+    const block = await provider.getBlock(mid);
+    if (block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() && block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()) {
+      return mid;
+    }
+    if (block.timestamp > targetTime) {
+      r = mid - 1;
+    } else if (block.timestamp < targetTime) {
+      l = mid + 1;
     }
   }
   return undefined;

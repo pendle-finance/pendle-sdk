@@ -203,10 +203,10 @@ export class StakingPool {
 
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
-    const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
+    const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
       return stakingPoolInfo.contractType == StakingPoolType.LmV1;
     })
-    const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: any) => {
+    const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
       return stakingPoolInfo.contractType == StakingPoolType.LmV2;
     })
 
@@ -214,17 +214,17 @@ export class StakingPool {
       userAddress: string
     ): Promise<PoolYields[]> => {
       const userLm1Interests = await redeemProxyContract.callStatic.redeemLmInterests(
-        Lm1s.map((LmInfo: any) => LmInfo.address),
-        Lm1s.map((LmInfo: any) => LmInfo.expiry),
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.address),
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
         userAddress
       );
       const userLm1Rewards = await redeemProxyContract.callStatic.redeemLmRewards(
-        Lm1s.map((LmInfo: any) => LmInfo.address),
-        Lm1s.map((LmInfo: any) => LmInfo.expiry),
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.address),
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
         userAddress
       )
       const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
-        return populatePoolYields(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
+        return populatePoolYields(Lm1s[i], userLm1Interests.lmInterests[i].toString(), userLm1Rewards.lmRewards[i].toString(), decimalsRecord);
       });
 
       const userLm2Interests = await redeemProxyContract.callStatic.redeemLmV2Interests(

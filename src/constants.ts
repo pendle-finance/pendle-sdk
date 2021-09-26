@@ -1,5 +1,5 @@
 import { BigNumber as BN, utils } from 'ethers';
-import { mainnetDecimals } from './decimals';
+import { mainnetDecimals, kovanDecimals } from './decimals';
 
 export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
 export const ETHAddress: string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -31,7 +31,8 @@ export const LMEpochDuration = BN.from("604800");
 export const VestingEpoches = 5;
 
 export const decimalsRecords: Record<string, Record<string, number>> = {
-  mainnet: mainnetDecimals
+  mainnet: mainnetDecimals,
+  kovan: kovanDecimals
 };
 
 export const gasBuffer: number = 1.3;

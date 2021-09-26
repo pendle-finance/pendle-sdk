@@ -2,12 +2,17 @@ import { dummyToken, dummyTokenAmount, EXP_2022, PendleMarket, Token, TokenAmoun
 // import { Market } from '../src/entities/market';
 import { ethers, BigNumber as BN } from 'ethers';
 import * as dotenv from 'dotenv';
+import { NetworkInfo } from '../src/networks';
+import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(30000);
 
+const chainId: number = 42;
+const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+
 // const dummyUser = '0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb'; // Mainnet test account
 const USDCToken: Token = new Token(
-    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    networkInfo.contractAddresses.tokens.USDC,
     6
 )
 const aUSDCYTToken: Token = new Token(
@@ -15,7 +20,7 @@ const aUSDCYTToken: Token = new Token(
     6
 )
 const PENDLEToken: Token = new Token(
-    '0x808507121b80c02388fad14726482e061b8da827',
+    networkInfo.contractAddresses.tokens.PENDLE,
     18
 )
 const PENDLEETHYTToken: Token = new Token(
@@ -29,13 +34,16 @@ const ETHUSDCYTToken = new Token(
     EXP_2022.toNumber()
 )
 const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDCYTToken }
-const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
-const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
-const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
-const aUSDC2021Market = PendleMarket.find("0x9e382e5f78b06631e4109b5d48151f2b3f326df0",1);
+// const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
+// const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
+// const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
+// const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
+// const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
 
-const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
-
+const PendleEthMarket = PendleMarket.find("0x4835f1f01102ea3c033ae193ec6ec63961863335", 42);
+const ETHUSDCMarket = PendleMarket.find("0x68fc791abd6339c064146ddc9506774aa142efbe", 42);
+const aUSDC2022Market = PendleMarket.find("0xba83823e364646d0d60ecfc9b2b31311abf66688",42);
+const cDAI2022Market = PendleMarket.find("0x2c49cf6bba5b6263d15c2afe79d98fa8a0386ec2", 42);
 
 const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market, cDAI2022Market, aUSDC2021Market };
 describe("Market", () => {
@@ -44,7 +52,7 @@ describe("Market", () => {
     let market: PendleMarket;
 
     beforeAll(async () => {
-        const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
+        const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`;
 
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
@@ -53,30 +61,30 @@ describe("Market", () => {
     });
 
     it("PendleMarket.readMarketDetails", async () => {
-        const marketDetails = await market.methods(signer).readMarketDetails();
+        const marketDetails = await market.methods(signer, chainId).readMarketDetails();
         console.log(JSON.stringify(marketDetails, null, '  '));
     })
 
     it('PendleMarket.yieldContract', async() => {
-        const yieldContract: YieldContract = market.yieldContract();
+        const yieldContract: YieldContract = market.yieldContract(chainId);
         console.log(JSON.stringify(yieldContract, null, '  '));
     })
 
-    it.only('PendleMarket.swapExactInDetails', async () => {
-        const swapExactInDetails = await market.methods(signer).swapExactInDetails(new TokenAmount(
+    it('PendleMarket.swapExactInDetails', async () => {
+        const swapExactInDetails = await market.methods(signer, chainId).swapExactInDetails(new TokenAmount(
             market.tokens[1],
             BN.from(10).pow(6).toString()
         ),
-        0.01);
+        0.001);
         console.log(swapExactInDetails);
     })
 
     it('PendleMarket.swapExactOutDetails', async () => {
-        const swapExactOutDetails = await market.methods(signer).swapExactOutDetails(new TokenAmount(
+        const swapExactOutDetails = await market.methods(signer, chainId).swapExactOutDetails(new TokenAmount(
             market.tokens[0],
             BN.from(10).pow(6).toString()
         ),
-        0.01);
+        0.001);
         console.log(swapExactOutDetails);
     })
 
@@ -91,7 +99,7 @@ describe("Market", () => {
     });
 
     it('PendleMarket.addDualDetails', async () => {
-        const response = await market.methods(signer).addDualDetails(new TokenAmount(
+        const response = await market.methods(signer, chainId).addDualDetails(new TokenAmount(
             tokens.USDCToken,
             BN.from(10).pow(11).toString()
         ));
@@ -104,7 +112,7 @@ describe("Market", () => {
     })
 
     it('PendleMarket.addSingleDetails', async () => {
-        const response = await market.methods(signer).addSingleDetails(new TokenAmount(
+        const response = await market.methods(signer, chainId).addSingleDetails(new TokenAmount(
             tokens.USDCToken,
             BN.from(10).pow(12).toString()
         ));

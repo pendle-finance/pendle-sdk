@@ -1,7 +1,7 @@
 import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { providers, Contract, BigNumber as BN, utils } from "ethers"
-import { forgeIdsInBytes } from "../constants";
+import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
@@ -44,7 +44,7 @@ export class YieldContract {
 
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeIdInBytes !== forgeIdsInBytes.SUSHISWAP_COMPLEX) {
-                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), await signer.getAddress(), { from: networkInfo.contractAddresses.misc.PendleRouter });
+                const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 return [
                     new TokenAmount(
                         new Token(
