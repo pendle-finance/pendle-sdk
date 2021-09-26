@@ -45,7 +45,7 @@ const ETHUSDCMarket = PendleMarket.find("0x68fc791abd6339c064146ddc9506774aa142e
 const aUSDC2022Market = PendleMarket.find("0xba83823e364646d0d60ecfc9b2b31311abf66688",42);
 const cDAI2022Market = PendleMarket.find("0x2c49cf6bba5b6263d15c2afe79d98fa8a0386ec2", 42);
 
-const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market, cDAI2022Market, aUSDC2021Market };
+const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market, cDAI2022Market };
 describe("Market", () => {
     let provider: ethers.providers.JsonRpcProvider;
     let signer: any;
@@ -57,7 +57,7 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        market = markets.aUSDC2021Market;
+        market = markets.aUSDC2022Market;
     });
 
     it("PendleMarket.readMarketDetails", async () => {
