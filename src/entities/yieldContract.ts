@@ -1,7 +1,7 @@
 import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { providers, Contract, BigNumber as BN, utils } from "ethers"
-import { forgeIdsInBytes } from "../constants";
+import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
@@ -10,7 +10,6 @@ import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
 } from './transactions';
-import { dummyAddress } from "..";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
