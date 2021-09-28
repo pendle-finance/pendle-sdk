@@ -1,5 +1,5 @@
 import { Contract , Wallet} from "ethers";
-import { contracts } from "../contracts";
+import { contracts } from "../src/contracts";
 import { consts, Network } from "./helpers/Constants";
 import { Mode, TestEnv } from "./TestEnv";
 

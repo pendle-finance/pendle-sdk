@@ -8,8 +8,10 @@ const PendleCompoundForge = require('@pendle/core/build/artifacts/contracts/core
 const PendleSushiswapSimpleForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapSimple/PendleSushiswapSimpleForge.sol/PendleSushiswapSimpleForge.json');
 const IERC20 = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
 const PendleLiquidityMiningBase = require('@pendle/core/build/artifacts/contracts/core/abstract/PendleLiquidityMiningBase.sol/PendleLiquidityMiningBase.json');
+const PendleLiquidityMiningV2Base = require('@pendle/core/build/artifacts/contracts/core/abstractV2/PendleLiquidityMiningBaseV2.sol/PendleLiquidityMiningBaseV2.json');
 const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleRedeemProxy.sol/PendleRedeemProxy.json');
-const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json')
+const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json');
+const PendleSingleSidedStaking = require('@pendle/single-staking/build/artifacts/contracts/SingleStaking.sol/SingleStaking.json');
 
 //TODO: User proper IERC20
 
@@ -20,6 +22,8 @@ export const contracts = {
   IPendleForge,
   IERC20,
   PendleLiquidityMiningBase,
+  PendleLiquidityMiningV2Base,
+  PendleSingleSidedStaking,
   PendleRedeemProxy,
   PendleLiquidityRewardsProxy,
   PendleSushiswapComplexForge,

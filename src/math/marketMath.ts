@@ -192,3 +192,7 @@ export function calcSlippedUpAmount(amount: BN, slippage: number) {
     slippage = Math.trunc(slippage * Math.pow(10, PercentageMaxDecimals));
     return amount.mul(PONE.add(BN.from(slippage))).div(PONE);
 }
+
+export function calcValuation(unitPrice: BigNumber, amount: BN, decimals: number): BigNumber {
+    return unitPrice.multipliedBy(amount.toString()).dividedBy(BN.from(10).pow(decimals).toString());
+}

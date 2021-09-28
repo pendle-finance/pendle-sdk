@@ -1,5 +1,5 @@
-import { distributeConstantsByNetwork } from "../helpers"
-import { NetworkInfo } from "../networks";
+import { distributeConstantsByNetwork, isSameAddress } from "../helpers"
+import { MARKETINFO, MarketProtocols, NetworkInfo } from "../networks";
 import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
 import { ETHAddress } from "../constants";
@@ -60,14 +60,12 @@ export async function fetchTokenPrice(address: string, chainId: number | undefin
       case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLowerCase():
         return fetchPriceFromCoingecko('ethereum');
-
-      case networkInfo.contractAddresses.tokens.ETHUSDC_SLP:
-      case networkInfo.contractAddresses.tokens.PENDLEETH_SLP:
-        return fetchSLPPrice(address);
-
-      default:
-        throw Error("Unsupporrted token in fetchTokenPrice");
     }
+    const market: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(m.address, address));
+    if (market !== undefined && market.platform == MarketProtocols.Sushiswap) {
+      return fetchSLPPrice(address);
+    }
+    throw Error(`Unsupported token ${address} in fetch toke price`)
   } else if (chainId == 42) {
     return new BigNumber(1); // returning dummy data since it's kovan
   } else {

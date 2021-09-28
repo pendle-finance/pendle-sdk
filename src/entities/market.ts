@@ -3,7 +3,7 @@ import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
-import { MARKETNFO, NetworkInfo, YTINFO } from '../networks';
+import { PENDLEMARKETNFO, NetworkInfo, YTINFO } from '../networks';
 import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH } from '../helpers'
 import { CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
@@ -114,7 +114,7 @@ export class PendleMarket extends Market {
   public static find(address: string, chainId?: number): PendleMarket {
     address = address.toLowerCase();
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const marketInfo: MARKETNFO | undefined = networkInfo.contractAddresses.markets.find((m: MARKETNFO) => {
+    const marketInfo: PENDLEMARKETNFO | undefined = networkInfo.contractAddresses.pendleMarkets.find((m: PENDLEMARKETNFO) => {
       return isSameAddress(m.address, address);
     })
     if (marketInfo === undefined) {
@@ -160,7 +160,7 @@ export class PendleMarket extends Market {
     chainId?: number
   ): Record<string, any> {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const markets: MARKETNFO[] = networkInfo.contractAddresses.markets;
+    const markets: PENDLEMARKETNFO[] = networkInfo.contractAddresses.pendleMarkets;
 
     const redeemProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleRedeemProxy,
@@ -733,10 +733,14 @@ export class PendleMarket extends Market {
       return volume;
     }
 
-    const getLiquidityValue = async (marketReserve: MarketReservesRaw): Promise<CurrencyAmount> => {
+    const getLiquidityValueBigNumber = async (marketReserve: MarketReservesRaw): Promise<BigNumber> => {
       const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
+      return totalLiquidityUSD;
+    }
 
+    const getLiquidityValue = async (marketReserve: MarketReservesRaw): Promise<CurrencyAmount> => {
+      const totalLiquidityUSD: BigNumber = await getLiquidityValueBigNumber(marketReserve);
       return {
         currency: 'USD',
         amount: parseFloat(totalLiquidityUSD.toFixed(DecimalsPrecision))
@@ -841,6 +845,14 @@ export class PendleMarket extends Market {
       }
     }
 
+    const getLPPriceRaw = async (): Promise<BigNumber> => {
+      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const liquidity: BigNumber = await getLiquidityValueBigNumber(marketReserves);
+      const totalSupplyLp: BN = await marketContract.totalSupply();
+      const decimal: number = networkInfo.decimalsRecord[this.address];
+      return liquidity.multipliedBy(BN.from(10).pow(decimal).toString()).dividedBy(totalSupplyLp.toString());
+    }
+
     return {
       readMarketDetails,
       swapExactInDetails,
@@ -855,6 +867,7 @@ export class PendleMarket extends Market {
       removeDual,
       removeSingleDetails,
       removeSingle,
+      getLPPriceRaw
     };
   }
 }

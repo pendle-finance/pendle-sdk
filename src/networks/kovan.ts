@@ -84,7 +84,7 @@ export const kovanContracts: NetworkContractAddresses = {
             expiry: EXP_2022
         }
     ],
-    markets: [
+    pendleMarkets: [
         {
             address: '0x16d7dd5673ed2f1adaaa0feabba2271585e498cc',
             pair: [

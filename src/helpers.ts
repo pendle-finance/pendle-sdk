@@ -1,5 +1,5 @@
 import { BigNumber as BN, Contract } from 'ethers';
-import { mainnetContracts, kovanContracts,NetworkInfo } from './networks'
+import { mainnetContracts, kovanContracts, NetworkInfo, StakingPoolType } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -60,6 +60,19 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
   }
 }
 
+export function getABIByStakingPoolType(type: StakingPoolType): any {
+  switch (type) {
+    case StakingPoolType.LmV1:
+      return contracts.PendleLiquidityMiningBase;
+
+    case StakingPoolType.LmV2:
+      return contracts.PendleLiquidityMiningV2Base;
+
+    case StakingPoolType.PendleSingleSided:
+      return contracts.PendleSingleSidedStaking;
+  }
+}
+
 export const getCurrentTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
   const latestBlockNumber = await provider.getBlockNumber();
   const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
@@ -83,11 +96,11 @@ export const getDecimal = async (decimalsRecord: Record<string, number>, address
   return decimalsRecord[address];
 }
 
-export const xor = (a: boolean, b: boolean) => a!=b;
+export const xor = (a: boolean, b: boolean) => a != b;
 
-export const getGasLimit = (estimate:BN) => { return {gasLimit: Math.trunc(estimate.toNumber() * gasBuffer) }}
+export const getGasLimit = (estimate: BN) => { return { gasLimit: Math.trunc(estimate.toNumber() * gasBuffer) } }
 
-export const getGasLimitWithETH = (estimate:BN, value: BN) => { return {gasLimit: Math.trunc(estimate.toNumber() * gasBuffer), value: value }}
+export const getGasLimitWithETH = (estimate: BN, value: BN) => { return { gasLimit: Math.trunc(estimate.toNumber() * gasBuffer), value: value } }
 
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
   const margin: number = 30;

@@ -1,4 +1,4 @@
-import { NetworkContractAddresses, StakingPoolType } from "./types";
+import { NetworkContractAddresses, StakingPoolType, MarketProtocols } from "./types";
 import { EXP_2021, EXP_2022, forgeIdsInBytes, marketFactoryIds } from "../constants";
 
 export const mainnetContracts: NetworkContractAddresses = {
@@ -176,6 +176,15 @@ export const mainnetContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"
             ]
+        },
+        {
+            address: '0x07282f2ceebd7a65451fcd268b364300d9e6d7f5',
+            inputTokenAddress: '0x808507121b80c02388fad14726482e061b8da827',
+            contractType: StakingPoolType.PendleSingleSided,
+            rewardTokenAddresses: [
+                '0x808507121b80c02388fad14726482e061b8da827'
+            ],
+            interestTokensAddresses: []
         }
     ],
     YTs: [
@@ -260,7 +269,7 @@ export const mainnetContracts: NetworkContractAddresses = {
             yieldTokenAddress: '0x37922c69b08babcceae735a31235c81f1d1e8e43'
         }
     ],
-    markets: [
+    pendleMarkets: [
         {
             address: '0x9e382e5f78b06631e4109b5d48151f2b3f326df0',
             pair: [
@@ -327,6 +336,40 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             marketFactoryId: marketFactoryIds.GENERIC
         },
+    ],
+    otherMarkets: [
+        {
+            address: '0x37922c69b08babcceae735a31235c81f1d1e8e43',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0x397ff1542f962076d0bfe58ea045ffa2d347aca0',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0x4556c4488cc16d5e9552cc1a99a529c1392e4fe9',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0x8b758d7fd0fc58fca8caa5e53af2c7da5f5f8de1',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0x0d8a21f2ea15269b7470c347083ee1f85e6a723b',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0x72972b21ce425cfd67935e07c68e84300ce3f40f',
+            platform: MarketProtocols.Sushiswap
+        },
+        {
+            address: '0xb124c4e18a282143d362a066736fd60d22393ef4',
+            platform: MarketProtocols.Sushiswap
+        }
     ],
     misc: {
         PendleRedeemProxy: '0xc956845c51c83b41d2705b5c9f31e86746d9af5b',

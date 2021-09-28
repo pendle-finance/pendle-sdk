@@ -1,5 +1,9 @@
 
 import { BigNumber as BN } from 'ethers';
+export enum MarketProtocols {
+    Sushiswap = 1,
+}
+
 export type NetworkInfo = {
     chainId: number,
     contractAddresses: NetworkContractAddresses,
@@ -9,7 +13,8 @@ export type NetworkContractAddresses = {
     stakingPools: LMINFO[],
     YTs: YTINFO[],
     OTs: OTINFO[],
-    markets: MARKETNFO[],
+    pendleMarkets: PENDLEMARKETNFO[],
+    otherMarkets?: MARKETINFO[],
     misc: Record<string, string>,
     tokens: Record<string, string>,
     forges: Record<string, string>
@@ -29,7 +34,12 @@ export type YTINFO = {
     forgeIdInBytes: string,
     expiry: BN
 };
-export type MARKETNFO = {
+export type MARKETINFO = {
+    address: string,
+    pair?: string[],
+    platform: MarketProtocols
+} 
+export type PENDLEMARKETNFO = {
     address: string,
     pair: string[],
     rewardTokenAddresses: string[],
@@ -39,7 +49,7 @@ export type OTINFO = {
     address: string,
     yieldTokenAddress: string
 }
-
+    
 export enum StakingPoolType {
     LmV1 = 'PendleLiquidityMining',
     LmV2 = 'PendleLiquidityMiningV2',
