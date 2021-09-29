@@ -1,4 +1,4 @@
-import { dummyToken, dummyTokenAmount, EXP_2022, PendleMarket, Token, TokenAmount, YieldContract } from '../src';
+import { dummyToken, dummyTokenAmount, EXP_2022, Market, PendleMarket, Token, TokenAmount, YieldContract } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, BigNumber as BN } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -42,7 +42,7 @@ const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDC
 
 const PendleEthMarket = PendleMarket.find("0x4835f1f01102ea3c033ae193ec6ec63961863335", 42);
 const ETHUSDCMarket = PendleMarket.find("0x68fc791abd6339c064146ddc9506774aa142efbe", 42);
-const aUSDC2022Market = PendleMarket.find("0xba83823e364646d0d60ecfc9b2b31311abf66688",42);
+const aUSDC2022Market = Market.find("0xba83823e364646d0d60ecfc9b2b31311abf66688",42);
 const cDAI2022Market = PendleMarket.find("0x2c49cf6bba5b6263d15c2afe79d98fa8a0386ec2", 42);
 
 const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market, cDAI2022Market };
@@ -57,7 +57,8 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        market = markets.aUSDC2022Market;
+        market = markets.aUSDC2022Market as PendleMarket;
+        console.log(aUSDC2022Market.methods(signer, chainId));
     });
 
     it.only("PendleMarket.readMarketDetails", async () => {

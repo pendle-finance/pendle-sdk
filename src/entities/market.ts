@@ -3,7 +3,7 @@ import { TokenAmount } from './tokenAmount';
 import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
-import { PENDLEMARKETNFO, NetworkInfo, YTINFO } from '../networks';
+import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
 import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH } from '../helpers'
 import { CurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
@@ -90,17 +90,43 @@ type TokenDetailsRelative = {
   outToken: Token;
 }
 
+
 export class Market {
   public readonly address: string;
   public readonly tokens: Token[];
+  public readonly protocol: MarketProtocols;
 
-  public constructor(marketAddress: string, tokens: Token[]) {
+  public constructor(marketAddress: string, tokens: Token[], protocol: MarketProtocols) {
     this.address = marketAddress;
     this.tokens = tokens.map((t: Token) => new Token(
       t.address.toLowerCase(),
       t.decimals,
       t.expiry
     ));
+    this.protocol = protocol;
+  }
+
+  public static find(address: string, chainId?: number): Market {
+    try {
+      let pendleMarket: PendleMarket = PendleMarket.find(address, chainId);
+      return pendleMarket;
+    } catch (error) {
+      const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+      const marketInfo: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(address, m.address));
+      if (marketInfo !== undefined && marketInfo.platform == MarketProtocols.Sushiswap) {
+        return new SushiMarket(
+          address,
+          [],
+        )
+      } else {
+        throw new Error(MARKET_NOT_EXIST)
+      }
+    }
+  }
+
+  public methods(_: providers.JsonRpcSigner,
+    __?: number): Record<string, any> {
+    return {}
   }
 }
 
@@ -108,7 +134,7 @@ export class PendleMarket extends Market {
   private marketFactoryId: string = "";
   public ytInfo: YTINFO = {} as YTINFO;
   public constructor(marketAddress: string, tokens: Token[]) {
-    super(marketAddress, [tokens[0], tokens[1]]);
+    super(marketAddress, [tokens[0], tokens[1]], MarketProtocols.Pendle);
   }
 
   public static find(address: string, chainId?: number): PendleMarket {
@@ -207,7 +233,7 @@ export class PendleMarket extends Market {
       getSwapTransactions,
       getLiquidityTransactions
     }
-  }
+  };
 
   public methods(signer: providers.JsonRpcSigner,
     chainId?: number): Record<string, any> {
@@ -262,7 +288,7 @@ export class PendleMarket extends Market {
 
           case forgeIdsInBytes.SUSHISWAP_COMPLEX:
           case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-            underlyingYieldRate = await fetchSushiYield(yieldBearingAddress);
+            underlyingYieldRate = await fetchSushiYield(yieldBearingAddress, chainId);
             break;
 
           // TODO: add Uniswap support here
@@ -278,7 +304,7 @@ export class PendleMarket extends Market {
       var liquidityYesterday: CurrencyAmount = await getPastLiquidityValue();
       const swapFee: BN = await pendleDataContract.swapFee();
       const protocolFee: BN = await pendleDataContract.protocolSwapFee();
-      const swapFeeForLP: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
+      const swapFeeApr: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
 
       const { ytPrice, impliedYield }: { ytPrice: number, impliedYield: number } = await getYTPriceAndImpliedYield(marketReserves);
 
@@ -293,7 +319,7 @@ export class PendleMarket extends Market {
           liquidity24HChange: liquidityYesterday.amount === 0
             ? liquidityToday.amount === 0 ? '0' : '1'
             : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
-          swapFeeApr: swapFeeForLP.toFixed(DecimalsPrecision),
+          swapFeeApr: swapFeeApr.toFixed(DecimalsPrecision),
           impliedYield: impliedYield.toString(),
           YTPrice: {
             currency: 'USD',
@@ -845,12 +871,30 @@ export class PendleMarket extends Market {
       }
     }
 
-    const getLPPriceRaw = async (): Promise<BigNumber> => {
+    const getLPPriceBigNumber = async (): Promise<BigNumber> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const liquidity: BigNumber = await getLiquidityValueBigNumber(marketReserves);
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const decimal: number = networkInfo.decimalsRecord[this.address];
       return liquidity.multipliedBy(BN.from(10).pow(decimal).toString()).dividedBy(totalSupplyLp.toString());
+    }
+
+    const getSwapFeeAprBigNumber = async (): Promise<BigNumber> => {
+      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+
+      const currentTime: number = await getCurrentTimestamp(signer.provider);
+
+      const volumeToday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.toNumber(), currentTime);
+
+      var liquidityToday: CurrencyAmount = await getLiquidityValue(marketReserves);
+      const swapFee: BN = await pendleDataContract.swapFee();
+      const protocolFee: BN = await pendleDataContract.protocolSwapFee();
+      const swapFeeApr: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
+      return swapFeeApr;
+    }
+
+    const getSwapFeeApr = async (): Promise<string> => {
+      return (await getSwapFeeAprBigNumber()).toFixed(DecimalsPrecision);
     }
 
     return {
@@ -867,7 +911,25 @@ export class PendleMarket extends Market {
       removeDual,
       removeSingleDetails,
       removeSingle,
-      getLPPriceRaw
+      getLPPriceBigNumber,
+      getSwapFeeApr
     };
+  }
+}
+
+
+export class SushiMarket extends Market {
+  public constructor(address: string, pair: Token[]) {
+    super(address, pair, MarketProtocols.Sushiswap);
+  }
+
+  public methods(_: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    const getSwapFeeApr = async (): Promise<string> => {
+      return (await fetchSushiYield(this.address, chainId)).toString()
+    }
+
+    return {
+      getSwapFeeApr
+    }
   }
 }

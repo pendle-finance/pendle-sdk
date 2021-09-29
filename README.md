@@ -18,6 +18,20 @@ Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarke
 
 ### Static Methods:
 ```
+Market.find(address, chainId?) => Market
+```
+This supports finding both Pendle YT markets and Sushi OT markets
+
+### Instance Methods:
+```
+market.methods(signer, chainId?).getSwapFeeApr() => Promise<string>
+```
+
+
+## PendleMarket
+
+### Static Methods:
+```
 PendleMarket.find(address, chainId?) => PendleMarket
 PendleMarket.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
 ```
@@ -101,6 +115,9 @@ pendleMarket.methods(JsonRpcSigner, chainId?).removeSingleDetails(percentage: nu
 pendleMarket.methods(JsonRpcSigner, chainId?).removeSingle(percentage: number, outToken: Token, slippage: number) => Promise<TransactionResponse>
 
 pendleMarket.yieldContract() => YieldContract
+
+pendleMarket.methods(signer, chainId?).getSwapFeeApr() => Promise<string>
+
 ```
 
 ## Staking Pool
@@ -145,6 +162,27 @@ StakingPool.find(adddress, inputTokenAddress, chainId?) => StakingPool
 StakingPool.methods(JsonRpcSigner, chainId?).fetchClaimableYields(address) => Promise<PoolYields[]>
 StakingPool.methods(JsonRpcSigner, chainId?).fetchAccruingRewards(address) => Promise<PoolAccruingRewards[]>
 StakingPool.methods(JsonRpcSigner, chainId?).fetchVestedRewards(address) => Promise<PoolVestedRewards[]>
+```
+
+### Instance Methods
+```
+AprInfo = {
+	origin: string, // 'Pendle' or 'Sushiswap'
+	apr: string
+}
+
+StakedAmount = {
+  amount: TokenAmount;
+  valuation: CurrencyAmount;
+}
+
+stakingPool.methods(signer, chainId?).getTotalStaked() => Promise<StakedAmount>
+stakingPool.methods(signer, chainId?).balanceOf(address) => Promise<StakedAmount>
+stakingPool.methods(signer, chainId?).rewardAprs() => Promise<AprInfo[]>
+
+stakingPool.methods(signer, chainId?).stake(amount: TokenAmount) => Promise<TransactionResponse>
+stakingPool.methods(signer, chainId?).unstake(amount: TokenAmount) => Promise<TransactionResponse>
+
 ```
 
 ## Yield Contract

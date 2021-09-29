@@ -175,7 +175,7 @@ export function calcPrincipalForSLPYT(exchangeRate: BN): BN {
 }
 
 export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): number {
-    return Math.pow((ONE.plus(p.dividedBy(ONE.minus(p)))).toNumber(), (new BigNumber(365).dividedBy(daysLeft)).toNumber()) - 1 ;
+    return Math.pow((ONE.plus(p.dividedBy(ONE.minus(p)))).toNumber(), (new BigNumber(365).dividedBy(daysLeft)).toNumber()) - 1;
 }
 
 export function calcPrincipalFloat(principalPerYT: BN, ytDecimal: number, underlyingDecimal: number): BigNumber {
@@ -195,4 +195,8 @@ export function calcSlippedUpAmount(amount: BN, slippage: number) {
 
 export function calcValuation(unitPrice: BigNumber, amount: BN, decimals: number): BigNumber {
     return unitPrice.multipliedBy(amount.toString()).dividedBy(BN.from(10).pow(decimals).toString());
+}
+
+export function calcLMRewardApr(rewardsValue: BigNumber, totalStakeValue: BigNumber, frequencyPerYear: number): BigNumber {
+    return rewardsValue.multipliedBy(frequencyPerYear).dividedBy(totalStakeValue);
 }

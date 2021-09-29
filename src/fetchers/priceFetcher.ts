@@ -3,6 +3,8 @@ import { MARKETINFO, MarketProtocols, NetworkInfo } from "../networks";
 import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
 import { ETHAddress } from "../constants";
+import { TokenAmount } from "../entities/tokenAmount";
+import { DecimalsPrecision } from "../math/marketMath";
 const axios = require('axios')
 
 export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
@@ -17,33 +19,41 @@ export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
 
 const sushiswapReservesQuery = (slpAddress: string) => gql`{
   pairs(where:{id: "${slpAddress}"}) {
-    reserveUSD,
-    totalSupply
+    totalSupply,
+    token0{
+      id
+    },
+    token1{
+      id
+    },
+    reserve0,
+    reserve1,
   }
 }`
 
-export async function fetchSLPPrice(address: string): Promise<BigNumber> {
+export async function fetchSLPPrice(address: string, chainId: number | undefined): Promise<BigNumber> {
 
+  if (chainId !== undefined && chainId != 1) {
+    throw Error("Unsupported network in fetchSLPPrice");
+  }
   const sushiswapSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange";
-  const usdPrice: BigNumber = await request(
+  const pair: any = (await request(
     sushiswapSubgraphApi,
     sushiswapReservesQuery(address)
-  )
-    .then((response) => {
-      const pair = response.pairs[0]
-      return new BigNumber(pair.reserveUSD)
-        .div(new BigNumber(pair.totalSupply));
-    })
-    .catch((err) => {
-      console.error(
-        'Something went wrong fetching SLP price, default to 1 USD',
-        err
-      )
-      return new BigNumber(1);
-    })
-
-  return usdPrice
-
+  )).pairs[0];
+  try {
+    const token0Price: BigNumber = await fetchTokenPrice(pair.token0.id, chainId);
+    const reserveUSD: BigNumber = token0Price.multipliedBy(pair.reserve0).multipliedBy(2);
+    return reserveUSD.dividedBy(new BigNumber(pair.totalSupply));
+  } catch {
+    try {
+      const token1Price: BigNumber = await fetchTokenPrice(pair.token1.id, chainId);
+      const reserveUSD: BigNumber = token1Price.multipliedBy(pair.reserve1).multipliedBy(2);
+      return reserveUSD.dividedBy(new BigNumber(pair.totalSupply));
+    }  catch {
+      throw Error(`Unable to fetch price for both tokens of SLP ${address}`);
+    }
+  }
 }
 
 export async function fetchTokenPrice(address: string, chainId: number | undefined): Promise<BigNumber> {
@@ -60,10 +70,13 @@ export async function fetchTokenPrice(address: string, chainId: number | undefin
       case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLowerCase():
         return fetchPriceFromCoingecko('ethereum');
+
+      case networkInfo.contractAddresses.tokens.SUSHI:
+        return fetchPriceFromCoingecko('sushi');
     }
     const market: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(m.address, address));
     if (market !== undefined && market.platform == MarketProtocols.Sushiswap) {
-      return fetchSLPPrice(address);
+      return fetchSLPPrice(address, chainId);
     }
     throw Error(`Unsupported token ${address} in fetch toke price`)
   } else if (chainId == 42) {
@@ -72,3 +85,10 @@ export async function fetchTokenPrice(address: string, chainId: number | undefin
     throw Error("Unsupported network in fetchTokenPrice");
   }
 }
+
+export async function fetchValuation(amount: TokenAmount, chainId: number | undefined): Promise<string> {
+  const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
+
+  const price: BigNumber = await fetchTokenPrice(amount.token.address, chainId);
+  return price.multipliedBy(new BigNumber(amount.rawAmount())).dividedBy(new BigNumber(10).pow(networkInfo.decimalsRecord[amount.token.address])).toFixed(DecimalsPrecision);
+} 

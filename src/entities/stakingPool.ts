@@ -1,7 +1,7 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getGasLimit } from '../helpers'
-import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches } from '../constants';
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getGasLimit, getBlockOneDayEarlier } from '../helpers'
+import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress } from '../constants';
 import { contracts } from '../contracts';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
@@ -11,7 +11,7 @@ import { PendleMarket } from './market';
 import { Yt } from './yt';
 import BigNumber from 'bignumber.js';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
-import { calcValuation } from '../math/marketMath';
+import { calcLMRewardApr, calcValuation, DecimalsPrecision } from '../math/marketMath';
 
 export interface StakingPoolId {
   address: string;
@@ -136,11 +136,15 @@ export const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], c
   }
 }
 
-
 export type FutureEpochRewards = {
   epochId: number;
   rewards: TokenAmount[];
 };
+
+export type AprInfo = {
+	origin: string,
+	apr: string
+}
 
 const STAKINGPOOL_NOT_EXIST = new Error("No Staking pool is found at the given address and input token.")
 
@@ -386,44 +390,17 @@ export class StakingPool {
     const getTotalStaked = async (): Promise<StakedAmount> => {
       if (this.contractType == StakingPoolType.LmV1) {
         const totalStakeLP: BN = (await stakingPoolContract.readExpiryData(expiry)).totalStakeLP;
-        const marketLPPrice: BigNumber = await market.methods(signer).getLPPriceRaw();
-        return {
-          amount: new TokenAmount(
-            this.inputToken,
-            totalStakeLP.toString()
-          ),
-          valuation: {
-            currency: 'USD',
-            amount: calcValuation(marketLPPrice, totalStakeLP, networkInfo.decimalsRecord[this.inputToken.address]).toNumber()
-          }
-        }
+        const marketLPPrice: BigNumber = await market.methods(signer).getLPPriceBigNumber();
+        return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.LmV2) {
         const totalStakeLP: BN = await stakingPoolContract.totalStake();
         const marketLPPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
-        return {
-          amount: new TokenAmount(
-            this.inputToken,
-            totalStakeLP.toString()
-          ),
-          valuation: {
-            currency: 'USD',
-            amount: calcValuation(marketLPPrice, totalStakeLP, networkInfo.decimalsRecord[this.inputToken.address]).toNumber()
-          }
-        }
+        return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const PENDLEContract: Contract = new Contract(this.inputToken.address, contracts.IERC20.abi, signer.provider);
         const totalStake: BN = await PENDLEContract.balanceOf(this.address);
         const PENDLEPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
-        return {
-          amount: new TokenAmount(
-            this.inputToken,
-            totalStake.toString()
-          ),
-          valuation: {
-            currency: 'USD',
-            amount: calcValuation(PENDLEPrice, totalStake, networkInfo.decimalsRecord[this.inputToken.address]).toNumber()
-          }
-        }
+        return populateStakedAmount(totalStake, PENDLEPrice);
       } else {
         throw Error(UNSUPPORTED_TYPE);
       }
@@ -431,14 +408,114 @@ export class StakingPool {
 
     const balanceOf = async(address: string): Promise<StakedAmount> => {
       if (this.contractType == StakingPoolType.LmV1) {
+        const stakedLP: BN = (await stakingPoolContract.readUserSpecificExpiryData(expiry, address)).balances;
+        const marketLPPrice: BigNumber = await market.methods(signer).getLPPriceBigNumber();
+        return populateStakedAmount(stakedLP, marketLPPrice);
+      } else if (this.contractType == StakingPoolType.LmV2) {
+        const stakedLP: BN = await stakingPoolContract.balances(address);
+        const marketLPPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
+        return populateStakedAmount(stakedLP, marketLPPrice);
+      } else if (this.contractType == StakingPoolType.PendleSingleSided) {
+        const userShareBalance: BN = await stakingPoolContract.balances(address);
+        const userPendleBalance: BN = await stakingPoolContract.callStatic.leave(userShareBalance, {from: address});
+        const PENDLEPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
+        return populateStakedAmount(userPendleBalance, PENDLEPrice);
+      } else {
+        throw Error(UNSUPPORTED_TYPE);
+      }
+    }
 
+    const rewardAprs = async(): Promise<AprInfo[]> => {
+      if (this.contractType == StakingPoolType.LmV1) {
+        const stakedUSDValue: BigNumber = new BigNumber((await getTotalStaked()).valuation.amount);
+        const startTime: BN = await stakingPoolContract.startTime();
+        const curTime: number = await getCurrentTimestamp(signer.provider);
+        const currentEpochId: number = getCurrentEpochId(curTime, startTime, LMEpochDuration);
+        const latestSetting: any = await stakingPoolContract.latestSetting();
+        const epochData: any = await stakingPoolContract.readEpochData(currentEpochId);
+
+        const settingId = currentEpochId >= latestSetting.firstEpochToApply
+            ? latestSetting.id
+            : epochData.settingId;
+
+        const rewardsForThisExpiry: BN = epochData.totalRewards.mul(await stakingPoolContract.allocationSettings(settingId, expiry)).div(
+            ALLOCATION_DENOMINATOR
+        );
+        const rewardsValue: BigNumber = calcValuation(await fetchTokenPrice(this.rewardTokens[0].address, chainId), rewardsForThisExpiry, networkInfo.decimalsRecord[this.rewardTokens[0].address]);
+        const rewardApr: BigNumber = calcLMRewardApr(rewardsValue, stakedUSDValue, 52);
+        return [{
+          origin: 'Pendle',
+          apr: rewardApr.toFixed(DecimalsPrecision)
+        }]
+      } else if (this.contractType == StakingPoolType.LmV2) {
+        const stakedUSDValue: BigNumber = new BigNumber((await getTotalStaked()).valuation.amount);
+        const startTime: BN = await stakingPoolContract.startTime();
+        const curTime: number = await getCurrentTimestamp(signer.provider);
+        const currentEpochId: number = getCurrentEpochId(curTime, startTime, LMEpochDuration);
+        const epochData: any = await stakingPoolContract.readEpochData(currentEpochId, dummyAddress);
+
+        const aprInfos: AprInfo[] = [];
+        const pendleRewardsValue: BigNumber = calcValuation(await fetchTokenPrice(this.rewardTokens[0].address, chainId), epochData.totalRewards, networkInfo.decimalsRecord[this.rewardTokens[0].address]);
+        aprInfos.push({
+          origin: 'Pendle',
+          apr: calcLMRewardApr(pendleRewardsValue, stakedUSDValue, 52).toFixed(DecimalsPrecision)
+        });
+        if (this.interestTokens !== undefined && this.interestTokens?.length > 0) {
+          const SLPLiquidityMiningContract: Contract = new Contract(this.address, contracts.PendleSLPLiquidityMining.abi, signer.provider);
+          const pid: BN = await SLPLiquidityMiningContract.pid();
+          const masterChefAddress: string = await SLPLiquidityMiningContract.masterChef();
+          const masterChefContract: Contract = new Contract(masterChefAddress, contracts.SushiMasterChef.abi, signer.provider);
+          const allocPoint: BN = (await masterChefContract.poolInfo(pid)).allocPoint;
+          const totalAllocPoint: BN = await masterChefContract.totalAllocPoint();
+          const globalSushiPerBlock: BN = await masterChefContract.sushiPerBlock();
+          const blockNumber: number = await signer.provider.getBlockNumber();
+          const blockNumberOneDayAgo: number = (await getBlockOneDayEarlier(chainId, signer.provider))!;
+          const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
+          const sushiPerBlock: BN = globalSushiPerBlock.mul(allocPoint).div(totalAllocPoint);
+          const sushiPrice: BigNumber = await fetchTokenPrice(this.interestTokens[0].address, chainId);
+          const sushiRewardsValue: BigNumber = calcValuation(sushiPrice, sushiPerBlock.mul(blockPerDay), networkInfo.decimalsRecord[this.interestTokens[0].address]);
+          aprInfos.push({
+            origin: 'Sushiswap',
+            apr: calcLMRewardApr(sushiRewardsValue, stakedUSDValue, 365).toFixed(DecimalsPrecision)
+          });
+        }
+        return aprInfos;
+      } else if (this.contractType == StakingPoolType.PendleSingleSided) {
+        const singleStakingManager: Contract = new Contract(networkInfo.contractAddresses.misc.PendleSingleStakingManager, contracts.PendleSingleStakingManager.abi, signer.provider);
+        const rewardPerBlock: BN = await singleStakingManager.rewardPerBlock();
+        const blockNumber: number = await signer.provider.getBlockNumber();
+        const blockNumberOneDayAgo: number = (await getBlockOneDayEarlier(chainId, signer.provider))!;
+        const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
+        const PENDLEContract: Contract = new Contract(this.inputToken.address, contracts.IERC20.abi, signer.provider);
+        const PendleStaked: BN = await PENDLEContract.balanceOf(this.address); 
+        return [{
+          origin: 'Pendle',
+          apr: calcLMRewardApr(new BigNumber(rewardPerBlock.mul(blockPerDay).toString()), new BigNumber(PendleStaked.toString()), 365).toFixed(DecimalsPrecision)
+        }]     
+      } else {
+        throw Error(UNSUPPORTED_TYPE);
+      }
+    }
+
+    const populateStakedAmount = (rawAmount: BN, price: BigNumber): StakedAmount => {
+      return {
+        amount: new TokenAmount(
+          this.inputToken,
+          rawAmount.toString()
+        ),
+        valuation: {
+          currency: 'USD',
+          amount: calcValuation(price, rawAmount, networkInfo.decimalsRecord[this.inputToken.address]).toNumber()
+        }
       }
     }
 
     return {
       stake,
       unstake,
-      getTotalStaked
+      getTotalStaked,
+      balanceOf,
+      rewardAprs
     }
   }
 }

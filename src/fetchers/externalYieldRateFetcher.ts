@@ -42,7 +42,7 @@ export const fetchCompoundYield = async (yieldBearingAddress: string) => {
 
 const sushiSubgraphURL: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange"
 
-export const fetchSushiYield = async (poolAddress: string) => {
+export const fetchSushiYield = async (poolAddress: string, _?: number): Promise<number> => { //chainId
   const yieldRate: number = await request(
     sushiSubgraphURL,
     gql`
