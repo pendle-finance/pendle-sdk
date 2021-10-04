@@ -1,13 +1,14 @@
 {
   "name": "@pendle/sdk",
   "author": "Pendle Labs",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "abis"
   ],
   "engines": {
     "node": ">=10"

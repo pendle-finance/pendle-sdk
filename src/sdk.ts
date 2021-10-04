@@ -1,6 +1,7 @@
 import { providers } from 'ethers';
 import { Token, TokenAmount } from './entities';
-import { fetchTokenBalances } from './fetchers';
+import { CurrencyAmount } from './entities/currencyAmount';
+import { fetchTokenBalances, fetchValuation } from './fetchers';
 
 export class Sdk {
   public readonly provider: providers.JsonRpcProvider;
@@ -15,5 +16,9 @@ export class Sdk {
     userAddress: string
   ): Promise<TokenAmount[]> {
     return await fetchTokenBalances(this.provider, tokens, userAddress);
+  }
+
+  public async fetchValuation(amount: TokenAmount, chainId?: number): Promise<CurrencyAmount> {
+    return fetchValuation(amount, chainId)
   }
 }

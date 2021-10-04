@@ -45,7 +45,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const lmV1Contract = new Contract("0x5b1c59eb6872f88a92469751a034b9b5ada9a73f", contracts.PendleLiquidityMiningBase.abi, provider);
     const d = await lmV1Contract.readUserSpecificExpiryData(1672272000, "0x7e733777a04b9fadf5ecd8e2bad303cabbd65cd6", {blockTag: 12648940});
     console.log(JSON.stringify(d, null, '  '));
@@ -66,7 +66,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchVestedRewards', async () => {
+  it.only('StakingPool.methods.fetchVestedRewards', async () => {
     const vestedRewards = await StakingPool.methods(signer).fetchVestedRewards(
       dummyUser
     );

@@ -40,7 +40,7 @@ PendleMarket.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise
 ```
 CurrencyAmount = {
   currency: string,
-  amount: string
+  amount: number
 }
 
 TokenReserveDetails = {
@@ -199,4 +199,12 @@ yieldContract.methods(JsonRpcSigner, chainId?).mintDetails(toMint: TokenAmount) 
 yieldContract.methods(JsonRpcSigner, chainId?).mint(toMint: TokenAmount) => Promise<TransactionResponse>
 yieldContract.methods(JsonRpcSigner, chainId?).redeemDetails(otAmount: TokenAmount, userAddress: string) => Promise<RedeemDetails>
 yieldContract.methods(JsonRpcSigner, chainId?).redeem(otAmount: TokenAmount): Promise<TransactionResponse>
+```
+
+## Misc functions:
+
+```
+import {Sdk} from '@pendle/sdk`;
+
+Sdk.fetchValuation(TokenAmount) => Promise<CurrencyAmount>
 ```

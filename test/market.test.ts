@@ -7,7 +7,7 @@ import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(30000);
 
-const chainId: number = 42;
+const chainId: number = 1;
 const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
 // const dummyUser = '0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb'; // Mainnet test account
@@ -34,18 +34,19 @@ const ETHUSDCYTToken = new Token(
     EXP_2022.toNumber()
 )
 const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDCYTToken }
-// const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
-// const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
-// const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
-// const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
-// const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
+const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
+const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
+const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
+const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
+const aUSDC2021Market = Market.find("0x9e382e5f78b06631e4109b5d48151f2b3f326df0", 1);
 
-const PendleEthMarket = PendleMarket.find("0x4835f1f01102ea3c033ae193ec6ec63961863335", 42);
-const ETHUSDCMarket = PendleMarket.find("0x68fc791abd6339c064146ddc9506774aa142efbe", 42);
-const aUSDC2022Market = Market.find("0xba83823e364646d0d60ecfc9b2b31311abf66688",42);
-const cDAI2022Market = PendleMarket.find("0x2c49cf6bba5b6263d15c2afe79d98fa8a0386ec2", 42);
 
-const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market, cDAI2022Market };
+// const PendleEthMarket = PendleMarket.find("0x4835f1f01102ea3c033ae193ec6ec63961863335", 42);
+// const ETHUSDCMarket = PendleMarket.find("0x68fc791abd6339c064146ddc9506774aa142efbe", 42);
+// const aUSDC2022Market = Market.find("0xba83823e364646d0d60ecfc9b2b31311abf66688",42);
+// const cDAI2022Market = PendleMarket.find("0x2c49cf6bba5b6263d15c2afe79d98fa8a0386ec2", 42);
+
+const markets = { PendleEthMarket, ETHUSDCMarket, aUSDC2022Market, cDAI2022Market, aUSDC2021Market };
 describe("Market", () => {
     let provider: ethers.providers.JsonRpcProvider;
     let signer: any;
@@ -57,8 +58,8 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        market = markets.aUSDC2022Market as PendleMarket;
-        console.log(aUSDC2022Market.methods(signer, chainId));
+        market = markets.aUSDC2021Market as PendleMarket;
+        console.log(market);
     });
 
     it.only("PendleMarket.readMarketDetails", async () => {

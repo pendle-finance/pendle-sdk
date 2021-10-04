@@ -4,7 +4,7 @@ import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
 import { ETHAddress } from "../constants";
 import { TokenAmount } from "../entities/tokenAmount";
-import { DecimalsPrecision } from "../math/marketMath";
+import { CurrencyAmount } from "../entities/currencyAmount";
 const axios = require('axios')
 
 export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
@@ -86,9 +86,12 @@ export async function fetchTokenPrice(address: string, chainId: number | undefin
   }
 }
 
-export async function fetchValuation(amount: TokenAmount, chainId: number | undefined): Promise<string> {
+export async function fetchValuation(amount: TokenAmount, chainId: number | undefined): Promise<CurrencyAmount> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
 
   const price: BigNumber = await fetchTokenPrice(amount.token.address, chainId);
-  return price.multipliedBy(new BigNumber(amount.rawAmount())).dividedBy(new BigNumber(10).pow(networkInfo.decimalsRecord[amount.token.address])).toFixed(DecimalsPrecision);
+  return {
+    currency: 'USD',
+    amount: price.multipliedBy(new BigNumber(amount.rawAmount())).dividedBy(new BigNumber(10).pow(networkInfo.decimalsRecord[amount.token.address])).toNumber()
+  }
 } 
