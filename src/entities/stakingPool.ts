@@ -153,8 +153,7 @@ export class StakingPool {
   public readonly inputToken: Token;
   public readonly rewardTokens: Token[]; // Should always be PENDLE
   public readonly interestTokens?: Token[]; //
-  public readonly contractType: 
-  ;
+  public readonly contractType: StakingPoolType;
 
   constructor(
     address: string,

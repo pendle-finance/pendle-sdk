@@ -1,4 +1,4 @@
-import { Yt, StakingPool, PendleMarket, dummyAddress, contracts } from '../src';
+import { Yt, StakingPool, PendleMarket, dummyAddress, contracts, Sdk } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, Contract } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -18,6 +18,12 @@ describe('Sdk', () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
   });
+
+  it.only('claim yields', async() => {
+    const sdk = new Sdk(signer);
+    const res = await sdk.estimateGasForClaimYields([],[],[],[],[]);
+    console.log(res);
+  })
 
   it('fetchPendleMarketData', async () => {
     const market = PendleMarket.find(
@@ -66,7 +72,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
 
-  it.only('StakingPool.methods.fetchVestedRewards', async () => {
+  it('StakingPool.methods.fetchVestedRewards', async () => {
     const vestedRewards = await StakingPool.methods(signer).fetchVestedRewards(
       dummyUser
     );
