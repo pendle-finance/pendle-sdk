@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 jest.setTimeout(30000);
 
-const dummyUser = '0x186e446fbd41dD51Ea2213dB2d3ae18B05A05ba8'; // Mainnet test account
+const dummyUser = '0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb'; // Mainnet test account
 
 describe('Sdk', () => {
   let provider: ethers.providers.JsonRpcProvider;
@@ -32,26 +32,26 @@ describe('Sdk', () => {
     console.log(JSON.stringify(market, null, '  '));
   });
 
-  it('Market.methods.fetchInterests', async () => {
+  it.skip('Market.methods.fetchInterests', async () => {
     const userInterests = await PendleMarket.methods(signer, 1).fetchInterests(
       dummyUser
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it('YT.methods.fetchInterests', async () => {
+  it.skip('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
       dummyUser
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it('YT.find', async() => {
+  it.skip('YT.find', async() => {
     const xyt: Yt = Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9');
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer
     ).fetchClaimableYields(

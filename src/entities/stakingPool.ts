@@ -1,6 +1,5 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-<<<<<<< HEAD
 import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getGasLimit, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, formatOutput } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress } from '../constants';
 import { contracts } from '../contracts';
@@ -13,12 +12,6 @@ import { Yt } from './yt';
 import BigNumber from 'bignumber.js';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
 import { calcLMRewardApr, calcValuation, DecimalsPrecision } from '../math/marketMath';
-=======
-import { getCurrentEpochId, indexRange, populatePoolAccruingRewards, populatePoolYields, populatePoolVestedRewards, distributeConstantsByNetwork, Call_MultiCall, Result_MultiCall, formatOutput } from '../helpers'
-import { ZERO, LMEpochDuration, LMStartTime, contracts, VestingEpoches } from '../';
-import { Token, TokenAmount } from '../entities'
-import { NetworkInfo, LMINFO } from '../networks';
->>>>>>> multicall
 
 export interface StakingPoolId {
   address: string;
@@ -266,6 +259,8 @@ export class StakingPool {
       calls.push({target: redeemProxyContract.address, callData: lm2sRewardsCallData});
 
       const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
+
+      console.log(returnedData);
 
       const userLm1Interests: BN[] = formatOutput(returnedData[0].returnData, contracts.PendleRedeemProxy.abi, "redeemLmInterests")[0];
       const userLm1Rewards: BN[] = formatOutput(returnedData[1].returnData, contracts.PendleRedeemProxy.abi, "redeemLmRewards")[0];
