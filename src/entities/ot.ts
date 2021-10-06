@@ -1,5 +1,7 @@
 import { providers } from "ethers";
 import { TokenAmount } from ".";
+import { distributeConstantsByNetwork } from "../helpers";
+import { NetworkInfo, OTINFO } from "../networks";
 import { Token } from "./token";
 
 export type OtReward = {
@@ -18,6 +20,8 @@ export class Ot extends Token {
     public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
         
         const fetchRewards = async (userAddress: string): Promise<OtReward[]> => {
+            const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+            const ots: OTINFO[] = networkInfo.contractAddresses.OTs;
             
         }
 

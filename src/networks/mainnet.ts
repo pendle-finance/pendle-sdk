@@ -376,7 +376,8 @@ export const mainnetContracts: NetworkContractAddresses = {
         PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b',
         PendleRouter: '0x1b6d3e5da9004668e14ca39d1553e9a46fe842b3',
         PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6',
-        PendleSingleStakingManager: '0x747fc744837deda8d1c568d8e90839e5d4495255'
+        PendleSingleStakingManager: '0x747fc744837deda8d1c568d8e90839e5d4495255',
+        MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696'
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',

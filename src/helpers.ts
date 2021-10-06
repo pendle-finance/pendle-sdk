@@ -1,8 +1,27 @@
-import { BigNumber as BN, Contract } from 'ethers';
+import { BigNumber as BN, Contract, Bytes, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, NetworkInfo, StakingPoolType } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
+
+export type Call_MultiCall = {
+  target: string,
+  callData: string
+}
+
+export type Result_MultiCall = {
+  success: boolean,
+  returnData: Bytes;
+}
+
+export function getFunctionABIByName(abi: any[], name: string): any {
+  return abi.find((f: any) => f.name == name);
+}
+
+export function formatOutput(returnedData: any, abi: any, name: string) {
+  return utils.defaultAbiCoder.decode(getFunctionABIByName(abi, name).outputs.map((f: any) => f.type), returnedData);
+}
+
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)

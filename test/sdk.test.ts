@@ -19,13 +19,13 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it('claim yields', async() => {
+  it.skip('claim yields', async() => {
     const sdk = new Sdk(signer);
     const res = await sdk.estimateGasForClaimYields([],[],[],[],[]);
     console.log(res);
   })
 
-  it('fetchPendleMarketData', async () => {
+  it.skip('fetchPendleMarketData', async () => {
     const market = PendleMarket.find(
       '0x944d1727d0b656f497e74044ff589871c330334f'
     );
@@ -39,7 +39,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('YT.methods.fetchInterests', async () => {
+  it('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
       dummyUser
     );
@@ -52,15 +52,12 @@ describe('Sdk', () => {
   })
 
   it('StakingPool.methods.fetchInterestsAndRewards', async () => {
-    const lmV1Contract = new Contract("0x5b1c59eb6872f88a92469751a034b9b5ada9a73f", contracts.PendleLiquidityMiningBase.abi, provider);
-    const d = await lmV1Contract.readUserSpecificExpiryData(1672272000, "0x7e733777a04b9fadf5ecd8e2bad303cabbd65cd6", {blockTag: 12648940});
-    console.log(JSON.stringify(d, null, '  '));
-    // const interestsAndRewards = await StakingPool.methods(
-    //   signer
-    // ).fetchClaimableYields(
-    //   "0xa2188a2d67fb39e386def087f43b9407aabe5c0e"
-    // );
-    // console.log(JSON.stringify(interestsAndRewards, null, '  '));
+    const interestsAndRewards = await StakingPool.methods(
+      signer
+    ).fetchClaimableYields(
+      dummyAddress
+    );
+    console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
   it('StakingPool.methods.fetchAccruingRewards', async () => {
