@@ -152,7 +152,7 @@ export class YieldContract {
         _: providers.JsonRpcSigner,
         chainId?: number
     ): Record<string, any> {
-        const getMintTransactions = (query: ForgeQuery) => {
+        const getMintTransactions = (query: ForgeQuery): Promise<TRANSACTION[]> => {
             return new SubgraphTransactions(chainId).getMintTransactions(query);
         };
 

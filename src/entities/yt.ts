@@ -84,15 +84,15 @@ export class Yt extends Token {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
         const ytInfo: YTINFO[] = networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => isSameAddress(yt.address, this.address));
         if (ytInfo.length === 0) {
-          throw Error(`YT with address ${this.address} not found on this network`);
+            throw Error(`YT with address ${this.address} not found on this network`);
         }
         return new YieldContract(
-          utils.parseBytes32String(ytInfo[0].forgeIdInBytes),
-          new Token(
-            ytInfo[0].underlyingAssetAddress,
-            networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
-          ),
-          this.expiry!
+            utils.parseBytes32String(ytInfo[0].forgeIdInBytes),
+            new Token(
+                ytInfo[0].underlyingAssetAddress,
+                networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
+            ),
+            this.expiry!
         )
-      }
+    }
 }

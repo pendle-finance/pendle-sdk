@@ -32,7 +32,6 @@ export type YieldInfo = {
 export type PoolYields = {
   address: string; // pool
   inputToken: Token;
-
   yields: YieldInfo[];
 };
 
