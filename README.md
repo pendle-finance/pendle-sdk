@@ -11,7 +11,19 @@ YtOrMarketInterest: {
 };
 
 Yt.find(address, chainId?) => Yt
-Yt.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise<YtOrMarketInterest[]>
+Yt.methods(JsonRpcSigner, chainId?).fetchInterests(userAddress) => Promise<YtOrMarketInterest[]>
+```
+
+## OT
+
+### Static Methods:
+```
+type OtReward = {
+    reward: TokenAmount
+    address: string
+}
+
+Ot.methods(JsonRpcSigner, chainId?).fetchInterests(userAddress) => Promise<OtReward[]>
 ```
 
 ## Market

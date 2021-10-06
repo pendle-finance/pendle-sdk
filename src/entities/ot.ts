@@ -29,7 +29,7 @@ export class Ot extends Token {
         );        
         const fetchRewards = async (userAddress: string): Promise<OtReward[]> => {
 
-            const userRewards = await redeemProxyContract.callStatic.redeemXyts(
+            const userRewards = await redeemProxyContract.callStatic.redeemOts(
                 OTs.map((OTInfo: OTINFO) => OTInfo.address),
                 { from: userAddress }
             );
@@ -48,7 +48,7 @@ export class Ot extends Token {
                     address: OTInfo.address,
                     reward: new TokenAmount(
                         new Token(OTInfo.rewardTokenAddresses![0], networkInfo.decimalsRecord[OTInfo.rewardTokenAddresses![0]]),
-                        userRewards[i].toString()
+                        userRewards[i].amountRewardOne.toString()
                     )
                 }
             })

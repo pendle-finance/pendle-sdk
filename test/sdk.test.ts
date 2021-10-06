@@ -39,14 +39,14 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it('YT.methods.fetchInterests', async () => {
+  it.only('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('OT.methods.fetchRewards', async() => {
+  it('OT.methods.fetchRewards', async() => {
     const userRewards = await Ot.methods(signer, 1).fetchRewards(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
