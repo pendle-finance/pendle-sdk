@@ -10,6 +10,7 @@ import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
 } from './transactions';
+import { TRANSACTION } from "./transactions/types";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
@@ -139,25 +140,29 @@ export class YieldContract {
             return pendleRouterContract.connect(signer).redeemUnderlying(...args, getGasLimit(gasEstimate))
         }
 
-        const getMintTransactions = (query: ForgeQuery) => {
-            return new SubgraphTransactions(networkInfo.chainId).getMintTransactions(
-                query
-            );
-        };
-
-        const getRedeemTransactions = (query: ForgeQuery) => {
-            return new SubgraphTransactions(
-                networkInfo.chainId
-            ).getRedeemTransactions(query);
-        };
-
         return {
             mintDetails,
             mint,
             redeemDetails,
             redeem,
-            getMintTransactions,
-            getRedeemTransactions,
         };
+    }
+
+    public static methods(
+        _: providers.JsonRpcSigner,
+        chainId?: number
+    ): Record<string, any> {
+        const getMintTransactions = (query: ForgeQuery) => {
+            return new SubgraphTransactions(chainId).getMintTransactions(query);
+        };
+
+        const getRedeemTransactions = (query: ForgeQuery): Promise<TRANSACTION[]> => {
+            return new SubgraphTransactions(chainId).getRedeemTransactions(query);
+        };
+
+        return {
+            getMintTransactions,
+            getRedeemTransactions
+        }
     }
 }

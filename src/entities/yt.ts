@@ -2,8 +2,9 @@ import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { NetworkInfo, YTINFO } from "../networks";
 import { distributeConstantsByNetwork, isSameAddress, getDecimal } from "../helpers";
-import { providers, Contract } from "ethers";
+import { providers, Contract, utils } from "ethers";
 import { contracts } from "../contracts";
+import { YieldContract } from "./yieldContract";
 
 export type YtOrMarketInterest = {
     address: string;
@@ -78,4 +79,20 @@ export class Yt extends Token {
             fetchInterests,
         };
     }
+
+    public yieldContract(chainId?: number): YieldContract {
+        const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+        const ytInfo: YTINFO[] = networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => isSameAddress(yt.address, this.address));
+        if (ytInfo.length === 0) {
+          throw Error(`YT with address ${this.address} not found on this network`);
+        }
+        return new YieldContract(
+          utils.parseBytes32String(ytInfo[0].forgeIdInBytes),
+          new Token(
+            ytInfo[0].underlyingAssetAddress,
+            networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
+          ),
+          this.expiry!
+        )
+      }
 }

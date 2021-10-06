@@ -217,13 +217,13 @@ export class PendleMarket extends Market {
       return formattedResult;
     };
 
-    const getSwapTransactions = (query: PendleAmmQuery) => {
+    const getSwapTransactions = (query: PendleAmmQuery): Promise<TRANSACTION[]> => {
       return new TransactionFetcher(networkInfo.chainId).getSwapTransactions(
         query
       );
     };
 
-    const getLiquidityTransactions = (query: PendleAmmQuery) => {
+    const getLiquidityTransactions = (query: PendleAmmQuery): Promise<TRANSACTION[]> => {
       return new TransactionFetcher(
         networkInfo.chainId
       ).getLiquidityTransactions(query);

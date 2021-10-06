@@ -10,7 +10,7 @@ type SubgraphQuery = {
   limit: number;
 };
 export interface ForgeQuery extends SubgraphQuery {
-  forgeId: 'CompoundV2' | 'AaveV2' | 'SushiswapSimple' | 'SushiswapComplex';
+  forgeId: string;
   expiry: number;
   underlyingTokenAddress: Address;
 }

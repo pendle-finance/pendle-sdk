@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 jest.setTimeout(30000);
 
-const dummyUser = '0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb'; // Mainnet test account
+const dummyUser = '0x186e446fbd41dD51Ea2213dB2d3ae18B05A05ba8'; // Mainnet test account
 
 describe('Sdk', () => {
   let provider: ethers.providers.JsonRpcProvider;
@@ -19,7 +19,7 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it.only('claim yields', async() => {
+  it('claim yields', async() => {
     const sdk = new Sdk(signer);
     const res = await sdk.estimateGasForClaimYields([],[],[],[],[]);
     console.log(res);
@@ -33,14 +33,14 @@ describe('Sdk', () => {
   });
 
   it('Market.methods.fetchInterests', async () => {
-    const userInterests = await PendleMarket.methods(signer).fetchInterests(
+    const userInterests = await PendleMarket.methods(signer, 1).fetchInterests(
       dummyUser
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it('YT.methods.fetchInterests', async () => {
-    const userInterests = await Yt.methods(signer).fetchInterests(
+  it.only('YT.methods.fetchInterests', async () => {
+    const userInterests = await Yt.methods(signer, 1).fetchInterests(
       dummyUser
     );
     console.log(JSON.stringify(userInterests, null, '  '));
