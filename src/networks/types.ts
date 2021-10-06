@@ -48,7 +48,8 @@ export type PENDLEMARKETNFO = {
 };
 export type OTINFO = {
     address: string,
-    yieldTokenAddress: string
+    yieldTokenAddress: string,
+    rewardTokenAddresses?: string[]
 }
     
 export enum StakingPoolType {

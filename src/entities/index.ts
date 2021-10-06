@@ -2,6 +2,7 @@ export * from './market';
 export * from './token';
 export * from './tokenAmount';
 export * from './yt';
+export * from './ot';
 export * from './stakingPool';
 export * from './mappings';
 export * from './transactions';

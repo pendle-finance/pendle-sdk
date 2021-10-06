@@ -260,8 +260,6 @@ export class StakingPool {
 
       const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
 
-      console.log(returnedData);
-
       const userLm1Interests: BN[] = formatOutput(returnedData[0].returnData, contracts.PendleRedeemProxy.abi, "redeemLmInterests")[0];
       const userLm1Rewards: BN[] = formatOutput(returnedData[1].returnData, contracts.PendleRedeemProxy.abi, "redeemLmRewards")[0];
       const userLm2Interests: BN[] = formatOutput(returnedData[2].returnData, contracts.PendleRedeemProxy.abi, "redeemLmV2Interests")[0];

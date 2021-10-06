@@ -1,7 +1,7 @@
 import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { NetworkInfo, YTINFO } from "../networks";
-import { distributeConstantsByNetwork, isSameAddress, getDecimal } from "../helpers";
+import { distributeConstantsByNetwork, isSameAddress, getDecimal, indexRange } from "../helpers";
 import { providers, Contract, utils } from "ethers";
 import { contracts } from "../contracts";
 import { YieldContract } from "./yieldContract";
@@ -57,22 +57,22 @@ export class Yt extends Token {
             userAddress: string,
         ): Promise<YtOrMarketInterest[]> => {
 
-            const formattedResult: YtOrMarketInterest[] = [];
 
             const userInterests = await redeemProxyContract.callStatic.redeemXyts(
                 YTs.map((YTInfo: any) => YTInfo.address),
                 { from: userAddress }
             );
-            for (let i = 0; i < YTs.length; i++) {
+            
+            const formattedResult: YtOrMarketInterest[] = indexRange(0, YTs.length).map((i: number) => {
                 const YTInfo = YTs[i];
-                formattedResult.push({
+                return {
                     address: YTInfo.address,
                     interest: new TokenAmount(
-                        new Token(YTInfo.rewardTokenAddresses[0], await getDecimal(decimalsRecord, YTInfo.rewardTokenAddresses[0], signer.provider)),
+                        new Token(YTInfo.rewardTokenAddresses[0], networkInfo.decimalsRecord[YTInfo.rewardTokenAddresses[0]]),
                         userInterests[i].toString()
                     ),
-                });
-            }
+                }
+            })
             return formattedResult;
         };
         return {

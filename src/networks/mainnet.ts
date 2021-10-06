@@ -246,27 +246,45 @@ export const mainnetContracts: NetworkContractAddresses = {
     OTs: [
         {
             address: "0x010a0288af52ed61e32674d82bbc7ddbfa9a1324",
-            yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c"
+            yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c",
+            rewardTokenAddresses: [
+                '0x4da27a545c0c5b758a6ba100e3a049001de870f5'
+            ]
         },
         {
             address: "0x8fcb1783bf4b71a51f702af0c266729c4592204a",
-            yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c"
+            yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c",
+            rewardTokenAddresses: [
+                '0x4da27a545c0c5b758a6ba100e3a049001de870f5'
+            ]
         },
         {
             address: "0xe55e3b62005a2035d48ac0c41a5a9c799f04892c",
-            yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
+            yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+            rewardTokenAddresses: [
+                '0xc00e94cb662c3520282e6f5717214004a7f26888'
+            ]
         },
         {
             address: "0x3d4e7f52efafb9e0c70179b688fc3965a75bcfea",
-            yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
+            yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+            rewardTokenAddresses: [
+                '0xc00e94cb662c3520282e6f5717214004a7f26888'
+            ]
         },
         {
             address: "0x322d6c69048330247165231eb7848a5c80a48878",
-            yieldTokenAddress: "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
+            yieldTokenAddress: "0x397ff1542f962076d0bfe58ea045ffa2d347aca0",
+            rewardTokenAddresses: [
+                '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
+            ]
         },
         {
             address: '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
-            yieldTokenAddress: '0x37922c69b08babcceae735a31235c81f1d1e8e43'
+            yieldTokenAddress: '0x37922c69b08babcceae735a31235c81f1d1e8e43',
+            rewardTokenAddresses: [
+                '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
+            ]
         }
     ],
     pendleMarkets: [

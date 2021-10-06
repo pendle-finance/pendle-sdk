@@ -1,4 +1,4 @@
-import { Yt, StakingPool, PendleMarket, dummyAddress, contracts, Sdk } from '../src';
+import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, contracts, Sdk } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, Contract } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -39,19 +39,26 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.skip('YT.methods.fetchInterests', async () => {
+  it('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
-      dummyUser
+      '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
+
+  it.only('OT.methods.fetchRewards', async() => {
+    const userRewards = await Ot.methods(signer, 1).fetchRewards(
+      '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
+    );
+    console.log(JSON.stringify(userRewards, null, '  '));
+  })
 
   it.skip('YT.find', async() => {
     const xyt: Yt = Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9');
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer
     ).fetchClaimableYields(
