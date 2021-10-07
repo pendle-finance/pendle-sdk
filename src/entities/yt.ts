@@ -1,6 +1,6 @@
 import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
-import { NetworkInfo, YTINFO } from "../networks";
+import { NetworkInfo, PENDLEMARKETNFO, YTINFO } from "../networks";
 import { distributeConstantsByNetwork, isSameAddress, getDecimal, indexRange } from "../helpers";
 import { providers, Contract, utils } from "ethers";
 import { contracts } from "../contracts";
@@ -11,15 +11,18 @@ export type YtOrMarketInterest = {
     interest: TokenAmount;
 };
 
-const YT_NOT_EXIST = new Error("No YT is found at the given address");
+const YT_NOT_EXIST = "No YT is found at the given address";
+const YT_MARKET_FEED_NOT_FOUND = "No Market found with this YT"; 
 
 export class Yt extends Token {
 
     public readonly yieldBearingAddress: string;
+    public readonly priceFeedMarketAddress: string;
 
-    public constructor(address: string, decimals: number, yieldBearingAddress: string, expiry?: number) {
+    public constructor(address: string, decimals: number, yieldBearingAddress: string, expiry: number, priceFeedMarketAddress: string) {
         super(address, decimals, expiry);
         this.yieldBearingAddress = yieldBearingAddress;
+        this.priceFeedMarketAddress = priceFeedMarketAddress;
     }
 
     public static find(address: string, chainId?: number): Yt {
@@ -28,13 +31,20 @@ export class Yt extends Token {
             return isSameAddress(address, y.address);
         })
         if (ytInfo === undefined) {
-            throw YT_NOT_EXIST;
+            throw new Error(YT_NOT_EXIST);
         }
+        const markets: PENDLEMARKETNFO[] | undefined = networkInfo.contractAddresses.pendleMarkets;
+        const marketInfo: PENDLEMARKETNFO | undefined = markets.find((m: PENDLEMARKETNFO) => isSameAddress(m.pair[0], address) || isSameAddress(m.pair[1], address));
+        if (marketInfo === undefined) {
+            throw new Error(YT_MARKET_FEED_NOT_FOUND);
+        }
+        const priceFeedMarketAddress: string = marketInfo.address;
         return new Yt(
             address.toLowerCase(),
             networkInfo.decimalsRecord[address.toLowerCase()],
             ytInfo.rewardTokenAddresses[0],
-            ytInfo.expiry.toNumber()
+            ytInfo.expiry.toNumber(),
+            priceFeedMarketAddress
         )
     }
 

@@ -760,7 +760,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValueBigNumber = async (marketReserve: MarketReservesRaw): Promise<BigNumber> => {
-      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
+      const baseTokenPrice: BigNumber = await fetchTokenPrice({address: this.tokens[1].address, signer, chainId});
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
       return totalLiquidityUSD;
     }
@@ -794,8 +794,8 @@ export class PendleMarket extends Market {
     }
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: number, impliedYield: number }> => {
-      const underlyingPrice: BigNumber = await fetchTokenPrice(underlyingAsset, chainId);
-      const baseTokenPrice: BigNumber = await fetchTokenPrice(this.tokens[1].address, chainId);
+      const underlyingPrice: BigNumber = await fetchTokenPrice({address:underlyingAsset, signer, chainId});
+      const baseTokenPrice: BigNumber = await fetchTokenPrice({address: this.tokens[1].address, signer, chainId});
       const ytDecimal: number = networkInfo.decimalsRecord[this.tokens[0].address];
       const rate: BN = calcRate(marketReserves.xytBalance, marketReserves.xytWeight, marketReserves.tokenBalance, marketReserves.tokenWeight, ytDecimal);
       const ytPrice: BigNumber = calcTokenPriceByMarket(baseTokenPrice, rate, networkInfo.decimalsRecord[this.tokens[1].address]);
@@ -912,7 +912,7 @@ export class PendleMarket extends Market {
       removeSingleDetails,
       removeSingle,
       getLPPriceBigNumber,
-      getSwapFeeApr
+      getSwapFeeApr,
     };
   }
 }

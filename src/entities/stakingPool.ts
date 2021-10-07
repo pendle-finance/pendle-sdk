@@ -453,12 +453,12 @@ export class StakingPool {
         return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.LmV2) {
         const totalStakeLP: BN = await stakingPoolContract.totalStake();
-        const marketLPPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
+        const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, signer, chainId});
         return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const PENDLEContract: Contract = new Contract(this.inputToken.address, contracts.IERC20.abi, signer.provider);
         const totalStake: BN = await PENDLEContract.balanceOf(this.address);
-        const PENDLEPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
+        const PENDLEPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, signer, chainId});
         return populateStakedAmount(totalStake, PENDLEPrice);
       } else {
         throw Error(UNSUPPORTED_TYPE);
@@ -472,12 +472,12 @@ export class StakingPool {
         return populateStakedAmount(stakedLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.LmV2) {
         const stakedLP: BN = await stakingPoolContract.balances(address);
-        const marketLPPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
+        const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, signer, chainId});
         return populateStakedAmount(stakedLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const userShareBalance: BN = await stakingPoolContract.balances(address);
         const userPendleBalance: BN = await stakingPoolContract.callStatic.leave(userShareBalance, {from: address});
-        const PENDLEPrice: BigNumber = await fetchTokenPrice(this.inputToken.address, chainId);
+        const PENDLEPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, signer, chainId});
         return populateStakedAmount(userPendleBalance, PENDLEPrice);
       } else {
         throw Error(UNSUPPORTED_TYPE);
@@ -500,7 +500,7 @@ export class StakingPool {
         const rewardsForThisExpiry: BN = epochData.totalRewards.mul(await stakingPoolContract.allocationSettings(settingId, expiry)).div(
             ALLOCATION_DENOMINATOR
         );
-        const rewardsValue: BigNumber = calcValuation(await fetchTokenPrice(this.rewardTokens[0].address, chainId), rewardsForThisExpiry, networkInfo.decimalsRecord[this.rewardTokens[0].address]);
+        const rewardsValue: BigNumber = calcValuation(await fetchTokenPrice({address: this.rewardTokens[0].address, signer, chainId}), rewardsForThisExpiry, networkInfo.decimalsRecord[this.rewardTokens[0].address]);
         const rewardApr: BigNumber = calcLMRewardApr(rewardsValue, stakedUSDValue, 52);
         return [{
           origin: 'Pendle',
@@ -514,7 +514,7 @@ export class StakingPool {
         const epochData: any = await stakingPoolContract.readEpochData(currentEpochId, dummyAddress);
 
         const aprInfos: AprInfo[] = [];
-        const pendleRewardsValue: BigNumber = calcValuation(await fetchTokenPrice(this.rewardTokens[0].address, chainId), epochData.totalRewards, networkInfo.decimalsRecord[this.rewardTokens[0].address]);
+        const pendleRewardsValue: BigNumber = calcValuation(await fetchTokenPrice({address: this.rewardTokens[0].address, signer, chainId}), epochData.totalRewards, networkInfo.decimalsRecord[this.rewardTokens[0].address]);
         aprInfos.push({
           origin: 'Pendle',
           apr: calcLMRewardApr(pendleRewardsValue, stakedUSDValue, 52).toFixed(DecimalsPrecision)
@@ -531,7 +531,7 @@ export class StakingPool {
           const blockNumberOneDayAgo: number = (await getBlockOneDayEarlier(chainId, signer.provider))!;
           const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
           const sushiPerBlock: BN = globalSushiPerBlock.mul(allocPoint).div(totalAllocPoint);
-          const sushiPrice: BigNumber = await fetchTokenPrice(this.interestTokens[0].address, chainId);
+          const sushiPrice: BigNumber = await fetchTokenPrice({address: this.interestTokens[0].address, signer, chainId});
           const sushiRewardsValue: BigNumber = calcValuation(sushiPrice, sushiPerBlock.mul(blockPerDay), networkInfo.decimalsRecord[this.interestTokens[0].address]);
           aprInfos.push({
             origin: 'Sushiswap',

@@ -3,7 +3,7 @@ import { contracts } from './contracts';
 import { Token, TokenAmount, StakingPool, PendleMarket, Yt, dummyTokenAmount, ETHToken } from './entities';
 import { CurrencyAmount } from './entities/currencyAmount';
 import { fetchTokenBalances, fetchValuation } from './fetchers';
-import { distributeConstantsByNetwork, getGasLimit } from './helpers';
+import { distributeConstantsByNetwork, getGasLimit, indexRange } from './helpers';
 import { NetworkInfo, StakingPoolType } from './networks';
 import { GasInfo, getGasPrice } from './fetchers/gasPriceFetcher';
 
@@ -16,16 +16,13 @@ export class Sdk {
     this.chainId = chainId;
   }
 
-  public async fetchTokenBalances(
-    // should be  in Token.contract
-    tokens: Token[],
-    userAddress: string
-  ): Promise<TokenAmount[]> {
-    return await fetchTokenBalances(this.signer.provider, tokens, userAddress);
-  }
-
-  public async fetchValuation(amount: TokenAmount, chainId?: number): Promise<CurrencyAmount> {
-    return fetchValuation(amount, chainId)
+  public async fetchValuations(amounts: TokenAmount[], chainId?: number): Promise<CurrencyAmount[]> {
+    const response: CurrencyAmount[] = new Array<CurrencyAmount>(amounts.length);
+    const promises = indexRange(0, amounts.length).map(async (i: number) => {
+      await fetchValuation(amounts[i], this.signer, chainId).then((r: CurrencyAmount) => response[i] = r);
+    })
+    await Promise.all(promises);
+    return response;
   }
 
   private constructArgsForClaimYields(
@@ -33,7 +30,8 @@ export class Sdk {
     ots: Token[],
     lps: Token[],
     interestStakingPools: StakingPool[],
-    rewardStakingPools: StakingPool[]
+    rewardStakingPools: StakingPool[],
+    userAddress: string
   ): any[] {
     const ytAddresses: string[] = yts.map((t: Token) => t.address);
     const otAddresses: string[] = ots.map((t: Token) => t.address);
@@ -54,15 +52,18 @@ export class Sdk {
     const lmV2sForRewards: StakingPool[] = rewardStakingPools.filter((s: StakingPool) => s.contractType == StakingPoolType.LmV2);
 
     const args: any[] = [
-      ytAddresses,
-      otAddresses,
-      marketAddresses,
-      lmV1sForRewards.map((s: StakingPool) => s.address),
-      lmV1sExpiriesForRewards,
-      lmV1sForInterest.map((s: StakingPool) => s.address),
-      lmV1sExpiriesForInterest,
-      lmV2sForRewards.map((s: StakingPool) => s.address),
-      lmV2sForInterest.map((s: StakingPool) => s.address)
+      {
+        xyts: ytAddresses,
+        ots: otAddresses,
+        markets: marketAddresses,
+        lmContractsForRewards: lmV1sForRewards.map((s: StakingPool) => s.address),
+        expiriesForRewards: lmV1sExpiriesForRewards,
+        lmContractsForInterests: lmV1sForInterest.map((s: StakingPool) => s.address),
+        expiriesForInterests: lmV1sExpiriesForInterest,
+        lmV2ContractsForRewards: lmV2sForRewards.map((s: StakingPool) => s.address),
+        lmV2ContractsForInterests: lmV2sForInterest.map((s: StakingPool) => s.address)
+      },
+      userAddress
     ];
     return args;
   }
@@ -74,7 +75,8 @@ export class Sdk {
     interestStakingPools: StakingPool[],
     rewardStakingPools: StakingPool[]
   ): Promise<providers.TransactionResponse> {
-    const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools);
+    const userAddress: string = await this.signer.getAddress();
+    const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(this.chainId);
     const redeemProxyContract = new Contract(
@@ -93,7 +95,8 @@ export class Sdk {
     interestStakingPools: StakingPool[],
     rewardStakingPools: StakingPool[]
   ): Promise<GasInfo> {
-    const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools);
+    const userAddress: string = await this.signer.getAddress();
+    const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(this.chainId);
     const redeemProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleRedeemProxy,
@@ -113,6 +116,7 @@ export class Sdk {
       gasPrice: new TokenAmount(
         ETHToken,
         gasPrice.toString(),
-      )}
+      )
+    }
   }
 }

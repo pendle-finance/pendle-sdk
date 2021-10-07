@@ -1,7 +1,8 @@
-import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, contracts, Sdk } from '../src';
+import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, contracts, Sdk, TokenAmount, ETHToken, Token } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, Contract } from 'ethers';
 import * as dotenv from 'dotenv';
+import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(30000);
 
@@ -19,9 +20,9 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it.skip('claim yields', async() => {
+  it('claim yields', async() => {
     const sdk = new Sdk(signer);
-    const res = await sdk.estimateGasForClaimYields([],[],[],[],[]);
+    const res = await sdk.estimateGasForClaimYields([],[],[new Token('0x9e382e5f78b06631e4109b5d48151f2b3f326df0', 18)],[],[]);
     console.log(res);
   })
 
@@ -39,7 +40,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('YT.methods.fetchInterests', async () => {
+  it('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
@@ -82,4 +83,49 @@ describe('Sdk', () => {
     );
     console.log(JSON.stringify(vestedRewards, null, '  '));
   });
+
+  it.only('Sdk.fetchValuations', async() => {
+    const sdk = new Sdk(signer, 1);
+    const valuations = await sdk.fetchValuations([new TokenAmount(
+      ETHToken,
+      "100000000000000000"
+    ),
+    new TokenAmount(
+      new Token(
+        '0x37922c69b08babcceae735a31235c81f1d1e8e43',
+        18
+      ),
+      "1000000000000000000"
+    ),
+    new TokenAmount(
+      new Token(
+        '0x49c8ac20de6409c7e0b8f9867cffd1481d8206c6',
+        18
+      ),
+      "1000000000000000000"
+    ),
+    new TokenAmount(
+      new Token(
+        '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
+        18
+      ),
+      "1000000000000000000"
+    )]);
+    console.log(JSON.stringify(valuations, null, '  '));
+  })
+
+  it('TokenAmounts.fetchValuations', async() => {
+    const networkInfo = distributeConstantsByNetwork(1);
+    const balances = await TokenAmount.methods(signer, 1).balancesOf({user: dummyAddress, tokens:[
+      new Token(
+        networkInfo.contractAddresses.tokens.USDC,
+        6
+      ),
+      new Token(
+        '0xbcca60bb61934080951369a648fb03df4f96263c',
+        6
+      )
+    ]});
+    console.log(JSON.stringify(balances, null,  '  '));
+  })
 });

@@ -22,7 +22,7 @@ type OtReward = {
     reward: TokenAmount
     address: string
 }
-
+Ot.find(address, chainId?) => Ot
 Ot.methods(JsonRpcSigner, chainId?).fetchInterests(userAddress) => Promise<OtReward[]>
 ```
 
@@ -218,7 +218,7 @@ yieldContract.methods(JsonRpcSigner, chainId?).redeem(otAmount: TokenAmount) => 
 ```
 import {Sdk} from '@pendle/sdk`;
 
-Sdk.fetchValuation(TokenAmount) => Promise<CurrencyAmount>
+Sdk.fetchValuations(TokenAmount[], chainId) => Promise<CurrencyAmount>
 Sdk.claimYields({
   yts: Token[],
   ots: Token[],

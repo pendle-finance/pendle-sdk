@@ -1,5 +1,8 @@
 import BigNumberjs from 'bignumber.js';
-import { decimalFactor } from '../helpers';
+import { providers, Contract, BigNumber as BN } from 'ethers';
+import { contracts } from '../contracts';
+import { Call_MultiCall, decimalFactor, distributeConstantsByNetwork, formatOutput, indexRange, Result_MultiCall } from '../helpers';
+import { NetworkInfo } from '../networks';
 import { Token, dummyToken } from './token';
 
 export class TokenAmount {
@@ -25,6 +28,36 @@ export class TokenAmount {
 
     public rawAmount(): string {
         return this.rawAmnt;
+    }
+
+    public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+        const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+        const balancesOf = async ({user, tokens}: {user: string, tokens: Token[]}): Promise<TokenAmount[]> => {
+            const multiCallV2Contract: Contract = new Contract(networkInfo.contractAddresses.misc.MultiCallV2, contracts.MultiCallV2.abi, signer.provider);
+            const calls: Call_MultiCall[] = new Array<Call_MultiCall>(tokens.length);
+            await Promise.all(indexRange(0, tokens.length).map(async (i: number): Promise<boolean> => {
+                const t: Token = tokens[i];
+                const tContract: Contract = new Contract(t.address, contracts.IERC20.abi, signer.provider);
+                calls[i] = {
+                    callData: (await tContract.populateTransaction.balanceOf(user)).data!,
+                    target: t.address
+                }
+                return true;
+            }));
+            const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(true, calls)).returnData;
+            const balances: TokenAmount[] = new Array<TokenAmount>(tokens.length);
+            indexRange(0, tokens.length).forEach((i: number) => {
+                const balance: BN = formatOutput(returnedData[i].returnData, contracts.IERC20.abi, "balanceOf")[0];
+                balances[i] = new TokenAmount(
+                    tokens[i],
+                    balance.toString()
+                )
+            });
+            return balances;
+        }
+        return {
+           balancesOf
+        }
     }
 }
 

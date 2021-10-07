@@ -195,7 +195,7 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             underlyingAssetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             forgeIdInBytes: forgeIdsInBytes.AAVE,
-            expiry: EXP_2021
+            expiry: EXP_2021,
         },
         {
             address: "0xcdb5b940e95c8632decdc806b90dd3fc44e699fe",
@@ -204,7 +204,7 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             underlyingAssetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             forgeIdInBytes: forgeIdsInBytes.AAVE,
-            expiry: EXP_2022
+            expiry: EXP_2022,
         },
         {
             address: "0x31654eb46a3a450265c6dfc4fc4fbbfe371e26fe",
@@ -213,7 +213,7 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             underlyingAssetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
             forgeIdInBytes: forgeIdsInBytes.COMPOUND,
-            expiry: EXP_2021
+            expiry: EXP_2021,
         },
         {
             address: "0xb7defe73528942793649c0a950ec528f66159047",
@@ -358,39 +358,71 @@ export const mainnetContracts: NetworkContractAddresses = {
     otherMarkets: [
         {
             address: '0x37922c69b08babcceae735a31235c81f1d1e8e43',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0x808507121b80c02388fad14726482e061b8da827',
+                '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+            ]
         },
         {
             address: '0x397ff1542f962076d0bfe58ea045ffa2d347aca0',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+                '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            ]
         },
         {
             address: '0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0xe55e3b62005a2035d48ac0c41a5a9c799f04892c',
+                '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            ]
         },
         {
             address: '0x4556c4488cc16d5e9552cc1a99a529c1392e4fe9',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0x3d4e7f52efafb9e0c70179b688fc3965a75bcfea',
+                '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            ]
         },
         {
             address: '0x8b758d7fd0fc58fca8caa5e53af2c7da5f5f8de1',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0x010a0288af52ed61e32674d82bbc7ddbfa9a1324',
+                '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            ]
         },
         {
             address: '0x0d8a21f2ea15269b7470c347083ee1f85e6a723b',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0x8fcb1783bf4b71a51f702af0c266729c4592204a',
+                '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            ]
         },
         {
             address: '0x72972b21ce425cfd67935e07c68e84300ce3f40f',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0x322d6c69048330247165231eb7848a5c80a48878',
+                '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+            ]
         },
         {
             address: '0xb124c4e18a282143d362a066736fd60d22393ef4',
-            platform: MarketProtocols.Sushiswap
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
+                '0x808507121b80c02388fad14726482e061b8da827'
+            ]
         }
     ],
     misc: {
-        PendleRedeemProxy: '0xc956845c51c83b41d2705b5c9f31e86746d9af5b',
+        PendleRedeemProxy: '0x5d5c1238b1549bcd7ff9e8994045891edd195568',
         PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b',
         PendleRouter: '0x1b6d3e5da9004668e14ca39d1553e9a46fe842b3',
         PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6',

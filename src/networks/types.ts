@@ -33,11 +33,11 @@ export type YTINFO = {
     rewardTokenAddresses: string[],
     underlyingAssetAddress: string,
     forgeIdInBytes: string,
-    expiry: BN
+    expiry: BN,
 };
 export type MARKETINFO = {
     address: string,
-    pair?: string[],
+    pair: string[],
     platform: MarketProtocols
 } 
 export type PENDLEMARKETNFO = {
@@ -49,7 +49,7 @@ export type PENDLEMARKETNFO = {
 export type OTINFO = {
     address: string,
     yieldTokenAddress: string,
-    rewardTokenAddresses?: string[]
+    rewardTokenAddresses?: string[],
 }
     
 export enum StakingPoolType {
