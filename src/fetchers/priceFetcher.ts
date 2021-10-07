@@ -107,6 +107,12 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
 
       case networkInfo.contractAddresses.tokens.SUSHI:
         return fetchPriceFromCoingecko('sushi');
+      
+      case networkInfo.contractAddresses.tokens.COMP:
+        return fetchPriceFromCoingecko('compound-governance-token');
+
+      case networkInfo.contractAddresses.tokens.stkAAVE:
+        return fetchPriceFromCoingecko('aave');
     }
 
     try {
