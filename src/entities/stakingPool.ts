@@ -21,7 +21,7 @@ export interface StakingPoolId {
 
 export enum YieldType {
   INTEREST = "interest",
-  REWARDS = "rewards"
+  REWARDS = "reward"
 }
 
 export type YieldInfo = {

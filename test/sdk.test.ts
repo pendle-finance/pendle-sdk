@@ -68,7 +68,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchAccruingRewards', async () => {
+  it.only('StakingPool.methods.fetchAccruingRewards', async () => {
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(
@@ -84,7 +84,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(vestedRewards, null, '  '));
   });
 
-  it.only('Sdk.fetchValuations', async() => {
+  it('Sdk.fetchValuations', async() => {
     const sdk = new Sdk(signer, 1);
     const valuations = await sdk.fetchValuations([new TokenAmount(
       ETHToken,
@@ -114,7 +114,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(valuations, null, '  '));
   })
 
-  it('TokenAmounts.fetchValuations', async() => {
+  it('TokenAmounts.balancesOf', async() => {
     const networkInfo = distributeConstantsByNetwork(1);
     const balances = await TokenAmount.methods(signer, 1).balancesOf({user: dummyAddress, tokens:[
       new Token(
