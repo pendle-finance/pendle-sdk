@@ -26,7 +26,8 @@ export type LMINFO = {
     contractType: StakingPoolType,
     rewardTokenAddresses: string[],
     interestTokensAddresses: string[],
-    expiry?: BN
+    expiry?: BN,
+    active: boolean
 };
 export type YTINFO = {
     address: string,

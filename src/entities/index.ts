@@ -8,3 +8,4 @@ export * from './mappings';
 export * from './transactions';
 export * from './yieldContract';
 export * from './types';
+export * from './oneClickWrapper';

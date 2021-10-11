@@ -55,6 +55,14 @@ export function calcRate(
     return BN.from(10).pow(inTokenDecimal).mul(outTokenReserve).mul(inTokenWeight).div(outTokenWeight).div(inTokenReserve);
 }
 
+export function calcUnweightedRate(
+    inTokenReserve: BN,
+    outTokenReserve: BN,
+    inTokenDecimal: number
+): BN {
+    return BN.from(10).pow(inTokenDecimal).mul(outTokenReserve).div(inTokenReserve);
+}
+
 export function calcAvgRate(
     inAmount: BN,
     outAmount: BN,

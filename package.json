@@ -1,7 +1,7 @@
 {
   "name": "@pendle/sdk",
   "author": "Pendle Labs",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -46,9 +46,9 @@
     }
   ],
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^5.0.3",
+    "@size-limit/preset-small-lib": "^5.0.5",
     "husky": "^7.0.1",
-    "size-limit": "^5.0.3",
+    "size-limit": "^5.0.5",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
     "typescript": "^4.4.3"
@@ -60,8 +60,8 @@
     "axios": "^0.21.4",
     "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
-    "ethers": "^5.4.6",
-    "graphql": "^15.5.3",
+    "ethers": "^5.4.7",
+    "graphql": "^15.6.1",
     "graphql-request": "^3.5.0",
     "ts-node": "^10.2.1"
   }
