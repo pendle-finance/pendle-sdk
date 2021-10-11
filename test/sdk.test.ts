@@ -20,9 +20,9 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it('claim yields', async() => {
+  it.only('claim yields', async() => {
     const sdk = new Sdk(signer);
-    const res = await sdk.estimateGasForClaimYields([],[],[new Token('0x9e382e5f78b06631e4109b5d48151f2b3f326df0', 18)],[],[]);
+    const res = await sdk.estimateGasForClaimYields({lps: [new Token('0x9e382e5f78b06631e4109b5d48151f2b3f326df0', 18)]});
     console.log(res);
   })
 
@@ -68,7 +68,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
-  it.only('StakingPool.methods.fetchAccruingRewards', async () => {
+  it('StakingPool.methods.fetchAccruingRewards', async () => {
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(

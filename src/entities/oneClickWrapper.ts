@@ -8,7 +8,7 @@ import { Yt } from "./yt";
 import { Token } from "./token";
 import { Contract } from "ethers";
 import { StakingPool } from "./stakingPool";
-import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO, StakingPoolType } from "../networks";
+import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
 import { distributeConstantsByNetwork, getABIByForgeId, isSameAddress } from "../helpers";
 import { contracts } from "../contracts";
 import { PendleMarket, Market, OtherMarketDetails } from "./market";
@@ -84,7 +84,7 @@ const dummySimulation = {
 }
 
 
-class OneClickWrapper {
+export class OneClickWrapper {
 
     public readonly yieldContract: YieldContract
 

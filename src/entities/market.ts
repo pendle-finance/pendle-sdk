@@ -937,13 +937,10 @@ export class SushiMarket extends Market {
 
     const readMarketDetails = async (): Promise<OtherMarketDetails> => {
       const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, signer.provider);
-      var token0Address: string = '', token1Address: string = '', token0Reserve: BN = BN.from(0), token1Reserve: BN = BN.from(0);
+      var token0Address: string = '', token0Reserve: BN = BN.from(0), token1Reserve: BN = BN.from(0);
       const promises = [];
       promises.push(marketContract.token0().then((r: string) => {
         token0Address = r;
-      }));
-      promises.push(marketContract.token1().then((r: string) => {
-        token1Address = r;
       }));
       promises.push(marketContract.getReserves().then((r: any) => {
         token0Reserve = r.reserve0;
