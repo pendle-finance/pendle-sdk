@@ -1,7 +1,7 @@
 import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { NetworkInfo, PENDLEMARKETNFO, YTINFO } from "../networks";
-import { distributeConstantsByNetwork, isSameAddress, getDecimal, indexRange } from "../helpers";
+import { distributeConstantsByNetwork, isSameAddress, indexRange } from "../helpers";
 import { providers, Contract, utils } from "ethers";
 import { contracts } from "../contracts";
 import { YieldContract } from "./yieldContract";
@@ -61,7 +61,6 @@ export class Yt extends Token {
         );
 
         const YTs: YTINFO[] = networkInfo.contractAddresses.YTs;
-        const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
         const fetchInterests = async (
             userAddress: string,

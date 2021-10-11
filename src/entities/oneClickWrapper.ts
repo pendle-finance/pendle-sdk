@@ -54,7 +54,7 @@ const dummyTransaction: Transaction = {
     protocol: "pendle"
 }
 
-class OneClickWrapper {
+export class OneClickWrapper {
 
     public readonly yieldContract: YieldContract
 

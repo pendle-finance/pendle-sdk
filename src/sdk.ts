@@ -1,8 +1,8 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 import { contracts } from './contracts';
-import { Token, TokenAmount, StakingPool, PendleMarket, Yt, dummyTokenAmount, ETHToken } from './entities';
+import { Token, TokenAmount, StakingPool, PendleMarket, Yt, ETHToken } from './entities';
 import { CurrencyAmount } from './entities/currencyAmount';
-import { fetchTokenBalances, fetchValuation } from './fetchers';
+import { fetchValuation } from './fetchers';
 import { distributeConstantsByNetwork, getGasLimit, indexRange } from './helpers';
 import { NetworkInfo, StakingPoolType } from './networks';
 import { GasInfo, getGasPrice } from './fetchers/gasPriceFetcher';
@@ -68,13 +68,19 @@ export class Sdk {
     return args;
   }
 
-  public async claimYields(
+  public async claimYields({
+    yts = [],
+    ots = [],
+    lps = [],
+    interestStakingPools = [],
+    rewardStakingPools = []
+  }: {
     yts: Token[],
     ots: Token[],
     lps: Token[],
     interestStakingPools: StakingPool[],
     rewardStakingPools: StakingPool[]
-  ): Promise<providers.TransactionResponse> {
+  }): Promise<providers.TransactionResponse> {
     const userAddress: string = await this.signer.getAddress();
     const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
 
@@ -88,13 +94,20 @@ export class Sdk {
     return redeemProxyContract.connect(this.signer).redeem(...args, getGasLimit(gasEstimate));
   }
 
-  public async estimateGasForClaimYields(
-    yts: Token[],
-    ots: Token[],
-    lps: Token[],
-    interestStakingPools: StakingPool[],
-    rewardStakingPools: StakingPool[]
-  ): Promise<GasInfo> {
+  public async estimateGasForClaimYields({
+    yts = [],
+    ots = [],
+    lps = [],
+    interestStakingPools = [],
+    rewardStakingPools = []
+  }: {
+    yts?: Token[],
+    ots?: Token[],
+    lps?: Token[],
+    interestStakingPools?: StakingPool[],
+    rewardStakingPools?: StakingPool[]
+  }): Promise<GasInfo> {
+    console.log(yts);
     const userAddress: string = await this.signer.getAddress();
     const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(this.chainId);
