@@ -438,7 +438,9 @@ export const mainnetContracts: NetworkContractAddresses = {
         WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
         SUSHI: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2',
         COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
-        stkAAVE: '0x4da27a545c0c5b758a6ba100e3a049001de870f5'
+        stkAAVE: '0x4da27a545c0c5b758a6ba100e3a049001de870f5',
+        aUSDC: '0xbcca60bb61934080951369a648fb03df4f96263c',
+        cDAI: '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643'
     },
     forges: {
         [forgeIdsInBytes.AAVE]: "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",

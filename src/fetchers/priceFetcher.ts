@@ -96,23 +96,27 @@ export async function fetchBasicTokenPrice(address: string, chainId: number | un
     switch (address.toLowerCase()) {
       case networkInfo.contractAddresses.tokens.USDC:
       case networkInfo.contractAddresses.tokens.DAI:
+      case networkInfo.contractAddresses.tokens.aUSDC:
         return new BigNumber(1)
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        return fetchPriceFromCoingecko('pendle');
+        return await fetchPriceFromCoingecko('pendle');
 
       case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLowerCase():
-        return fetchPriceFromCoingecko('ethereum');
+        return await fetchPriceFromCoingecko('ethereum');
 
       case networkInfo.contractAddresses.tokens.SUSHI:
-        return fetchPriceFromCoingecko('sushi');
+        return await fetchPriceFromCoingecko('sushi');
 
       case networkInfo.contractAddresses.tokens.COMP:
-        return fetchPriceFromCoingecko('compound-governance-token');
+        return await fetchPriceFromCoingecko('compound-governance-token');
 
       case networkInfo.contractAddresses.tokens.stkAAVE:
-        return fetchPriceFromCoingecko('aave');
+        return await fetchPriceFromCoingecko('aave');
+
+      case networkInfo.contractAddresses.tokens.cDAI:
+        return await fetchPriceFromCoingecko('cdai');
     }
   }
   throw Error(`Token ${address} is not supported in basic tokens`);
