@@ -116,7 +116,10 @@ export class Market {
       if (marketInfo !== undefined && marketInfo.platform == MarketProtocols.Sushiswap) {
         return new SushiMarket(
           address,
-          [],
+          marketInfo.pair.map((ad: string) => new Token(
+            ad,
+            networkInfo.decimalsRecord[ad]
+          )),
         )
       } else {
         throw new Error(MARKET_NOT_EXIST)
@@ -919,7 +922,8 @@ export class PendleMarket extends Market {
 
 export type OtherMarketDetails = {
   tokenReserves: TokenAmount[],
-  rates: TokenAmount[]
+  rates: TokenAmount[],
+  totalSupplyLP: string
 }
 
 export class SushiMarket extends Market {
@@ -937,7 +941,7 @@ export class SushiMarket extends Market {
 
     const readMarketDetails = async (): Promise<OtherMarketDetails> => {
       const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, signer.provider);
-      var token0Address: string = '', token0Reserve: BN = BN.from(0), token1Reserve: BN = BN.from(0);
+      var token0Address: string = '', token0Reserve: BN = BN.from(0), token1Reserve: BN = BN.from(0), totalSupplyLP: BN = BN.from(0);
       const promises = [];
       promises.push(marketContract.token0().then((r: string) => {
         token0Address = r;
@@ -946,6 +950,9 @@ export class SushiMarket extends Market {
         token0Reserve = r.reserve0;
         token1Reserve = r.reserve1;
       }));
+      promises.push(marketContract.totalSupply().then((r: BN) => {
+        totalSupplyLP = r;
+      }))
       await Promise.all(promises);
 
       if (!isSameAddress(this.tokens[0].address, token0Address)) {
@@ -975,7 +982,8 @@ export class SushiMarket extends Market {
             this.tokens[0],
             rateOfToken1.toString()
           )
-        ]
+        ],
+        totalSupplyLP: totalSupplyLP.toString()
       }
     }
 

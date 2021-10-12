@@ -12,6 +12,7 @@ import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
 import { distributeConstantsByNetwork, getABIByForgeId, isSameAddress } from "../helpers";
 import { contracts } from "../contracts";
 import { PendleMarket, Market, OtherMarketDetails } from "./market";
+import { calcOtherTokenAmount } from "../math/marketMath";
 
 export enum Action {
     stakeOT,
@@ -138,21 +139,58 @@ export class OneClickWrapper {
         }
 
         const simulateStakeOT = async (pendleFixture: PendleFixture, inputTokenAmount: TokenAmount, slippage: number): Promise<SimulationDetails> => {
+            const user: string = await signer.getAddress();
+            const inAmount: BN = BN.from(inputTokenAmount.rawAmount());
+            const transactions: Transaction[] = [];
+
             const otMarketDetail: OtherMarketDetails = await pendleFixture.otMarket.methods(signer, chainId).readMarketDetails();
             const otRate: BN = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? BN.from(otMarketDetail.rates[0]) : BN.from(otMarketDetail.rates[1]);
 
             if (isUnderlyingLP()) {
-                const underlyingLPDetails: OtherMarketDetails = await (Market.find(this.yieldContract.underlyingAsset.address, chainId).methods(signer, chainId).readMarketDetails());
-                const otherTokenInLP: Token = isSameAddress(underlyingLPDetails.tokenReserves[0].token.address, inputTokenAmount.token.address) ? underlyingLPDetails.tokenReserves[1].token : underlyingLPDetails.tokenReserves[0].token;
+                const underlyingLP: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
+                const underlyingLPDetails: OtherMarketDetails = await (underlyingLP.methods(signer, chainId).readMarketDetails());
+                
+                const inputTokenIdxInLP: number = isSameAddress(underlyingLPDetails.tokenReserves[0].token.address, inputTokenAmount.token.address) ? 0 : 1;
+
+                const otherTokenInLP: Token = underlyingLPDetails.tokenReserves[1 ^ inputTokenIdxInLP].token;
                 const baseTokenInOtMarket: Token = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? pendleFixture.otMarket.tokens[1]: pendleFixture.otMarket.tokens[0];
+                
                 if (isSameAddress(inputTokenAmount.token.address, baseTokenInOtMarket.address)) { // As the case of Pendle in PE
 
                 } else { // As the case of ETH in PE
-
+                    const otherTokenInLPAmount: TokenAmount = new TokenAmount(
+                        otherTokenInLP, 
+                        calcOtherTokenAmount(
+                            BN.from(underlyingLPDetails.tokenReserves[inputTokenIdxInLP].rawAmount()),
+                            BN.from(underlyingLPDetails.tokenReserves[1 ^ inputTokenIdxInLP].rawAmount()),
+                            inAmount
+                        ).toString()
+                    );
+                    const outLPAmount: TokenAmount = new TokenAmount(
+                        new Token(
+                            underlyingLP.address,
+                            networkInfo.decimalsRecord[underlyingLP.address]
+                        ),
+                        inAmount.mul(BN.from(underlyingLPDetails.totalSupplyLP)).div(underlyingLPDetails.tokenReserves[inputTokenIdxInLP].rawAmount()).toString()
+                    )
+                    transactions.push({
+                        action: TransactionAction.preMint,
+                        user: user,
+                        protocol: 'external',
+                        paid: [
+                            inputTokenAmount,
+                            otherTokenInLPAmount
+                        ],
+                        received: [
+                            outLPAmount
+                        ]
+                    });
+                    
                 }
             } else {
                 return dummySimulation;
             }
+            return dummySimulation;
         }
 
         const simulate = async (action: Action, inputTokenAmount: TokenAmount, slippage: number): Promise<SimulationDetails> => {

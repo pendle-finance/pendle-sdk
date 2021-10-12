@@ -163,7 +163,8 @@ export const kovanContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 '0xe12afec5aa12cf614678f9bfeeb98ca9bb95b5b0'
             ],
-            expiry: EXP_2021
+            expiry: EXP_2021,
+            active: true
         },
         {
             address: '0x25fc31df947eb3d92cfbdbbc38ebcf8519be49bc',
@@ -175,7 +176,8 @@ export const kovanContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 '0xe12afec5aa12cf614678f9bfeeb98ca9bb95b5b0'
             ],
-            expiry: EXP_2022
+            expiry: EXP_2022,
+            active: true
         },
         {
             address: '0x4a7e31f01119c921fda702e54a882a289cf7c637',
@@ -187,7 +189,8 @@ export const kovanContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad'
             ],
-            expiry: EXP_2021
+            expiry: EXP_2021,
+            active: true
         },
         {
             address: '0x4a7e31f01119c921fda702e54a882a289cf7c637',
@@ -199,7 +202,8 @@ export const kovanContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad'
             ],
-            expiry: EXP_2022
+            expiry: EXP_2022,
+            active: true
         },
         {
             address: '0x63faa1e8faebafa0209e8a9fb4c418828485de85',
@@ -211,7 +215,8 @@ export const kovanContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 '0xcec1967d0ea74e2efe7eda4dfa323e8252e57550'
             ],
-            expiry: EXP_2022
+            expiry: EXP_2022,
+            active: true
         },
         {
             address: '0x5fdbb48fced67425ab0598544de1aa63c220ea9d',
@@ -223,7 +228,8 @@ export const kovanContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 '0x0db5af4b374e810f6e5a15ccc3d65e28cc4dbec7'
             ],
-            expiry: EXP_2022
+            expiry: EXP_2022,
+            active: true
         },
         {
             address: "0x5a336682ed0b21d48c4e905d62d7db627c46dfe6",
@@ -232,7 +238,8 @@ export const kovanContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
             ],
-            interestTokensAddresses: []
+            interestTokensAddresses: [],
+            active: true
         },
         {
             address: "0x4e0dd650beffc89a7872df4cce4756f3564aca22",
@@ -241,7 +248,8 @@ export const kovanContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
             ],
-            interestTokensAddresses: []
+            interestTokensAddresses: [],
+            active: true
         },
         {
             address: "0x92d44a8c833c26f8778fa056c382ae1090492049",
@@ -250,7 +258,8 @@ export const kovanContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
             ],
-            interestTokensAddresses: []
+            interestTokensAddresses: [],
+            active: true
         },
         {
             address: "0xb29f1150c96f182cdd37ac78325216481ef43de7",
@@ -259,7 +268,8 @@ export const kovanContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
             ],
-            interestTokensAddresses: []
+            interestTokensAddresses: [],
+            active: true
         },
         {
             address: "0x71faf7da78be1e30aa6dcf4cbcef047fa937d08d",
@@ -268,7 +278,8 @@ export const kovanContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
             ],
-            interestTokensAddresses: []
+            interestTokensAddresses: [],
+            active: true
         },
         {
             address: "0xefb89e619519cf78e1f45806ee5650b2e49ed6f6",
@@ -277,7 +288,8 @@ export const kovanContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
             ],
-            interestTokensAddresses: []
+            interestTokensAddresses: [],
+            active: true
         }
     ],
     misc: {
