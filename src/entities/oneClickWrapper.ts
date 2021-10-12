@@ -144,22 +144,22 @@ export class OneClickWrapper {
             const transactions: Transaction[] = [];
 
             const otMarketDetail: OtherMarketDetails = await pendleFixture.otMarket.methods(signer, chainId).readMarketDetails();
-            const otRate: BN = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? BN.from(otMarketDetail.rates[0]) : BN.from(otMarketDetail.rates[1]);
+            const otTokenIdxInMarket: number = isSameAddress(pendleFixture.ot.address, otMarketDetail.tokenReserves[0].token.address) ? 0 : 1;
 
             if (isUnderlyingLP()) {
                 const underlyingLP: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
                 const underlyingLPDetails: OtherMarketDetails = await (underlyingLP.methods(signer, chainId).readMarketDetails());
-                
+
                 const inputTokenIdxInLP: number = isSameAddress(underlyingLPDetails.tokenReserves[0].token.address, inputTokenAmount.token.address) ? 0 : 1;
 
                 const otherTokenInLP: Token = underlyingLPDetails.tokenReserves[1 ^ inputTokenIdxInLP].token;
-                const baseTokenInOtMarket: Token = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? pendleFixture.otMarket.tokens[1]: pendleFixture.otMarket.tokens[0];
-                
+                const baseTokenInOtMarket: Token = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? pendleFixture.otMarket.tokens[1] : pendleFixture.otMarket.tokens[0];
+
                 if (isSameAddress(inputTokenAmount.token.address, baseTokenInOtMarket.address)) { // As the case of Pendle in PE
 
                 } else { // As the case of ETH in PE
                     const otherTokenInLPAmount: TokenAmount = new TokenAmount(
-                        otherTokenInLP, 
+                        otherTokenInLP,
                         calcOtherTokenAmount(
                             BN.from(underlyingLPDetails.tokenReserves[inputTokenIdxInLP].rawAmount()),
                             BN.from(underlyingLPDetails.tokenReserves[1 ^ inputTokenIdxInLP].rawAmount()),
@@ -184,6 +184,45 @@ export class OneClickWrapper {
                         received: [
                             outLPAmount
                         ]
+                    });
+
+                    const otytAmounts: TokenAmount[] = this.yieldContract.methods(signer, chainId).mintDetails(outLPAmount);
+                    transactions.push({
+                        action: TransactionAction.mint,
+                        user: user,
+                        protocol: 'pendle',
+                        paid: [outLPAmount],
+                        received: otytAmounts,
+                    })
+
+                    const otAmount: TokenAmount = otytAmounts[0];
+                    const otReserve: BN = BN.from(otMarketDetail.tokenReserves[otTokenIdxInMarket].rawAmount());
+                    const otherTokenReserve: BN = BN.from(otMarketDetail.tokenReserves[1 ^ otTokenIdxInMarket].rawAmount());
+                    const otherTokenInOtMarketAmount: TokenAmount = new TokenAmount(
+                        baseTokenInOtMarket,
+                        BN.from(otAmount.rawAmount()).mul(otherTokenReserve).div(otReserve).toString()
+                    );
+                    const otMarketLpAmount: TokenAmount = new TokenAmount(
+                        new Token(
+                            pendleFixture.otMarket.address,
+                            networkInfo.decimalsRecord[pendleFixture.otMarket.address]
+                        ),
+                        BN.from(otMarketDetail.totalSupplyLP).mul(otAmount.rawAmount()).div(otReserve).toString()
+                    )
+                    transactions.push({
+                        action: TransactionAction.addLiquidity,
+                        user: user,
+                        protocol: 'external',
+                        paid: [otAmount, otherTokenInOtMarketAmount],
+                        received: [otMarketLpAmount]
+                    });
+
+                    transactions.push({
+                        action: TransactionAction.stake,
+                        user: user,
+                        protocol: 'pendle',
+                        paid: [otMarketLpAmount],
+                        received: []
                     });
                     
                 }
