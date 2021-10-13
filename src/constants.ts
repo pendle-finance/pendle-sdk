@@ -37,4 +37,4 @@ export const decimalsRecords: Record<string, Record<string, number>> = {
   kovan: kovanDecimals
 };
 
-export const gasBuffer: number = 1.3;
+export const gasBuffer: number = 1.2;
