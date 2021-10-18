@@ -29,9 +29,9 @@ describe("Staking pools", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        sp = sps.YTaUSDC2021Pool;
+        sp = sps.OTcDAI2021Pool;
     });
-    it.only('Get totalStaked', async() => {
+    it('Get totalStaked', async() => {
         const totalStake = await sp.methods(signer).getTotalStaked();
         console.log(JSON.stringify(totalStake, null, '  '));
     })

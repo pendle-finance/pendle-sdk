@@ -14,6 +14,7 @@ const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/P
 const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json');
 const PendleSingleSidedStaking = require('@pendle/single-staking/build/artifacts/contracts/SingleStaking.sol/SingleStaking.json');
 const PendleSingleStakingManager = require('@pendle/single-staking/build/artifacts/contracts/SingleStakingManager.sol/SingleStakingManager.json');
+const PendleWrapper = require('@pendle/core/build/artifacts/contracts/proxies/PendleWrapper.sol/PendleWrapper.json');
 const SushiMasterChef = require('../abis/SushiMasterChefABI.json');
 const MultiCallV2 = require('../abis/MulticallV2.json');
 const UniswapV2Pair = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Pair.sol/IUniswapV2Pair.json');
@@ -38,6 +39,7 @@ export const contracts = {
   PendleCompoundForge,
   SushiMasterChef,
   PendleSingleStakingManager,
+  PendleWrapper,
   MultiCallV2,
   UniswapV2Pair
 };

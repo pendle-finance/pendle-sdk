@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import { NetworkInfo } from '../src/networks';
 import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
-jest.setTimeout(30000);
+jest.setTimeout(300000);
 
 const chainId: number = 1;
 const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
@@ -57,12 +57,15 @@ describe("Market", () => {
 
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        market = markets.aUSDC2021Market as PendleMarket;
+        signer = provider.getSigner();
+        market = markets.PendleEthMarket;
     });
 
-    it("PendleMarket.readMarketDetails", async () => {
+    it.only("PendleMarket.readMarketDetails", async () => {
+        const networkInfo = distributeConstantsByNetwork(chainId);
+        console.log(networkInfo.contractAddresses.tokens.PENDLE);
         const marketDetails = await market.methods(signer, chainId).readMarketDetails();
+
         console.log(JSON.stringify(marketDetails, null, '  '));
     })
 
@@ -145,7 +148,7 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it.only('Market.readMarketDetails', async() => {
+    it('Market.readMarketDetails', async() => {
         const sushiMarket = Market.find('0x37922c69b08babcceae735a31235c81f1d1e8e43', 1);
         const response = await sushiMarket.methods(signer, 1).readMarketDetails();
         console.log(JSON.stringify(response, null, '  '));

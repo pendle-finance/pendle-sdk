@@ -49,6 +49,7 @@ export type SwapDetails = {
 
 export type AddDualLiquidityDetails = {
   otherTokenAmount: TokenAmount;
+  lpMinted: string
   shareOfPool: string;
 };
 
@@ -473,6 +474,9 @@ export class PendleMarket extends Market {
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
       const shareOfPool: BigNumber = calcShareOfPool(tokenDetailsRelative.inReserve, inAmount);
 
+      const totalSupply: BN = await marketContract.totalSupply();
+      const lpMinted: BN = totalSupply.mul(inAmount).div(tokenDetailsRelative.inReserve);
+
       if (isSameAddress(tokenDetailsRelative.outToken.address, networkInfo.contractAddresses.tokens.WETH)) {
         tokenDetailsRelative.outToken = ETHToken;
       }
@@ -482,6 +486,7 @@ export class PendleMarket extends Market {
           tokenDetailsRelative.outToken,
           otherAmount.toString()
         ),
+        lpMinted: lpMinted.toString(),
         shareOfPool: shareOfPool.toFixed(DecimalsPrecision)
       }
     }
@@ -916,6 +921,7 @@ export class PendleMarket extends Market {
       removeSingle,
       getLPPriceBigNumber,
       getSwapFeeApr,
+      getMarketFactoryId
     };
   }
 }
