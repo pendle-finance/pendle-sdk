@@ -1,5 +1,5 @@
 import { BigNumber as BN, utils } from 'ethers';
-import { mainnetDecimals, kovanDecimals } from './decimals';
+import { mainnetDecimals, kovanDecimals, avalancheDecimals } from './decimals';
 
 export const dummyAddress: string = "0xDEADbeEfEEeEEEeEEEeEEeeeeeEeEEeeeeEEEEeE";
 export const zeroAddress: string = "0x0000000000000000000000000000000000000000";
@@ -10,6 +10,9 @@ export const forgeIdsInBytes = {
   AAVE: utils.formatBytes32String('AaveV2'),
   SUSHISWAP_SIMPLE: utils.formatBytes32String('SushiswapSimple'),
   SUSHISWAP_COMPLEX: utils.formatBytes32String('SushiswapComplex'),
+  JOE_SIMPLE: utils.formatBytes32String('TraderJoeSimple'),
+  JOE_COMPLEX: utils.formatBytes32String('TraderJoeComplex'),
+  BENQI: utils.formatBytes32String('BenQi')
 };
 
 export const marketFactoryIds = {
@@ -34,7 +37,8 @@ export const VestingEpoches = 5;
 
 export const decimalsRecords: Record<string, Record<string, number>> = {
   mainnet: mainnetDecimals,
-  kovan: kovanDecimals
+  kovan: kovanDecimals,
+  avalanche: avalancheDecimals
 };
 
 export const gasBuffer: number = 1.2;
