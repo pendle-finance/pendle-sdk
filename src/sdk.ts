@@ -81,8 +81,10 @@ export class Sdk {
     interestStakingPools: StakingPool[],
     rewardStakingPools: StakingPool[]
   }): Promise<providers.TransactionResponse> {
-    const userAddress: string = await this.signer.getAddress();
+    // const userAddress: string = await this.signer.getAddress();
+     const userAddress: string = "0xabcd";
     const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
+    console.log(...args);
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(this.chainId);
     const redeemProxyContract = new Contract(
@@ -107,7 +109,6 @@ export class Sdk {
     interestStakingPools?: StakingPool[],
     rewardStakingPools?: StakingPool[]
   }): Promise<GasInfo> {
-    console.log(yts);
     const userAddress: string = await this.signer.getAddress();
     const args: any[] = this.constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(this.chainId);

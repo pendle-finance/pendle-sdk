@@ -1,6 +1,6 @@
-import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, contracts, Sdk, TokenAmount, ETHToken, Token } from '../src';
+import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHToken, Token } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers, Contract } from 'ethers';
+import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
@@ -22,7 +22,13 @@ describe('Sdk', () => {
 
   it.only('claim yields', async() => {
     const sdk = new Sdk(signer);
-    const res = await sdk.estimateGasForClaimYields({lps: [new Token('0x9e382e5f78b06631e4109b5d48151f2b3f326df0', 18)]});
+    const res = await sdk.claimYields({
+      yts: [],
+      ots: [],
+      lps: [],
+      interestStakingPools: [],
+      rewardStakingPools: [StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1),StakingPool.find('0x5b1c59eb6872f88a92469751a034b9b5ada9a73f', '0x944d1727d0b656f497e74044ff589871c330334f', 1)]
+    });
     console.log(res);
   })
 
