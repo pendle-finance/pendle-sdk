@@ -99,7 +99,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [
                 '0xa7a1e25fdbc12471607d56a6074f067ec85563f2'
-            ]
+            ],
+            active: true
         },
         {
             address: '0xc96fa930ae9183574705f8884f0afbd368206f07',
@@ -111,7 +112,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [
                 '0x76145e99d3f4165a313e8219141ae0d26900b710'
-            ]
+            ],
+            active: true
         },
         {
             address: '0xdfa4b40e783700facfe501c73ba70aaa10635b08',
@@ -123,7 +125,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [
                 '0xa389f9430876455c36478deea9769b7ca4e3ddb1'
-            ]
+            ],
+            active: true
         }
     ],
     misc: {
@@ -131,7 +134,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         PendleLiquidityRewardsProxy: '',
         PendleRouter: '0x8d5a41254618b2d662699c50848718ee26fffd12',
         PendleData: '0x4aB7d436c18877C76c1f82703178E8cf9Ef401A0',
-        MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696'
+        MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696',
+        JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052'
     },
     tokens: {
         USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'

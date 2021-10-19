@@ -1,6 +1,6 @@
 import { providers, BigNumber as BN } from "ethers";
 import { AprInfo } from "./stakingPool";
-import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE } from "../constants";
+import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE, ONE_DAY } from "../constants";
 import { dummyTokenAmount, TokenAmount } from './tokenAmount';
 import { YieldContract } from "./yieldContract";
 import { Ot } from "./ot";
@@ -541,6 +541,106 @@ export class OneClickWrapper {
             }
         }
 
+        const getMasterChefBaseRewards = async(lpAmount: TokenAmount, pid: number, pendleFixture:PendleFixture): Promise<TokenAmount[]> => {
+            if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_COMPLEX) {
+                const masterChefV2Address: string = networkInfo.contractAddresses.misc.JOE_MASTERCHEFV2;
+                const masterChefV2: Contract = new Contract(masterChefV2Address, contracts.JoeMasterChef.abi);
+
+                var allocPoint: BN, totalAllocPoint: BN, totalJoePerSec: BN, devPercent: BN, treasuryPercent: BN, investorPercent: BN;
+                const promises: Promise<any>[] = [];
+                promises.push(masterChefV2.poolInfo(pid));
+                promises.push(masterChefV2.totalAllocPoint());
+                promises.push(masterChefV2.joePerSec());
+                promises.push(masterChefV2.devPercent());
+                promises.push(masterChefV2.treasuryPercent());
+                promises.push(masterChefV2.investorPercent());
+                await Promise.all(promises).then((values: any[]) => {
+                    allocPoint = values[0].allocPoint;
+                    totalAllocPoint = values[1];
+                    totalJoePerSec = values[2];
+                    devPercent = values[3];
+                    treasuryPercent = values[4];
+                    investorPercent = values[5];
+                });
+                const underlyingLpContract: Contract = new Contract(lpAmount.token.address, contracts.IERC20.abi);
+                const lpBalance: BN = await underlyingLpContract.balanceOf(masterChefV2Address);
+                const joeTokenAddress: string = (await masterChefV2.joe()).toLowerCase();
+                const oneWeek: BN = ONE_DAY.mul(7);
+                const joeReward: BN = oneWeek
+                    .mul(totalJoePerSec!)
+                    .mul(allocPoint!)
+                    .div(totalAllocPoint!)
+                    .mul(BN.from(1000).sub(devPercent!).sub(treasuryPercent!).sub(investorPercent!))
+                    .mul(lpAmount.rawAmount())
+                    .div(lpBalance)
+                    .div(1000);
+                return [new TokenAmount(
+                    new Token(
+                        joeTokenAddress,
+                        networkInfo.decimalsRecord[joeTokenAddress]
+                    ),
+                    joeReward.toString()
+                )]
+            }
+            return [];
+        }
+
+        const getOtRewards = async(underlyingAmount: TokenAmount, pendleFixture: PendleFixture): Promise<TokenAmount[]> => {
+            if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_COMPLEX) {
+                const yieldTokenHolderAddress: string = await pendleFixture.forge.yieldTokenHolders(this.yieldContract.underlyingAsset, this.yieldContract.expiry);
+                const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi);
+                const pid: number = await yieldTokenHolder.pid();
+                return getMasterChefBaseRewards(underlyingAmount, pid, pendleFixture);
+            } else if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_COMPLEX) {
+                return getMasterChefBaseRewards(underlyingAmount, pendleFixture);
+            }
+            return [];
+        }
+
+        const getOtLpRewards = async()
+
+        type rewardsInfo = {
+            rewards: TokenAmount[], // rewards you will get in one week
+            swapFees: {
+                otPool: string,
+                ytPool: string
+            },
+            valuations: {
+                otPool: CurrencyAmount,
+                ytPool: CurrencyAmount
+            }
+        }
+
+        const getAllRewardsFromTxns = async(action: Action, testSimulation: SimulationDetails, pendleFixture: PendleFixture): Promise<rewardsInfo> => {
+            
+            var promises: Promise<TokenAmount[]>[] = [];
+            var otLpValuation: CurrencyAmount = dummyCurrencyAmount, ytLpValuation: CurrencyAmount = dummyCurrencyAmount;
+            var otLpSwapFeeApr: BigNumber = new BigNumber(0), ytLpSwapFeeApr: BigNumber = new BigNumber(0);
+            if (action == Action.stakeYT) {
+                const mintTxn: Transaction = testSimulation.transactions.find((txn: Transaction) => txn.action == TransactionAction.mint)!;
+                promises.push(getOtRewards(mintTxn.paid[0], pendleFixture));
+            } else {
+                const otLpAddLiqTxn: Transaction = getAddOtLiqTxn(testSimulation.transactions, pendleFixture)!;
+                promises.push(getOtLpRewards(otLpAddLiqTxn.received[0]));
+            }
+            if (action == Action.stakeOT || action == Action.stakeOTYT) {
+                const otLpAddLiqTxn: Transaction = getAddOtLiqTxn(testSimulation.transactions, pendleFixture)!;
+                promises.push(getLmRewards(pendleFixture.otStakingPool, otLpAddLiqTxn.received[0]));
+                otLpValuation = await fetchValuation(otLpAddLiqTxn.received[0], signer, chainId);
+                otLpSwapFeeApr = await pendleFixture.otMarket.methods(signer, chainId).getSwapFeeApr();
+            }
+            if (action == Action.stakeYT || action == Action.stakeOTYT) {
+                const ytLpAddLiqTxn: Transaction = getAddYtLiqTxn(testSimulation.transactions, pendleFixture)!;
+                promises.push(getLmRewards(pendleFixture.ytStakingPool, ytLpAddLiqTxn.received[0]));
+                ytLpValuation = await fetchValuation(ytLpAddLiqTxn.received[0], signer, chainId);
+                ytLpSwapFeeApr = await pendleFixture.ytMarket.methods(signer, chainId).getSwapFeeApr();
+            }
+
+            return {
+                
+            }
+        }
+
         const apr = async (action: Action): Promise<WrapperAPRInfo> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
 
@@ -559,29 +659,9 @@ export class OneClickWrapper {
             for (const t of testSimulation.tokenAmounts) {
                 totalPrincipalValuation = totalPrincipalValuation.plus((await fetchValuation(t, signer, chainId)).amount);
             }
-            var rewardsPerAnnum: TokenAmount[] = [];
-            var promises: Promise<TokenAmount[]>[] = [];
-            var otLpValuation: CurrencyAmount = dummyCurrencyAmount, ytLpValuation: CurrencyAmount = dummyCurrencyAmount;
-            var otLpSwapFeeApr: BigNumber = new BigNumber(0), ytLpSwapFeeApr: BigNumber = new BigNumber(0);
-            if (action == Action.stakeYT) {
-                const mintTxn: Transaction = testSimulation.transactions.find((txn: Transaction) => txn.action == TransactionAction.mint)!;
-                promises.push(getOtRewards(mintTxn.received[0]));
-            } else {
-                const otLpAddLiqTxn: Transaction = getAddOtLiqTxn(testSimulation.transactions, pendleFixture)!;
-                promises.push(getOtLpRewards(otLpAddLiqTxn.received[0]));
-            }
-            if (action == Action.stakeOT || action == Action.stakeOTYT) {
-                const otLpAddLiqTxn: Transaction = getAddOtLiqTxn(testSimulation.transactions, pendleFixture)!;
-                promises.push(getLmRewards(pendleFixture.otStakingPool, otLpAddLiqTxn.received[0]));
-                otLpValuation = await fetchValuation(otLpAddLiqTxn.received[0], signer, chainId);
-                otLpSwapFeeApr = await pendleFixture.otMarket.methods(signer, chainId).getSwapFeeApr();
-            }
-            if (action == Action.stakeYT || action == Action.stakeOTYT) {
-                const ytLpAddLiqTxn: Transaction = getAddYtLiqTxn(testSimulation.transactions, pendleFixture)!;
-                promises.push(getLmRewards(pendleFixture.ytStakingPool, ytLpAddLiqTxn.received[0]));
-                ytLpValuation = await fetchValuation(ytLpAddLiqTxn.received[0], signer, chainId);
-                ytLpSwapFeeApr = await pendleFixture.ytMarket.methods(signer, chainId).getSwapFeeApr();
-            }
+            var rewardsInfo: rewardsInfo = await getAllRewardsFromTxns(action, testSimulation, pendleFixture);
+            var otLpSwapFeeAprAdjusted: BigNumber = otLpSwapFeeApr.multipliedBy(otLpValuation.amount).div(totalPrincipalValuation);
+            var ytLpSwapFeeAprAdjusted: BigNumber = ytLpSwapFeeApr.multipliedBy(ytLpValuation.amount).div(totalPrincipalValuation);
             var otLpSwapFeeAprAdjusted: BigNumber = otLpSwapFeeApr.multipliedBy(otLpValuation.amount).div(totalPrincipalValuation);
             var ytLpSwapFeeAprAdjusted: BigNumber = ytLpSwapFeeApr.multipliedBy(ytLpValuation.amount).div(totalPrincipalValuation);
 
