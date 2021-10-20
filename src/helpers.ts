@@ -1,5 +1,5 @@
 import { BigNumber as BN, Contract, Bytes, utils } from 'ethers';
-import { mainnetContracts, kovanContracts, NetworkInfo, StakingPoolType } from './networks'
+import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -54,6 +54,12 @@ export const distributeConstantsByNetwork = (chainId?: number): NetworkInfo => {
       contractAddresses: kovanContracts,
       decimalsRecord: decimalsRecords.kovan
     }
+  } else if (chainId == 43114) {
+    return {
+      chainId: 43114,
+      contractAddresses: avalancheContracts,
+      decimalsRecord: decimalsRecords.avalanche
+    }
   } else {
     throw Error("Unsupported Network");
   }
@@ -68,10 +74,17 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
       return contracts.PendleCompoundForge;
 
     case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+    case forgeIdsInBytes.JOE_SIMPLE:
       return contracts.PendleSushiswapSimpleForge;
 
     case forgeIdsInBytes.SUSHISWAP_COMPLEX:
       return contracts.PendleSushiswapComplexForge;
+
+    case forgeIdsInBytes.BENQI:
+      return contracts.PendleCompoundForge; // To-Do
+
+    case forgeIdsInBytes.JOE_COMPLEX:
+      return contracts.PendleSushiswapComplexForge; // To-do
 
     default: {
       throw Error("Unsupported Forge Id");
