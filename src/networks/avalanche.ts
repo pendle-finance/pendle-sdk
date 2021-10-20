@@ -138,7 +138,11 @@ export const avalancheContracts: NetworkContractAddresses = {
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052'
     },
     tokens: {
-        USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+        USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
+        JOE: '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
+        WAVAX: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+        PENDLE: '0xb4a4807c35782f74b071b99e606e8fbfc66d2fa3'
+
     },
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0x3966b3f49995ea333b21750294ff457eec27f5ae",

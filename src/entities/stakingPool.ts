@@ -12,6 +12,8 @@ import { Yt } from './yt';
 import BigNumber from 'bignumber.js';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
 import { calcLMRewardApr, calcValuation, DecimalsPrecision } from '../math/marketMath';
+import { AprInfo } from './types';
+import { MasterChef } from './masterChef';
 
 export interface StakingPoolId {
   address: string;
@@ -140,10 +142,6 @@ export type FutureEpochRewards = {
   rewards: TokenAmount[];
 };
 
-export type AprInfo = {
-	origin: string,
-	apr: string
-}
 
 const STAKINGPOOL_NOT_EXIST = new Error("No Staking pool is found at the given address and input token.")
 
@@ -522,21 +520,8 @@ export class StakingPool {
         if (this.interestTokens !== undefined && this.interestTokens?.length > 0) {
           const SLPLiquidityMiningContract: Contract = new Contract(this.address, contracts.PendleSLPLiquidityMining.abi, signer.provider);
           const pid: BN = await SLPLiquidityMiningContract.pid();
-          const masterChefAddress: string = await SLPLiquidityMiningContract.masterChef();
-          const masterChefContract: Contract = new Contract(masterChefAddress, contracts.SushiMasterChef.abi, signer.provider);
-          const allocPoint: BN = (await masterChefContract.poolInfo(pid)).allocPoint;
-          const totalAllocPoint: BN = await masterChefContract.totalAllocPoint();
-          const globalSushiPerBlock: BN = await masterChefContract.sushiPerBlock();
-          const blockNumber: number = await signer.provider.getBlockNumber();
-          const blockNumberOneDayAgo: number = (await getBlockOneDayEarlier(chainId, signer.provider))!;
-          const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
-          const sushiPerBlock: BN = globalSushiPerBlock.mul(allocPoint).div(totalAllocPoint);
-          const sushiPrice: BigNumber = await fetchTokenPrice({address: this.interestTokens[0].address, signer, chainId});
-          const sushiRewardsValue: BigNumber = calcValuation(sushiPrice, sushiPerBlock.mul(blockPerDay), networkInfo.decimalsRecord[this.interestTokens[0].address]);
-          aprInfos.push({
-            origin: 'Sushiswap',
-            apr: calcLMRewardApr(sushiRewardsValue, stakedUSDValue, 365).toFixed(DecimalsPrecision)
-          });
+
+          aprInfos.concat(await MasterChef.methods(signer, chainId).getRewardsAprs(pid));
         }
         return aprInfos;
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {

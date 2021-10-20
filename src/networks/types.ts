@@ -39,7 +39,8 @@ export type YTINFO = {
 export type MARKETINFO = {
     address: string,
     pair: string[],
-    platform: MarketProtocols
+    platform: MarketProtocols,
+    masterChefPID?: number
 } 
 export type PENDLEMARKETNFO = {
     address: string,
@@ -57,4 +58,6 @@ export enum StakingPoolType {
     LmV1 = 'PendleLiquidityMining',
     LmV2 = 'PendleLiquidityMiningV2',
     PendleSingleSided = 'PendleSingleStaking',
+    LmV1Multi = 'PendleLiquidityMiningMulti',
+    LmV2Multi = 'PendleLiquidityMiningMultiV2'
 }

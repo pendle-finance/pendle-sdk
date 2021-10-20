@@ -445,6 +445,7 @@ export const mainnetContracts: NetworkContractAddresses = {
         PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6',
         PendleSingleStakingManager: '0x747fc744837deda8d1c568d8e90839e5d4495255',
         MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696',
+        MasterChef: '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd',
         PendleWrapper: '0xabcdabcdabcd',
     },
     tokens: {

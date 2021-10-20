@@ -118,13 +118,28 @@ export async function fetchBasicTokenPrice(address: string, chainId: number | un
       case networkInfo.contractAddresses.tokens.cDAI:
         return await fetchPriceFromCoingecko('cdai');
     }
+  } else if (chainId == 43114) {
+    switch (address.toLowerCase()) {
+      case networkInfo.contractAddresses.tokens.USDC:
+        return new BigNumber(1)
+
+      case networkInfo.contractAddresses.tokens.WAVAX:
+      case ETHAddress.toLocaleLowerCase():
+        return await fetchPriceFromCoingecko('avalanche-2');
+
+      case networkInfo.contractAddresses.tokens.JOE:
+        return await fetchPriceFromCoingecko('joe');
+
+      case networkInfo.contractAddresses.tokens.PENDLE:
+        return await fetchPriceFromCoingecko('pendle');
+    }
   }
   throw Error(`Token ${address} is not supported in basic tokens`);
 }
 
 export async function fetchTokenPrice({ address, signer, chainId }: { address: string, signer: providers.JsonRpcSigner, chainId: number | undefined }): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
-  if (chainId === undefined || chainId == 1) {
+  if (chainId === undefined || chainId == 1 || chainId == 43114) {
     try {
       return await fetchBasicTokenPrice(address, chainId);
     } catch (err) { }
