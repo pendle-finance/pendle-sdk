@@ -15,7 +15,7 @@ export class TokenAmount {
         } else {
             this.rawAmnt = new BigNumberjs(amount)
                 .times(decimalFactor(token.decimals))
-                .toString();
+                .toFixed(0);
         }
         this.token = token;
     }

@@ -36,7 +36,7 @@ const ETHUSDCYTToken = new Token(
 const tokens = { USDCToken, aUSDCYTToken, PENDLEToken, PENDLEETHYTToken, ETHUSDCYTToken }
 const PendleEthMarket = PendleMarket.find("0x685d32f394a5F03e78a1A0F6A91B4E2bf6F52cfE", 1);
 const ETHUSDCMarket = PendleMarket.find("0x79c05Da47dC20ff9376B2f7DbF8ae0c994C3A0D0", 1);
-const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd",1);
+const aUSDC2022Market = PendleMarket.find("0x8315bcbc2c5c1ef09b71731ab3827b0808a2d6bd", 1);
 const cDAI2022Market = PendleMarket.find("0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", 1);
 const aUSDC2021Market = Market.find("0x9e382e5f78b06631e4109b5d48151f2b3f326df0", 1);
 
@@ -58,26 +58,25 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner("0xb69da28b6b5ddf0fd4fee4823a3ffd2243a13c92");
-        market = markets.aUSDC2021Market as PendleMarket;
-        console.log(market);
+        market = markets.PendleEthMarket as PendleMarket;
     });
 
-    it.only("PendleMarket.readMarketDetails", async () => {
+    it("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods(signer, chainId).readMarketDetails();
         console.log(JSON.stringify(marketDetails, null, '  '));
     })
 
-    it('PendleMarket.yieldContract', async() => {
+    it('PendleMarket.yieldContract', async () => {
         const yieldContract: YieldContract = market.yieldContract(chainId);
         console.log(JSON.stringify(yieldContract, null, '  '));
     })
 
-    it('PendleMarket.swapExactInDetails', async () => {
+    it.only('PendleMarket.swapExactInDetails', async () => {
         const swapExactInDetails = await market.methods(signer, chainId).swapExactInDetails(new TokenAmount(
-            market.tokens[1],
-            BN.from(10).pow(6).toString()
-        ),
-        0.001);
+            { address: '0x808507121b80c02388fad14726482e061b8da827', decimals: 18, expiry: undefined },
+            '38960.9542',
+            false),
+            1.09 / 100);
         console.log(swapExactInDetails);
     })
 
@@ -86,7 +85,7 @@ describe("Market", () => {
             market.tokens[0],
             BN.from(10).pow(6).toString()
         ),
-        0.001);
+            0.001);
         console.log(swapExactOutDetails);
     })
 
