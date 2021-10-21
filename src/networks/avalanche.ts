@@ -208,7 +208,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         PendleLiquidityRewardsProxy: '',
         PendleRouter: '0x8d5a41254618b2d662699c50848718ee26fffd12',
         PendleData: '0x4aB7d436c18877C76c1f82703178E8cf9Ef401A0',
-        MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696',
+        MultiCallV2: '0x11b8399bc71e8b67a0f7cca2663612af1ca38536',
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052'
     },
     tokens: {
