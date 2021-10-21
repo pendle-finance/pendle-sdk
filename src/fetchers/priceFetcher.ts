@@ -1,4 +1,4 @@
-import { distributeConstantsByNetwork, isSameAddress } from "../helpers"
+import { decimalFactor, distributeConstantsByNetwork, isSameAddress } from "../helpers"
 import { MARKETINFO, MarketProtocols, NetworkInfo } from "../networks";
 import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
@@ -9,6 +9,8 @@ import { PendleMarket, MarketDetails } from "../entities/market";
 import { providers } from "ethers";
 import { Ot } from "../entities/ot";
 import { Yt } from "../entities/yt";
+import { Contract, BigNumber as BN } from "ethers";
+import { contracts } from "../contracts";
 const axios = require('axios')
 
 const sushiswapSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange";
@@ -90,7 +92,16 @@ export async function fetchYtPrice(yt: Yt, signer: providers.JsonRpcSigner, chai
   return new BigNumber(marketdetails.otherDetails.YTPrice.amount);
 }
 
-export async function fetchBasicTokenPrice(address: string, chainId: number | undefined): Promise<BigNumber> {
+export async function fetchCTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number|undefined): Promise<BigNumber> {
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+  const cTokenContract: Contract = new Contract(address, contracts.ICToken, signer.provider);
+  const underlyingAsset: string = await cTokenContract.underlying();
+  const exchangeRate: BN = await cTokenContract.callStatic.exchangeRateCurrent();
+  const adjustedExchangeRate: BigNumber = new BigNumber(exchangeRate.toString()).div(decimalFactor(10+networkInfo.decimalsRecord[underlyingAsset]));
+  return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, signer, chainId}));
+}
+
+export async function fetchBasicTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
     switch (address.toLowerCase()) {
@@ -123,6 +134,9 @@ export async function fetchBasicTokenPrice(address: string, chainId: number | un
       case networkInfo.contractAddresses.tokens.USDC:
         return new BigNumber(1)
 
+      case networkInfo.contractAddresses.tokens.qiUSDC:
+        return await fetchCTokenPrice(address, signer, chainId);
+
       case networkInfo.contractAddresses.tokens.WAVAX:
       case ETHAddress.toLocaleLowerCase():
         return await fetchPriceFromCoingecko('avalanche-2');
@@ -141,7 +155,7 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1 || chainId == 43114) {
     try {
-      return await fetchBasicTokenPrice(address, chainId);
+      return await fetchBasicTokenPrice(address, signer, chainId);
     } catch (err) { }
 
     try {

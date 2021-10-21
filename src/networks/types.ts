@@ -2,6 +2,7 @@
 import { BigNumber as BN } from 'ethers';
 export enum MarketProtocols {
     Sushiswap = 1,
+    TraderJoe,
     Pendle
 }
 
