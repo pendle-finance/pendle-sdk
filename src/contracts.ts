@@ -14,8 +14,13 @@ const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/P
 const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json');
 const PendleSingleSidedStaking = require('@pendle/single-staking/build/artifacts/contracts/SingleStaking.sol/SingleStaking.json');
 const PendleSingleStakingManager = require('@pendle/single-staking/build/artifacts/contracts/SingleStakingManager.sol/SingleStakingManager.json');
-const SushiMasterChef = require('../abis/SushiMasterChefABI.json')
+const PendleWrapper = require('@pendle/core/build/artifacts/contracts/proxies/PendleWrapper.sol/PendleWrapper.json');
+const PendleTraderJoeYieldTokenHolder = require("../abis/PendleTraderJoeYieldTokenHolder.json")
+const SushiMasterChef = require('../abis/SushiMasterChefABI.json');
+const JoeMasterChef = require('../abis/JoeMasterChefABI.json');
 const MultiCallV2 = require('../abis/MulticallV2.json');
+const UniswapV2Pair = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Pair.sol/IUniswapV2Pair.json');
+const ICToken = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
 
 //TODO: User proper IERC20
 
@@ -35,7 +40,12 @@ export const contracts = {
   PendleSushiswapSimpleForge,
   PendleAaveV2Forge,
   PendleCompoundForge,
+  PendleTraderJoeYieldTokenHolder,
   SushiMasterChef,
+  JoeMasterChef,
   PendleSingleStakingManager,
-  MultiCallV2
+  PendleWrapper,
+  MultiCallV2,
+  UniswapV2Pair,
+  ICToken
 };
