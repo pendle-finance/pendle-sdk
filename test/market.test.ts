@@ -84,7 +84,7 @@ describe("Market", () => {
         console.log(JSON.stringify(yieldContract, null, '  '));
     })
 
-    it('PendleMarket.swapExactInDetails', async () => {
+    it.only('PendleMarket.swapExactInDetails', async () => {
         const swapExactInDetails = await market.methods(signer, chainId).swapExactInDetails(new TokenAmount(
             market.tokens[1],
             BN.from(10).pow(6).toString()
