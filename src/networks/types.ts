@@ -41,7 +41,6 @@ export type MARKETINFO = {
     address: string,
     pair: string[],
     platform: MarketProtocols,
-    masterChefPID?: number
 } 
 export type PENDLEMARKETNFO = {
     address: string,

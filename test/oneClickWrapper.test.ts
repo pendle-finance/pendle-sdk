@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from "../src/helpers";
 
 dotenv.config();
-jest.setTimeout(30000);
+jest.setTimeout(300000);
 
 const chainId: number = 1;
 const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
@@ -55,7 +55,11 @@ const PENDLE: Token = new Token(
   networkInfo.contractAddresses.tokens.PENDLE,
   18
 )
-const Tokens = { DAIToken, USDCToken, PENDLEETHSLPToken, ETHUSDCSLPToken, OTPEToken, OTaUSDCToken, OTcDAIToken, cDAIToken, aUSDCToken, PENDLE }
+const WETH: Token = new Token(
+  networkInfo.contractAddresses.tokens.WETH,
+  18
+)
+const Tokens = { DAIToken, USDCToken, PENDLEETHSLPToken, ETHUSDCSLPToken, OTPEToken, OTaUSDCToken, OTcDAIToken, cDAIToken, aUSDCToken, PENDLE, WETH }
 describe("One click wrapper", () => {
   let provider: ethers.providers.JsonRpcProvider;
   let signer: any;
@@ -79,9 +83,14 @@ describe("One click wrapper", () => {
   it('Simulate stake OT', async () => {
     console.log("IN")
     const res = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
-      Tokens.PENDLE,
-      BN.from(10).pow(24).toString()
+      Tokens.WETH,
+      BN.from(10).pow(20).toString()
     ), 0.01)
+    console.log(JSON.stringify(res, null, '  '));
+  })
+
+  it.only('apr', async() => {
+    const res = await wrapper.methods(signer, chainId).apr(Action.stakeOT);
     console.log(JSON.stringify(res, null, '  '));
   })
 })

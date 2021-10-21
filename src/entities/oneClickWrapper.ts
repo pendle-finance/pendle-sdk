@@ -1,6 +1,6 @@
 import { providers, BigNumber as BN } from "ethers";
 import { AprInfo } from "./types";
-import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE, ONE_DAY } from "../constants";
+import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE, ETHAddress } from "../constants";
 import { dummyTokenAmount, TokenAmount } from './tokenAmount';
 import { YieldContract } from "./yieldContract";
 import { Ot } from "./ot";
@@ -9,7 +9,7 @@ import { Token } from "./token";
 import { Contract } from "ethers";
 import { StakingPool } from "./stakingPool";
 import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
-import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, getGasLimit, isSameAddress } from "../helpers";
+import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, getGasLimit, getGasLimitWithETH, isSameAddress } from "../helpers";
 import { contracts } from "../contracts";
 import { PendleMarket, Market, OtherMarketDetails, MarketDetails, AddDualLiquidityDetails } from "./market";
 import { calcOtherTokenAmount, calcShareOfPool, calcSlippedDownAmount, calcSlippedUpAmount, DecimalsPrecision } from "../math/marketMath";
@@ -444,8 +444,59 @@ export class OneClickWrapper {
             }
         }
 
+        const wrapEth = (tokenAmount: TokenAmount): TokenAmount => {
+            if (isSameAddress(tokenAmount.token.address, ETHAddress)) {
+                return new TokenAmount(
+                    new Token(
+                        networkInfo.contractAddresses.tokens.WETH,
+                        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.WETH]
+                    ),
+                    tokenAmount.rawAmount()
+                )
+            } else {
+                return tokenAmount;
+            }
+        }
+
+        const unwrapEth = (tokenAmount: TokenAmount): TokenAmount => {
+            if (isSameAddress(tokenAmount.token.address, networkInfo.contractAddresses.tokens.WETH)) {
+                return new TokenAmount(
+                    new Token(
+                        ETHAddress,
+                        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.WETH]
+                    ),
+                    tokenAmount.rawAmount()
+                )
+            } else {
+                return tokenAmount;
+            }
+        }
+
+        const unwrapEthInTransaction = (txn: Transaction): Transaction => {
+            return {
+                action: txn.action,
+                paid: txn.paid.map(unwrapEth),
+                maxPaid: txn.maxPaid.map(unwrapEth),
+                received: txn.received.map(unwrapEth),
+                user: txn.user,
+                protocol: txn.protocol
+            }
+        }
+
+        const unwrapEthInSimulation = (simulation: SimulationDetails): SimulationDetails => {
+            return {
+                tokenAmounts: simulation.tokenAmounts.map(unwrapEth),
+                transactions: simulation.transactions.map(unwrapEthInTransaction),
+                poolShares: {
+                    otPoolShare: simulation.poolShares.otPoolShare,
+                    ytPoolShare: simulation.poolShares.ytPoolShare
+                }
+            }
+        }
+
         const simulate = async (action: Action, inputTokenAmount: TokenAmount, slippage: number): Promise<SimulationDetails> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
+            inputTokenAmount = wrapEth(inputTokenAmount);
             if (isUnderlyingLP()) {
                 const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
 
@@ -455,13 +506,24 @@ export class OneClickWrapper {
                 )
                 const testSimulationResult: SimulationDetails = await simulateWithFixedInput(action, pendleFixture, testTokenAmount, slippage);
                 const testInputTokenAmount: TokenAmount = testSimulationResult.tokenAmounts.find((t: TokenAmount) => isSameAddress(t.token.address, inputTokenAmount.token.address))!;
-                return scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
+                const scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
+                return unwrapEthInSimulation(scaledSimulation);
             }
             return dummySimulation
         }
 
         const send = async (action: Action, sTxns: Transaction[], slippage: number): Promise<providers.TransactionResponse> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
+            const maxEthPaid: BN = sTxns.reduce((p: BN, txn: Transaction): BN => {
+                const ethInThisTxn: BN = txn.maxPaid.reduce((pp: BN, t: TokenAmount): BN => {
+                    if (isSameAddress(t.token.address, ETHAddress)) {
+                        return pp.add(BN.from(t.rawAmount()));
+                    } else {
+                        return pp;
+                    }
+                }, BN.from(0));
+                return p.add(ethInThisTxn);
+            }, BN.from(0))
 
             if (isUnderlyingLP()) {
                 const dataTknz: DataTknz = {} as DataTknz;
@@ -515,8 +577,8 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqOT
                         ];
-                        var gasEstimate: BN = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForOT(...args);
-                        return PendleWrapper.connect(signer).insAddDualLiqForOT(...args, getGasLimit(gasEstimate));
+                        var gasEstimate: BN = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForOT(...args, {value: maxEthPaid});
+                        return PendleWrapper.connect(signer).insAddDualLiqForOT(...args, getGasLimitWithETH(gasEstimate, maxEthPaid));
 
                     case Action.stakeYT:
                         args = [
@@ -524,8 +586,8 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqYT
                         ];
-                        gasEstimate = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForYT(...args);
-                        return PendleWrapper.connect(signer).insAddDualLiqForYT(...args, getGasLimit(gasEstimate));
+                        gasEstimate = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForYT(...args, {value: maxEthPaid});
+                        return PendleWrapper.connect(signer).insAddDualLiqForYT(...args, getGasLimitWithETH(gasEstimate, maxEthPaid));
 
                     case Action.stakeOTYT:
                         args = [
@@ -534,8 +596,8 @@ export class OneClickWrapper {
                             dataAddLiqOT,
                             dataAddLiqYT
                         ];
-                        gasEstimate = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForOTandYT(...args);
-                        return PendleWrapper.connect(signer).insAddDualLiqForOTandYT(...args, getGasLimit(gasEstimate)); 
+                        gasEstimate = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForOTandYT(...args, {value: maxEthPaid});
+                        return PendleWrapper.connect(signer).insAddDualLiqForOTandYT(...args, getGasLimitWithETH(gasEstimate, maxEthPaid)); 
                 }
             } else {
                 return {} as providers.TransactionResponse;
@@ -659,6 +721,9 @@ export class OneClickWrapper {
             for (const t of testSimulation.tokenAmounts) {
                 totalPrincipalValuation = totalPrincipalValuation.plus((await fetchValuation(t, signer, chainId)).amount);
             }
+
+            console.log(totalPrincipalValuation.toString())
+
             var rewardsInfo: rewardsInfo = await getAllRewardsFromTxns(action, testSimulation, pendleFixture);
             const adjustedOTRewards: AprInfo[] = rewardsInfo.otRewards.map((aprWP: AprWithPrincipal) => {
                 return {

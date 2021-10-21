@@ -14,6 +14,7 @@ import { contracts } from "../contracts";
 const axios = require('axios')
 
 const sushiswapSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange";
+const traderJoeSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/traderjoe-xyz/exchange";
 
 export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
   const price = await axios.get(
@@ -40,14 +41,21 @@ const sushiswapReservesQuery = (slpAddress: string) => gql`{
 }`
 
 export async function fetchSLPPrice({ address, signer, chainId }: { address: string, signer: providers.JsonRpcSigner, chainId: number | undefined }): Promise<BigNumber> {
-
-  if (chainId !== undefined && chainId != 1) {
+  var pair: any;
+  if (chainId === undefined || chainId == 1) {
+    pair = (await request(
+      sushiswapSubgraphApi,
+      sushiswapReservesQuery(address)
+    )).pairs[0];
+  } else if (chainId == 43114) {
+    pair = (await request(
+      traderJoeSubgraphApi,
+      sushiswapReservesQuery(address)
+    )).pairs[0];
+  } else {
     throw Error("Unsupported network in fetchSLPPrice");
   }
-  const pair: any = (await request(
-    sushiswapSubgraphApi,
-    sushiswapReservesQuery(address)
-  )).pairs[0];
+  console.log(pair)
   try {
     const token0Price: BigNumber = await fetchTokenPrice({ address: pair.token0.id, signer, chainId });
     const reserveUSD: BigNumber = token0Price.multipliedBy(pair.reserve0).multipliedBy(2);
@@ -137,7 +145,7 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
       case networkInfo.contractAddresses.tokens.qiUSDC:
         return await fetchCTokenPrice(address, signer, chainId);
 
-      case networkInfo.contractAddresses.tokens.WAVAX:
+      case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLocaleLowerCase():
         return await fetchPriceFromCoingecko('avalanche-2');
 
@@ -174,7 +182,7 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
     } catch (err) { }
 
     const otherMarket: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(m.address, address));
-    if (otherMarket !== undefined && otherMarket.platform == MarketProtocols.Sushiswap) {
+    if (otherMarket !== undefined && (otherMarket.platform == MarketProtocols.Sushiswap || otherMarket.platform == MarketProtocols.TraderJoe)) {
       return await fetchSLPPrice({ address, signer, chainId });
     }
     throw Error(`Unsupported token ${address} in fetch toke price`)

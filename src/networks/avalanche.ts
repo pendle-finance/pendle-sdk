@@ -111,6 +111,22 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
             ],
             platform: MarketProtocols.TraderJoe
+        },
+        {
+            address: '0xd82b9b055f79d1a244005406988f85ed970797ed',
+            pair: [
+                '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
+                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ],
+            platform: MarketProtocols.TraderJoe
+        },
+        {
+            address: '0xa389f9430876455c36478deea9769b7ca4e3ddb1',
+            pair: [
+                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
+                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ],
+            platform: MarketProtocols.TraderJoe
         }
     ],
     stakingPools: [
@@ -198,7 +214,7 @@ export const avalancheContracts: NetworkContractAddresses = {
     tokens: {
         USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
         JOE: '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
-        WAVAX: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+        WETH: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
         PENDLE: '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
         qiUSDC: '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'
     },
