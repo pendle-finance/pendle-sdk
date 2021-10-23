@@ -1,7 +1,7 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
 import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getGasLimit, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, formatOutput } from '../helpers'
-import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress } from '../constants';
+import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress, HG } from '../constants';
 import { contracts } from '../contracts';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
@@ -285,14 +285,21 @@ export class StakingPool {
           callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateAccruing(LmInfo.address, LmInfo.expiry, userAddress)).data!
         }
       }));
-      const Lm2AccruingRewardsCalls: Call_MultiCall[] = await Promise.all(Lm2s.map(async function (LmInfo: LMINFO) {
+      const Lm2AccruingRewardsCalls: Call_MultiCall[] = await Promise.all(Lm2s.slice(0,).map(async function (LmInfo: LMINFO) {
         return {
           target: liquidityRewardsProxyContract.address,
           callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateAccruingV2(LmInfo.address, userAddress)).data!
         }
       }));
       const calls = Lm1AccruingRewardsCalls.concat(Lm2AccruingRewardsCalls);
-      const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
+      var returnedData: Result_MultiCall[] = [];
+      const batchSize: number = 5;
+      for (var i: number = 0; true; i ++) {
+        var leftInd: number = i * batchSize;
+        var rightInd: number = Math.min(calls.length, (i+1)*batchSize);
+        returnedData = returnedData.concat((await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls.slice(leftInd,rightInd), HG)).returnData);
+        if (rightInd == calls.length) break;
+      }
 
       const userLm1AccruingRewards: BN[] = indexRange(0, Lm1s.length).map((i: number) => {
         if (returnedData[i].success) {
@@ -338,8 +345,14 @@ export class StakingPool {
         }
       }));
       const calls = Lm1VestedRewardsCalls.concat(Lm2VestedRewardsCalls);
-      const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
-
+      var returnedData: Result_MultiCall[] = [];
+      const batchSize: number = 5;
+      for (var i: number = 0; true; i ++) {
+        var leftInd: number = i * batchSize;
+        var rightInd: number = Math.min(calls.length, (i+1)*batchSize);
+        returnedData = returnedData.concat((await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls.slice(leftInd,rightInd), HG)).returnData);
+        if (rightInd == calls.length) break;
+      }
 
       const userLm1VestedRewards: BN[][] = indexRange(0, Lm1s.length).map((i: number) => {
         if (returnedData[i].success) {

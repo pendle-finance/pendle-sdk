@@ -24,6 +24,13 @@ export const avalancheContracts: NetworkContractAddresses = {
             rewardTokenAddresses: ['0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'],
             forgeIdInBytes: forgeIdsInBytes.BENQI,
             expiry: EXP_2022
+        },
+        {
+            address: '0xd9b2cc0d8ca646229d1af3877636d09b926d9cca',
+            underlyingAssetAddress: '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
+            rewardTokenAddresses: ['0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'],
+            forgeIdInBytes: forgeIdsInBytes.XJOE,
+            expiry: EXP_2022
         }
     ],
     OTs: [
@@ -49,6 +56,13 @@ export const avalancheContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
                 '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ]
+        }, 
+        {
+            address: '0xec9f7b3cbbea2ef11c8c1880230f453bd4653992',
+            yieldTokenAddress: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33',
+            rewardTokenAddresses: [
+                '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd'
             ]
         }
     ],
@@ -84,6 +98,15 @@ export const avalancheContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [
                 '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'
             ],
+            marketFactoryId: marketFactoryIds.GENERIC
+        },
+        {
+            address: '0x1dea9a08b8a26a591923e4b593ede6f5d36df7ab',
+            pair: [
+                '0xd9b2cc0d8ca646229d1af3877636d09b926d9cca',
+                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+            ],
+            rewardTokenAddresses: ['0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'],
             marketFactoryId: marketFactoryIds.GENERIC
         }
     ],
@@ -127,7 +150,15 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
             ],
             platform: MarketProtocols.TraderJoe
-        }
+        },
+        {
+            address: '0x94a587369e15b5eadd0e77d65fbbe4c568bdd9cb',
+            pair: [
+                '0xec9f7b3cbbea2ef11c8c1880230f453bd4653992',
+                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+            ],
+            platform: MarketProtocols.TraderJoe
+        },
     ],
     stakingPools: [
         {
@@ -201,13 +232,37 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             active: true
+        },
+        {
+            address: '0x347c59093cf1b42fff090d2900497582241ff6db',
+            inputTokenAddress: '0x1dea9a08b8a26a591923e4b593ede6f5d36df7ab',
+            contractType: StakingPoolType.LmV1,
+            rewardTokenAddresses: [
+                '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
+                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ],
+            interestTokensAddresses: [
+                '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'
+            ],
+            active: true
+        },
+        {
+            address: '0xb77c0ef85ede1bf2fd93a3af19418f2af8ed1d35',
+            inputTokenAddress: '0x94a587369e15b5eadd0e77d65fbbe4c568bdd9cb',
+            contractType: StakingPoolType.LmV2,
+            rewardTokenAddresses: [
+                '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
+                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ],
+            interestTokensAddresses: [],
+            active: true
         }
     ],
     misc: {
         PendleRedeemProxy: '0xf1c056b317055cfb5d3178498e011e3c5b0bc5a4',
         PendleLiquidityRewardsProxy: '',
-        PendleRouter: '0x8d5a41254618b2d662699c50848718ee26fffd12',
-        PendleData: '0x4aB7d436c18877C76c1f82703178E8cf9Ef401A0',
+        PendleRouter: '0xd313701e2835ab8fd758e9aa151c8c4200e96658',
+        PendleData: '0x010f240e9a5084267d549f1a7edf2a85911250c7',
         MultiCallV2: '0x11b8399bc71e8b67a0f7cca2663612af1ca38536',
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052'
     },

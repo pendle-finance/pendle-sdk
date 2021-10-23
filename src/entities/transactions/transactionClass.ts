@@ -24,11 +24,14 @@ const networkMapping: Record<string | number, number> = {
   mainnet: 1,
   42: 42,
   kovan: 42,
+  43114: 43114,
+  avalanche: 43114
 };
 
 const chainIdToNetworkMapping: Record<number, string> = {
   1: 'mainnet',
   42: 'kovan',
+  43114: 'avalanche'
 };
 
 export class TransactionFetcher {

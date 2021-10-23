@@ -754,6 +754,10 @@ export class PendleMarket extends Market {
           limit: 100,
           marketAddress: this.address,
         });
+        if (result.length === 0) {
+          f = false;
+          break;
+        }
         for (let i: number = 0; i < result.length; i++) {
           if (result[i].timestamp! > leftBound && result[i].timestamp! <= rightBound) {
             amount = amount + (result[i].amount.amount);

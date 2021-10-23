@@ -4,6 +4,7 @@ import { contracts } from '../contracts';
 import { Call_MultiCall, decimalFactor, distributeConstantsByNetwork, formatOutput, indexRange, Result_MultiCall } from '../helpers';
 import { NetworkInfo } from '../networks';
 import { Token, dummyToken } from './token';
+import { HG } from '../constants';
 
 export class TokenAmount {
     public readonly token: Token;
@@ -44,7 +45,7 @@ export class TokenAmount {
                 }
                 return true;
             }));
-            const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(true, calls)).returnData;
+            const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(true, calls, HG)).returnData;
             const balances: TokenAmount[] = new Array<TokenAmount>(tokens.length);
             indexRange(0, tokens.length).forEach((i: number) => {
                 const balance: BN = formatOutput(returnedData[i].returnData, contracts.IERC20.abi, "balanceOf")[0];

@@ -20,7 +20,7 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it.only('claim yields', async() => {
+  it('claim yields', async() => {
     const sdk = new Sdk(signer);
     const res = await sdk.claimYields({
       yts: [],
@@ -74,11 +74,12 @@ describe('Sdk', () => {
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchAccruingRewards', async () => {
+  it.only('StakingPool.methods.fetchAccruingRewards', async () => {
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(
-      dummyAddress
+      '0x186e446fbd41dD51Ea2213dB2d3ae18B05A05ba8'
+      // dummyUser
     );
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });

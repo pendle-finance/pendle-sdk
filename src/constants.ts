@@ -12,7 +12,8 @@ export const forgeIdsInBytes = {
   SUSHISWAP_COMPLEX: utils.formatBytes32String('SushiswapComplex'),
   JOE_SIMPLE: utils.formatBytes32String('TraderJoeSimple'),
   JOE_COMPLEX: utils.formatBytes32String('TraderJoeComplex'),
-  BENQI: utils.formatBytes32String('BenQi')
+  BENQI: utils.formatBytes32String('BenQi'),
+  XJOE: utils.formatBytes32String('xJoe')
 };
 
 export const marketFactoryIds = {
@@ -42,3 +43,5 @@ export const decimalsRecords: Record<string, Record<string, number>> = {
 };
 
 export const gasBuffer: number = 1.2;
+
+export const HG = {gasLimit: 100000000}

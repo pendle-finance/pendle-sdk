@@ -659,7 +659,7 @@ export class OneClickWrapper {
         const getAllRewardsFromTxns = async(action: Action, testSimulation: SimulationDetails, pendleFixture: PendleFixture): Promise<rewardsInfo> => {
             var otPromises: Promise<AprWithPrincipal[]>[] = [], ytPromises: Promise<AprWithPrincipal[]>[] = [];
             var otLpValuation: CurrencyAmount = ZeroCurrencyAmount, ytLpValuation: CurrencyAmount = ZeroCurrencyAmount;
-            var otLpSwapFeeApr: BigNumber = new BigNumber(0), ytLpSwapFeeApr: BigNumber = new BigNumber(0);
+            var otLpSwapFeeApr: string = '0', ytLpSwapFeeApr: string = '0';
             const mintTxn: Transaction = testSimulation.transactions.find((txn: Transaction) => txn.action == TransactionAction.mint)!;
             otPromises.push(getOtRewards(mintTxn.paid[0], pendleFixture));
 
@@ -671,7 +671,7 @@ export class OneClickWrapper {
                 otLpSwapFeeApr = await pendleFixture.otMarket.methods(signer, chainId).getSwapFeeApr();
                 otRewards.push({
                     apr: {
-                        apr: otLpSwapFeeApr.toFixed(DecimalsPrecision),
+                        apr: otLpSwapFeeApr,
                         origin: "Swap Fee"
                     },
                     principal: otLpValuation
@@ -684,7 +684,7 @@ export class OneClickWrapper {
                 ytLpSwapFeeApr = await pendleFixture.ytMarket.methods(signer, chainId).getSwapFeeApr();
                 ytRewards.push({
                     apr: {
-                        apr: ytLpSwapFeeApr.toFixed(DecimalsPrecision),
+                        apr: ytLpSwapFeeApr,
                         origin: "Swap Fee"
                     },
                     principal: ytLpValuation
