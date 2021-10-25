@@ -5,6 +5,7 @@ const IPendleForge = require('@pendle/core/build/artifacts/contracts/interfaces/
 const PendleSushiswapComplexForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSushiswapComplexForge.sol/PendleSushiswapComplexForge.json')
 const PendleAaveV2Forge = require('@pendle/core/build/artifacts/contracts/core/aave/v2/PendleAaveV2Forge.sol/PendleAaveV2Forge.json');
 const PendleCompoundForge = require('@pendle/core/build/artifacts/contracts/core/compound/PendleCompoundForge.sol/PendleCompoundForge.json');
+const PendleCompoundV2Forge = require('@pendle/core/build/artifacts/contracts/core/compoundV2/PendleCompoundV2Forge.sol/PendleCompoundV2Forge.json');
 const PendleSushiswapSimpleForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapSimple/PendleSushiswapSimpleForge.sol/PendleSushiswapSimpleForge.json');
 const IERC20 = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
 const PendleLiquidityMiningBase = require('@pendle/core/build/artifacts/contracts/core/abstract/PendleLiquidityMiningBase.sol/PendleLiquidityMiningBase.json');
@@ -40,6 +41,7 @@ export const contracts = {
   PendleSushiswapSimpleForge,
   PendleAaveV2Forge,
   PendleCompoundForge,
+  PendleCompoundV2Forge,
   PendleTraderJoeYieldTokenHolder,
   SushiMasterChef,
   JoeMasterChef,

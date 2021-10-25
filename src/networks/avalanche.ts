@@ -277,5 +277,6 @@ export const avalancheContracts: NetworkContractAddresses = {
         [forgeIdsInBytes.JOE_SIMPLE]: "0xfccbebda2a67efc6c28c4fa2c4ed9d0fbfe3a5d0",
         [forgeIdsInBytes.JOE_COMPLEX]: "0x8a10cf1b5ba0cbe6505c615e38cfa6927fa6c3e4",
         [forgeIdsInBytes.BENQI]: "0xf9a93aa08049b7fda4236344d562e60e62f22e8a",
+        [forgeIdsInBytes.XJOE]: "0x6a8b6c18fc1da1e50a6f47476b8469106e557131"
     }
 }

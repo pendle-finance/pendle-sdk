@@ -55,7 +55,6 @@ export async function fetchSLPPrice({ address, signer, chainId }: { address: str
   } else {
     throw Error("Unsupported network in fetchSLPPrice");
   }
-  console.log(pair)
   try {
     const token0Price: BigNumber = await fetchTokenPrice({ address: pair.token0.id, signer, chainId });
     const reserveUSD: BigNumber = token0Price.multipliedBy(pair.reserve0).multipliedBy(2);

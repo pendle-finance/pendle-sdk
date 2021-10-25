@@ -8,6 +8,10 @@ export function rmul(x: BN, y: BN): BN {
     return (RONE.div(2)).add(x.mul(y)).div(RONE);
 }
 
+export function cmul(x: BN, y: BN) : BN {
+    return x.mul(y).div(BN.from(10).pow(18));
+}
+
 export function rdiv(x: BN, y: BN): BN{
     return (y.div(2)).add(x.mul(RONE)).div(y);
 }

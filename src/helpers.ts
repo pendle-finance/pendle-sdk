@@ -81,10 +81,14 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
       return contracts.PendleSushiswapComplexForge;
 
     case forgeIdsInBytes.BENQI:
-      return contracts.PendleCompoundForge; // To-Do
+    case forgeIdsInBytes.COMPOUND_UPGRADED:
+      return contracts.PendleCompoundV2Forge; 
 
     case forgeIdsInBytes.JOE_COMPLEX:
-      return contracts.PendleSushiswapComplexForge; // To-do
+      return contracts.PendleSushiswapSimpleForge; // To-do
+
+    case forgeIdsInBytes.XJOE:
+      return contracts.PendleSushiswapSimpleForge; // To-do
 
     default: {
       throw Error("Unsupported Forge Id");
@@ -99,6 +103,12 @@ export function getABIByStakingPoolType(type: StakingPoolType): any {
 
     case StakingPoolType.LmV2:
       return contracts.PendleLiquidityMiningV2Base;
+
+    case StakingPoolType.LmV1Multi:
+      return contracts.PendleLiquidityMiningBase; // To-do
+
+    case StakingPoolType.LmV2Multi:
+      return contracts.PendleLiquidityMiningV2Base; // To-do
 
     case StakingPoolType.PendleSingleSided:
       return contracts.PendleSingleSidedStaking;

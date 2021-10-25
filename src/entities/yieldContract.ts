@@ -5,7 +5,7 @@ import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
-import { rmul, rdiv } from "../math/mathLib";
+import { rmul, rdiv, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
@@ -43,8 +43,12 @@ export class YieldContract {
         const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
         const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
 
+        const useCompoundMath = (): boolean => {
+            return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || this.forgeIdInBytes == forgeIdsInBytes.BENQI;
+        }
+
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
-            if (this.forgeIdInBytes !== forgeIdsInBytes.SUSHISWAP_COMPLEX) {
+            if (this.forgeIdInBytes == forgeIdsInBytes.AAVE && this.forgeIdInBytes == forgeIdsInBytes.COMPOUND) {
                 const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 return [
                     new TokenAmount(
@@ -68,7 +72,7 @@ export class YieldContract {
                 const exchangeRate: BN = await pendleForgeContract.connect(signer.provider).callStatic.getExchangeRate(this.underlyingAsset.address, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 const ot: string = (await pendleDataContract.callStatic.otTokens(this.forgeIdInBytes, this.underlyingAsset.address, this.expiry)).toLowerCase();
                 const yt: string = (await pendleDataContract.callStatic.xytTokens(this.forgeIdInBytes, this.underlyingAsset.address, this.expiry)).toLowerCase();
-                const amountToMint = rmul(BN.from(toMint.rawAmount()), exchangeRate);
+                const amountToMint: BN = useCompoundMath() ? cmul(BN.from(toMint.rawAmount()), exchangeRate) : rmul(BN.from(toMint.rawAmount()), exchangeRate);
                 return [
                     new TokenAmount(
                         new Token(
