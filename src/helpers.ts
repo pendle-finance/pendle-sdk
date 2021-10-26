@@ -1,4 +1,4 @@
-import { BigNumber as BN, Contract, Bytes, utils } from 'ethers';
+import { BigNumber as BN, Contract, Bytes, utils, providers } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";
@@ -146,19 +146,42 @@ export const getGasLimitWithETH = (estimate: BN, value: BN) => { return { gasLim
 
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
   const margin: number = 30;
-  var blockRateUpperBound: number;
-  if (chainId === undefined || chainId == 1) {
-    blockRateUpperBound = 7;
-  } else if (chainId == 42) {
-    blockRateUpperBound = 3;
-  } else {
-    throw Error("Unsupported network in getBlockOneDayEarlier");
+  var scanInterval: BN;
+  switch (chainId) {
+    case undefined:
+    case 1:
+      scanInterval = ONE_DAY.div(7);
+      break
+    
+    case 42:
+      scanInterval = ONE_DAY.div(5);
+      break;
+
+    case 43114:
+      scanInterval = ONE_DAY;
+      break
+
+    default:
+      throw Error(`Unsupported chain ${chainId} in getBlockOneDayEarlier`)
   }
   const latestBlockNumber = await provider.getBlockNumber();
   const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
   const targetTime: number = currentTime - ONE_DAY.toNumber();
-  var l: number = latestBlockNumber - ONE_DAY.div(blockRateUpperBound).toNumber();
-  var r: number = latestBlockNumber - ONE_DAY.div(30).toNumber();
+  var rightBound: BN = BN.from(await provider.getBlockNumber());
+  var leftBound: BN = rightBound;
+  while (true) {
+    const block = await provider.getBlock(rightBound.sub(scanInterval).toNumber());
+    if (block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() && block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()) {
+      return rightBound.sub(scanInterval).toNumber();
+    }
+    if (block.timestamp < targetTime - ONE_MINUTE.mul(margin).toNumber()) {
+      leftBound = rightBound.sub(scanInterval);
+      break;
+    }
+    rightBound = rightBound.sub(scanInterval);
+  }
+  var l: number = leftBound.toNumber();
+  var r: number = rightBound.toNumber();
   while (l < r) {
     var mid: number = Math.trunc((l + r) / 2);
     const block = await provider.getBlock(mid);

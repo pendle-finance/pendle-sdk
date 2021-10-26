@@ -780,6 +780,7 @@ export class PendleMarket extends Market {
             break;
           }
         }
+        page = page + 1;
       }
       volume.amount = amount;
       return volume;
@@ -800,23 +801,18 @@ export class PendleMarket extends Market {
     }
 
     const getPastLiquidityValue = async (): Promise<CurrencyAmount> => {
-      if (chainId === undefined || chainId == 1) {
-        const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
-        if (pastBlockNumber === undefined) {
-          console.error("Unable to get block that is 1 day old");
-          return {
-            currency: "USD",
-            amount: 0
-          }
-        }
-        const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
-        return getLiquidityValue(pastMarketReserves);
-      } else { // If Kovan, then return 0 since we do not have access to achived state
+      if (chainId == 42) return ZeroCurrencyAmount  // If Kovan, then return 0 since we do not have access to achived state
+
+      const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
+      if (pastBlockNumber === undefined) {
+        console.error("Unable to get block that is 1 day old");
         return {
-          currency: 'USD',
+          currency: "USD",
           amount: 0
-        };
+        }
       }
+      const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
+      return getLiquidityValue(pastMarketReserves);
     }
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: number, impliedYield: number }> => {
