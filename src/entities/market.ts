@@ -5,7 +5,7 @@ import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
 import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH } from '../helpers'
-import { CurrencyAmount } from './currencyAmount';
+import { CurrencyAmount, dummyCurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
   TransactionFetcher,
@@ -272,7 +272,7 @@ export class PendleMarket extends Market {
           break;
         
         case forgeIdsInBytes.BENQI:
-          underlyingYieldRate = await fetchBenqiYield(yieldBearingAsset);
+          underlyingYieldRate = await fetchBenqiYield(underlyingAsset);
           break;
 
         case forgeIdsInBytes.SUSHISWAP_COMPLEX:
@@ -304,21 +304,27 @@ export class PendleMarket extends Market {
         weights: marketReserves.tokenWeight.toString()
       }
 
-      const yieldBearingAsset: string = Yt.find(this.tokens[0].address).yieldBearingAddress;
-      var underlyingYieldRate: number = await getUnderlyingYieldRate({underlyingAsset, yieldBearingAsset});
+      const yieldBearingAsset: string = Yt.find(this.tokens[0].address, chainId).yieldBearingAddress;
+      var promises: Promise<any>[] = [];
+      var underlyingYieldRate: number = 0;
+      promises.push(getUnderlyingYieldRate({underlyingAsset, yieldBearingAsset}).then((res: number) => underlyingYieldRate = res));
 
       const currentTime: number = await getCurrentTimestamp(signer.provider);
 
-      const volumeToday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.toNumber(), currentTime);
-      const volumeYesterday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.mul(2).toNumber(), currentTime - ONE_DAY.toNumber())
+      var volumeToday: CurrencyAmount = ZeroCurrencyAmount, volumeYesterday: CurrencyAmount = ZeroCurrencyAmount;
+      promises.push(getVolume(currentTime - ONE_DAY.toNumber(), currentTime).then((res: CurrencyAmount) => volumeToday = res));
+      promises.push(getVolume(currentTime - ONE_DAY.mul(2).toNumber(), currentTime - ONE_DAY.toNumber()).then((res: CurrencyAmount) => volumeYesterday = res));
 
-      var liquidityToday: CurrencyAmount = await getLiquidityValue(marketReserves);
-      var liquidityYesterday: CurrencyAmount = await getPastLiquidityValue();
+      var liquidityToday: CurrencyAmount = ZeroCurrencyAmount; 
+      promises.push(getLiquidityValue(marketReserves).then((res: CurrencyAmount) => liquidityToday = res));
+      var liquidityYesterday: CurrencyAmount = ZeroCurrencyAmount;
+      promises.push(getPastLiquidityValue().then((res: CurrencyAmount) => liquidityYesterday = res));
       const swapFee: BN = await pendleDataContract.swapFee();
       const protocolFee: BN = await pendleDataContract.protocolSwapFee();
       const swapFeeApr: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
 
       const { ytPrice, impliedYield }: { ytPrice: number, impliedYield: number } = await getYTPriceAndImpliedYield(marketReserves);
+      await Promise.all(promises);
 
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],

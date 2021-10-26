@@ -68,12 +68,11 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        market = markets.PendleEthMarket;
+        market = PendleMarket.find('0x50d3a2991db715e51c55a5ec06488e91522029d2', chainId)
     });
 
     it.only("PendleMarket.readMarketDetails", async () => {
         const networkInfo = distributeConstantsByNetwork(chainId);
-        console.log(networkInfo.contractAddresses.tokens.PENDLE);
         const marketDetails = await market.methods(signer, chainId).readMarketDetails();
 
         console.log(JSON.stringify(marketDetails, null, '  '));
@@ -84,7 +83,7 @@ describe("Market", () => {
         console.log(JSON.stringify(yieldContract, null, '  '));
     })
 
-    it.only('PendleMarket.swapExactInDetails', async () => {
+    it('PendleMarket.swapExactInDetails', async () => {
         const swapExactInDetails = await market.methods(signer, chainId).swapExactInDetails(new TokenAmount(
             market.tokens[1],
             BN.from(10).pow(6).toString()

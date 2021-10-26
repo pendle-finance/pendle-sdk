@@ -165,7 +165,7 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
     try {
       const ot: Ot = Ot.find(address, chainId);
       return await fetchOtPrice(ot, signer, chainId);
-    } catch (err) { console.log(err); }
+    } catch (err) { }
 
     try {
       const yt: Yt = Yt.find(address, chainId);

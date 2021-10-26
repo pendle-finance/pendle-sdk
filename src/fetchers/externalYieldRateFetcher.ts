@@ -88,7 +88,7 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
 export async function fetchBenqiYield(underlyingAddress: string): Promise<number> {
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(43114);
   const benqiAPI = 'https://api.benqi.fi/tokens/total_apys';
-  const response = axios.get(benqiAPI).then((res: any) => res.data);
+  const response = await axios.get(benqiAPI).then((res: any) => res.data);
   for (const t in networkInfo.contractAddresses.tokens) {
     if (isSameAddress(networkInfo.contractAddresses.tokens[t], underlyingAddress)) {
       return response[t].supply;
