@@ -20,7 +20,7 @@ export const fetchAaveYield = async (underlyingAddress: string) => {
 
       if (!underlyingData) return 0
 
-      return underlyingData.liquidityRate * 100
+      return underlyingData.liquidityRate
     })
 
   return yieldInPercentage
@@ -37,7 +37,7 @@ export const fetchCompoundYield = async (yieldBearingAddress: string) => {
 
       if (!underlyingData) return 0
 
-      return underlyingData.supply_rate.value * 100
+      return underlyingData.supply_rate.value
     })
 
   return yieldInPercentage
@@ -74,9 +74,8 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
         .plus(1)
         .pow(365)
         .minus(1)
-      const yieldRatePercentage = yieldRate.multipliedBy(100)
 
-      return yieldRatePercentage.toNumber()
+      return yieldRate.toNumber()
     })
     .catch((err: any) => {
       throw Error(`Something went wrong fetching Sushi Yield Rate ${err}`)
