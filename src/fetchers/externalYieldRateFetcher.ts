@@ -1,5 +1,8 @@
 import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
+import { sushiswapSubgraphApi, traderJoeSubgraphApi } from '../constants';
+import { NetworkInfo } from '../networks';
+import { distributeConstantsByNetwork, isSameAddress } from '../helpers';
 const axios = require('axios');
 
 export const fetchAaveYield = async (underlyingAddress: string) => {
@@ -40,11 +43,9 @@ export const fetchCompoundYield = async (yieldBearingAddress: string) => {
   return yieldInPercentage
 }
 
-const sushiSubgraphURL: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange"
-
-export const fetchSushiYield = async (poolAddress: string, _?: number): Promise<number> => { //chainId
+export const fetchSushiForkYield = async (poolAddress: string, chainId?: number): Promise<number> => { //chainId
   const yieldRate: number = await request(
-    sushiSubgraphURL,
+    chainId === undefined || chainId == 1 ? sushiswapSubgraphApi : traderJoeSubgraphApi,
     gql`
         {
           pairs(where: { id: "${poolAddress}" }) {
@@ -82,4 +83,16 @@ export const fetchSushiYield = async (poolAddress: string, _?: number): Promise<
     })
 
   return yieldRate
+}
+
+export async function fetchBenqiYield(underlyingAddress: string): Promise<number> {
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(43114);
+  const benqiAPI = 'https://api.benqi.fi/tokens/total_apys';
+  const response = axios.get(benqiAPI).then((res: any) => res.data);
+  for (const t in networkInfo.contractAddresses.tokens) {
+    if (isSameAddress(networkInfo.contractAddresses.tokens[t], underlyingAddress)) {
+      return response[t].supply;
+    }
+  }
+  return 0;
 }

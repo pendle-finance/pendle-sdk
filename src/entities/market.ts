@@ -13,7 +13,7 @@ import {
 } from './transactions';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
 import { forgeIdsInBytes, ONE_DAY, ETHAddress } from '../constants';
-import { fetchAaveYield, fetchCompoundYield, fetchSushiYield } from '../fetchers/externalYieldRateFetcher';
+import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactions/types';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
 
@@ -259,6 +259,34 @@ export class PendleMarket extends Market {
       return this.marketFactoryId;
     }
 
+    const getUnderlyingYieldRate = async({underlyingAsset, yieldBearingAsset}: {underlyingAsset: string, yieldBearingAsset: string}): Promise<number> => {
+
+      var underlyingYieldRate: number = 0;
+      switch (yieldContract.forgeIdInBytes) {
+        case forgeIdsInBytes.AAVE:
+          underlyingYieldRate = await fetchAaveYield(yieldContract.underlyingAsset.address);
+          break;
+
+        case forgeIdsInBytes.COMPOUND:
+          underlyingYieldRate = await fetchCompoundYield(yieldBearingAsset);
+          break;
+        
+        case forgeIdsInBytes.BENQI:
+          underlyingYieldRate = await fetchBenqiYield(yieldBearingAsset);
+          break;
+
+        case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+        case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+        case forgeIdsInBytes.JOE_COMPLEX:
+        case forgeIdsInBytes.JOE_SIMPLE:
+          underlyingYieldRate = await fetchSushiForkYield(yieldBearingAsset, chainId);
+          break;
+
+        // TODO: add Uniswap support here
+      }
+      return underlyingYieldRate;
+    }
+
     const readMarketDetails = async (): Promise<MarketDetails> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
       const ytReserveDetails: TokenReserveDetails = {
@@ -276,28 +304,8 @@ export class PendleMarket extends Market {
         weights: marketReserves.tokenWeight.toString()
       }
 
-      var underlyingYieldRate: number = 0;
-      if (chainId !== undefined && chainId !== 1) {
-        underlyingYieldRate = 0;
-      } else {
-        const yieldBearingAddress: string = Yt.find(this.tokens[0].address).yieldBearingAddress;
-        switch (yieldContract.forgeIdInBytes) {
-          case forgeIdsInBytes.AAVE:
-            underlyingYieldRate = await fetchAaveYield(yieldContract.underlyingAsset.address);
-            break;
-
-          case forgeIdsInBytes.COMPOUND:
-            underlyingYieldRate = await fetchCompoundYield(yieldBearingAddress);
-            break;
-
-          case forgeIdsInBytes.SUSHISWAP_COMPLEX:
-          case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-            underlyingYieldRate = await fetchSushiYield(yieldBearingAddress, chainId);
-            break;
-
-          // TODO: add Uniswap support here
-        }
-      }
+      const yieldBearingAsset: string = Yt.find(this.tokens[0].address).yieldBearingAddress;
+      var underlyingYieldRate: number = await getUnderlyingYieldRate({underlyingAsset, yieldBearingAsset});
 
       const currentTime: number = await getCurrentTimestamp(signer.provider);
 
@@ -821,9 +829,15 @@ export class PendleMarket extends Market {
         case forgeIdsInBytes.COMPOUND:
           principalPerYT = await pendleForgeContract.initialRate(underlyingAsset);
           break;
+        
+        case forgeIdsInBytes.BENQI:
+          principalPerYT = BN.from(1).pow(networkInfo.decimalsRecord[underlyingAsset]);
+          break;
 
         case forgeIdsInBytes.SUSHISWAP_SIMPLE:
         case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+        case forgeIdsInBytes.JOE_SIMPLE:
+        case forgeIdsInBytes.JOE_COMPLEX:
           principalPerYT = calcPrincipalForSLPYT(await pendleForgeContract.callStatic.getExchangeRate(underlyingAsset));
           break
       }
@@ -946,7 +960,7 @@ export class SushiMarket extends Market {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
     const getSwapFeeApr = async (): Promise<string> => {
-      return (await fetchSushiYield(this.address, chainId)).toString()
+      return (await fetchSushiForkYield(this.address, chainId)).toString()
     }
 
     const readMarketDetails = async (): Promise<OtherMarketDetails> => {

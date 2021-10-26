@@ -45,3 +45,6 @@ export const decimalsRecords: Record<string, Record<string, number>> = {
 export const gasBuffer: number = 1.2;
 
 export const HG = {gasLimit: 100000000}
+
+export const sushiswapSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange";
+export const traderJoeSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/traderjoe-xyz/exchange";

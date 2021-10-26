@@ -2,7 +2,7 @@ import { decimalFactor, distributeConstantsByNetwork, isSameAddress } from "../h
 import { MARKETINFO, MarketProtocols, NetworkInfo } from "../networks";
 import { request, gql } from "graphql-request"
 import BigNumber from "bignumber.js";
-import { ETHAddress } from "../constants";
+import { ETHAddress, sushiswapSubgraphApi, traderJoeSubgraphApi } from "../constants";
 import { TokenAmount } from "../entities/tokenAmount";
 import { CurrencyAmount } from "../entities/currencyAmount";
 import { PendleMarket, MarketDetails } from "../entities/market";
@@ -12,9 +12,6 @@ import { Yt } from "../entities/yt";
 import { Contract, BigNumber as BN } from "ethers";
 import { contracts } from "../contracts";
 const axios = require('axios')
-
-const sushiswapSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange";
-const traderJoeSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/traderjoe-xyz/exchange";
 
 export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
   const price = await axios.get(
@@ -40,21 +37,24 @@ const sushiswapReservesQuery = (slpAddress: string) => gql`{
   }
 }`
 
-export async function fetchSLPPrice({ address, signer, chainId }: { address: string, signer: providers.JsonRpcSigner, chainId: number | undefined }): Promise<BigNumber> {
-  var pair: any;
+async function getSushiForkPairInfo(pairAddress: string, chainId: number | undefined): Promise<any> {
   if (chainId === undefined || chainId == 1) {
-    pair = (await request(
+    return (await request(
       sushiswapSubgraphApi,
-      sushiswapReservesQuery(address)
+      sushiswapReservesQuery(pairAddress)
     )).pairs[0];
   } else if (chainId == 43114) {
-    pair = (await request(
+    return (await request(
       traderJoeSubgraphApi,
-      sushiswapReservesQuery(address)
+      sushiswapReservesQuery(pairAddress)
     )).pairs[0];
   } else {
-    throw Error("Unsupported network in fetchSLPPrice");
+    throw Error("Unsupported network in getSushiForkPairInfo");
   }
+}
+
+export async function fetchSLPPrice({ address, signer, chainId }: { address: string, signer: providers.JsonRpcSigner, chainId: number | undefined }): Promise<BigNumber> {
+  var pair = await getSushiForkPairInfo(address, chainId);
   try {
     const token0Price: BigNumber = await fetchTokenPrice({ address: pair.token0.id, signer, chainId });
     const reserveUSD: BigNumber = token0Price.multipliedBy(pair.reserve0).multipliedBy(2);
@@ -76,10 +76,7 @@ export async function fetchOtPrice(ot: Ot, signer: providers.JsonRpcSigner, chai
     console.error(`No price feeding market found for this OT ${ot.address}`);
     return new BigNumber(1);
   }
-  const pair: any = (await request(
-    sushiswapSubgraphApi,
-    sushiswapReservesQuery(marketAddress)
-  )).pairs[0];
+  const pair: any = await getSushiForkPairInfo(marketAddress, chainId);
   var otherReserve: BigNumber, otherPirce: BigNumber, thisReserve: BigNumber;
   if (isSameAddress(pair.token0.id, ot.address)) {
     otherReserve = pair.reserve1;
@@ -168,7 +165,7 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
     try {
       const ot: Ot = Ot.find(address, chainId);
       return await fetchOtPrice(ot, signer, chainId);
-    } catch (err) { }
+    } catch (err) { console.log(err); }
 
     try {
       const yt: Yt = Yt.find(address, chainId);
