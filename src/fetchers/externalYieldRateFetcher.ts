@@ -95,3 +95,7 @@ export async function fetchBenqiYield(underlyingAddress: string): Promise<number
   }
   return 0;
 }
+
+export async function fetchXJOEYield(): Promise<number> {
+  return 0.2;
+}

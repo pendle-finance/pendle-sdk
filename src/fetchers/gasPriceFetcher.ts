@@ -20,6 +20,8 @@ export async function getGasPrice(chainId: number | undefined): Promise<BN> {
         return gasPrice;
     } else if (chainId == 42) {
         return dummyGasPrice;
+    } else if (chainId == 43114) {
+        return BN.from(25).mul(BN.from(10).pow(9));
     } else {
         throw Error("Unsupported network in getGasPrice");
     }

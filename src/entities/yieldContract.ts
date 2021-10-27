@@ -48,7 +48,7 @@ export class YieldContract {
         }
 
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
-            if (this.forgeIdInBytes == forgeIdsInBytes.AAVE && this.forgeIdInBytes == forgeIdsInBytes.COMPOUND) {
+            if (this.forgeIdInBytes == forgeIdsInBytes.AAVE || this.forgeIdInBytes == forgeIdsInBytes.COMPOUND) {
                 const response = await pendleForgeContract.connect(signer.provider).callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 return [
                     new TokenAmount(
@@ -101,34 +101,23 @@ export class YieldContract {
         const redeemDetails = async (amountToRedeem: TokenAmount, userAddress: string): Promise<RedeemDetails> => {
             const interestRedeemed: BN = await pendleForgeContract.connect(signer.provider).callStatic.redeemDueInterests(userAddress, this.underlyingAsset.address, this.expiry, { from: networkInfo.contractAddresses.misc.PendleRouter });
             const yTokenAddress: string = networkInfo.contractAddresses.OTs.find((OtInfo: OTINFO) => OtInfo.address == amountToRedeem.token.address)!.yieldTokenAddress;
-            var amountRedeemed: BN = BN.from(0);
-            switch (this.forgeIdInBytes) {
-                case forgeIdsInBytes.AAVE: {
-                    amountRedeemed = BN.from(amountToRedeem.rawAmount());
-                    break;
-                }
-
-                case forgeIdsInBytes.COMPOUND: {
-                    const initialRate: BN = await pendleForgeContract.callStatic.initialRate(this.underlyingAsset.address);
-                    const currentRate: BN = await pendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
-                    amountRedeemed = BN.from(amountToRedeem.rawAmount()).mul(initialRate).div(currentRate);
-                    break;
-                }
-
-                case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-                case forgeIdsInBytes.SUSHISWAP_COMPLEX: {
-                    const currentRate: BN = await pendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address);
-                    amountRedeemed = rdiv(BN.from(amountToRedeem.rawAmount()), (currentRate));
-                    break;
-                }
-            }
+            const yToken: Token = new Token(
+                yTokenAddress,
+                networkInfo.decimalsRecord[yTokenAddress]
+            );
+            const testMintAmount: BN = BN.from(10).pow(18);
+            const testMintedAmount: TokenAmount[] = await mintDetails(new TokenAmount(
+                yToken,
+                testMintAmount.toString()
+            ));
+            const amountRedeemed: TokenAmount = new TokenAmount(
+                yToken,
+                BN.from(amountToRedeem.rawAmount()).mul(testMintAmount).div(testMintedAmount[0].rawAmount()).toString()
+            )
             return {
-                redeemableAmount: new TokenAmount(
-                    new Token(yTokenAddress, networkInfo.decimalsRecord[yTokenAddress]),
-                    amountRedeemed.toString()
-                ),
+                redeemableAmount: amountRedeemed,
                 interestAmount: new TokenAmount(
-                    new Token(yTokenAddress, networkInfo.decimalsRecord[yTokenAddress]),
+                    yToken,
                     (interestRedeemed).toString()
                 ),
             }

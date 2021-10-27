@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 import { dummyAddress } from '../src';
 
 dotenv.config()
-jest.setTimeout(30000);
+jest.setTimeout(300000);
 
 const chainId = 1;
 const PendleSingle: StakingPool = StakingPool.find('0x07282f2ceebd7a65451fcd268b364300d9e6d7f5', '0x808507121b80c02388fad14726482e061b8da827',1);
@@ -29,7 +29,7 @@ describe("Staking pools", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        sp = sps.OTcDAI2021Pool;
+        sp = sps.OTPE2022Pool;
     });
     it('Get totalStaked', async() => {
         const totalStake = await sp.methods(signer).getTotalStaked();

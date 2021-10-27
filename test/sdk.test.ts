@@ -20,9 +20,10 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it('claim yields', async() => {
+  it.only('claim yields', async() => {
     const sdk = new Sdk(signer);
-    const res = await sdk.claimYields({
+    console.log("estimate")
+    const res = await sdk.estimateGasForClaimYields({
       yts: [],
       ots: [],
       lps: [],
@@ -74,7 +75,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
-  it.only('StakingPool.methods.fetchAccruingRewards', async () => {
+  it('StakingPool.methods.fetchAccruingRewards', async () => {
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(

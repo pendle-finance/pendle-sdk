@@ -95,7 +95,11 @@ const forgeIdToMode: Record<string, number> = {
     [forgeIdsInBytes.COMPOUND]: 1,
     [forgeIdsInBytes.COMPOUND_UPGRADED]: 1,
     [forgeIdsInBytes.SUSHISWAP_SIMPLE]: 3,
-    [forgeIdsInBytes.SUSHISWAP_COMPLEX]: 3
+    [forgeIdsInBytes.SUSHISWAP_COMPLEX]: 3,
+    [forgeIdsInBytes.JOE_COMPLEX]: 3,
+    [forgeIdsInBytes.JOE_SIMPLE]: 3,
+    [forgeIdsInBytes.BENQI]: 1,
+    [forgeIdsInBytes.XJOE]: 5
 }
 
 export type DataTknzAaveCompound = {
@@ -172,7 +176,8 @@ export class OneClickWrapper {
         const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, signer.provider);
 
         const isUnderlyingLP = (): boolean => {
-            return this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_SIMPLE || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_COMPLEX;
+            return this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_SIMPLE || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_COMPLEX 
+                || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_SIMPLE || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_COMPLEX;
         }
 
         const getAddOtLiqTxn = (txns: Transaction[], pendleFixture: PendleFixture): Transaction | undefined => {

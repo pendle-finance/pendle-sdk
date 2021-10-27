@@ -477,7 +477,7 @@ export class StakingPool {
     const getTotalStaked = async (): Promise<StakedAmount> => {
       if (this.contractType == StakingPoolType.LmV1 || this.contractType == StakingPoolType.LmV1Multi) {
         const totalStakeLP: BN = (await stakingPoolContract.readExpiryData(expiry)).totalStakeLP;
-        const marketLPPrice: BigNumber = await market.methods(signer).getLPPriceBigNumber();
+        const marketLPPrice: BigNumber = await market.methods(signer, chainId).getLPPriceBigNumber();
         return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
         const totalStakeLP: BN = await stakingPoolContract.totalStake();
@@ -496,7 +496,7 @@ export class StakingPool {
     const balanceOf = async(address: string): Promise<StakedAmount> => {
       if (this.contractType == StakingPoolType.LmV1 || this.contractType == StakingPoolType.LmV1Multi) {
         const stakedLP: BN = (await stakingPoolContract.readUserSpecificExpiryData(expiry, address)).balances;
-        const marketLPPrice: BigNumber = await market.methods(signer).getLPPriceBigNumber();
+        const marketLPPrice: BigNumber = await market.methods(signer, chainId).getLPPriceBigNumber();
         return populateStakedAmount(stakedLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
         const stakedLP: BN = await stakingPoolContract.balances(address);

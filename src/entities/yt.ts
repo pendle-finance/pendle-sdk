@@ -66,7 +66,6 @@ export class Yt extends Token {
             userAddress: string,
         ): Promise<YtOrMarketInterest[]> => {
 
-
             const userInterests = await redeemProxyContract.callStatic.redeemXyts(
                 YTs.map((YTInfo: any) => YTInfo.address),
                 { from: userAddress }

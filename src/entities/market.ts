@@ -13,7 +13,7 @@ import {
 } from './transactions';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
 import { forgeIdsInBytes, ONE_DAY, ETHAddress } from '../constants';
-import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield } from '../fetchers/externalYieldRateFetcher';
+import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactions/types';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
 
@@ -280,6 +280,10 @@ export class PendleMarket extends Market {
         case forgeIdsInBytes.JOE_COMPLEX:
         case forgeIdsInBytes.JOE_SIMPLE:
           underlyingYieldRate = await fetchSushiForkYield(yieldBearingAsset, chainId);
+          break;
+
+        case forgeIdsInBytes.XJOE:
+          underlyingYieldRate = await fetchXJOEYield();
           break;
 
         // TODO: add Uniswap support here
@@ -840,6 +844,7 @@ export class PendleMarket extends Market {
         case forgeIdsInBytes.SUSHISWAP_COMPLEX:
         case forgeIdsInBytes.JOE_SIMPLE:
         case forgeIdsInBytes.JOE_COMPLEX:
+        case forgeIdsInBytes.XJOE:
           principalPerYT = calcPrincipalForSLPYT(await pendleForgeContract.callStatic.getExchangeRate(underlyingAsset));
           break
       }
