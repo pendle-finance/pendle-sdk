@@ -15,6 +15,8 @@ import { calcLMRewardApr, calcValuation, DecimalsPrecision } from '../math/marke
 import { AprInfo } from './types';
 import { MasterChef } from './masterChef';
 import { PairTokens, PairUints } from './types';
+import { RedeemProxy } from './redeemProxy';
+import { PairTokenUints } from './multiTokens';
 
 export interface StakingPoolId {
   address: string;
@@ -43,31 +45,18 @@ export type StakedAmount = {
   valuation: CurrencyAmount;
 }
 
-export const populatePoolYields = (LmInfo: LMINFO, interestAmount: string, rewardAmount: string, decimalsRecord: Record<string, number>): PoolYields => {
-  const yields: YieldInfo[] = [
-    {
-      yield: new TokenAmount(
-        new Token(
-          LmInfo.rewardTokenAddresses[0],
-          decimalsRecord[LmInfo.rewardTokenAddresses[0]]
-        ),
-        rewardAmount
-      ),
+const populatePoolYields = (LmInfo: LMINFO, interestAmounts: TokenAmount[], rewardAmounts: TokenAmount[], decimalsRecord: Record<string, number>): PoolYields => {
+  const yields: YieldInfo[] = interestAmounts.map((t: TokenAmount): YieldInfo => {
+    return {
+      yield: t,
+      yieldType: YieldType.INTEREST
+    }
+  }).concat(rewardAmounts.map((t: TokenAmount): YieldInfo => {
+    return {
+      yield: t,
       yieldType: YieldType.REWARDS
     }
-  ];
-  if (LmInfo.interestTokensAddresses.length > 0) {
-    yields.push({
-      yield: new TokenAmount(
-        new Token(
-          LmInfo.interestTokensAddresses[0],
-          decimalsRecord[LmInfo.interestTokensAddresses[0]]
-        ),
-        interestAmount
-      ),
-      yieldType: YieldType.INTEREST
-    })
-  }
+  }))
   return {
     address: LmInfo.address,
     inputToken: new Token(
@@ -84,7 +73,7 @@ export type PoolAccruingRewards = {
   accruingRewards: FutureEpochRewards[];
 };
 
-export const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
+const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
   return {
     address: LmInfo.address,
     inputToken: new Token(
@@ -114,7 +103,7 @@ export type PoolVestedRewards = {
   vestedRewards: FutureEpochRewards[];
 };
 
-export const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
+const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
   return {
     address: LmInfo.address,
     inputToken: new Token(
@@ -223,53 +212,47 @@ export class StakingPool {
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
-      return stakingPoolInfo.contractType == StakingPoolType.LmV1;
+      return StakingPool.isLmV1ByType(stakingPoolInfo.contractType);
     })
     const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
-      return stakingPoolInfo.contractType == StakingPoolType.LmV2;
+      return StakingPool.isLmV2ByType(stakingPoolInfo.contractType);
     })
 
     const fetchClaimableYields = async (
       userAddress: string
     ): Promise<PoolYields[]> => {
-      const calls: Call_MultiCall[] = [];
-      const lm1sInterestsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmInterests(
-        Lm1s.map((LmInfo: any) => LmInfo.address),
-        Lm1s.map((LmInfo: any) => LmInfo.expiry),
+      const promises: Promise<PairTokenUints[]>[] = [];
+      promises.push(RedeemProxy.methods(signer, chainId).callStatic.redeemLmInterests(
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.address),
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
         userAddress
-      )).data!;
-      calls.push({ target: redeemProxyContract.address, callData: lm1sInterestsCallData })
-      const lm1sRewardsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmRewards(
-        Lm1s.map((LmInfo: any) => LmInfo.address),
-        Lm1s.map((LmInfo: any) => LmInfo.expiry),
+      ));
+      promises.push(RedeemProxy.methods(signer, chainId).callStatic.redeemLmRewards(
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.address),
+        Lm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
         userAddress
-      )).data!;
-      calls.push({target: redeemProxyContract.address, callData: lm1sRewardsCallData});
+      ));
+      promises.push(RedeemProxy.methods(signer, chainId).callStatic.redeemLmV2Interests(
+        Lm2s.map((LmInfo: LMINFO) => LmInfo.address),
+        userAddress
+      ));
+      promises.push(RedeemProxy.methods(signer, chainId).callStatic.redeemLmV2Rewards(
+        Lm2s.map((LmInfo: LMINFO) => LmInfo.address),
+        userAddress
+      ));
+      const values: PairTokenUints[][] = (await Promise.all(promises));
+      const userLm1Interests: PairTokenUints[] = values[0];
+      const userLm1Rewards: PairTokenUints[] = values[1];
 
-      const lm2sInterestsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmV2Interests(
-        Lm2s.map((LmInfo: any) => LmInfo.address),
-        userAddress
-      )).data!;
-      calls.push({target: redeemProxyContract.address, callData: lm2sInterestsCallData});
-      const lm2sRewardsCallData: string = (await redeemProxyContract.populateTransaction.redeemLmV2Rewards(
-        Lm2s.map((LmInfo: any) => LmInfo.address),
-        userAddress
-      )).data!;
-      calls.push({target: redeemProxyContract.address, callData: lm2sRewardsCallData});
-
-      const returnedData: Result_MultiCall[] = (await multiCallV2Contract.callStatic.tryBlockAndAggregate(false, calls)).returnData;
-
-      const userLm1Interests: BN[] = formatOutput(returnedData[0].returnData, contracts.PendleRedeemProxy.abi, "redeemLmInterests")[0];
-      const userLm1Rewards: BN[] = formatOutput(returnedData[1].returnData, contracts.PendleRedeemProxy.abi, "redeemLmRewards")[0];
-      const userLm2Interests: BN[] = formatOutput(returnedData[2].returnData, contracts.PendleRedeemProxy.abi, "redeemLmV2Interests")[0];
-      const userLm2Rewards: BN[] = formatOutput(returnedData[3].returnData, contracts.PendleRedeemProxy.abi, "redeemLmV2Rewards")[0];
+      const userLm2Interests: PairTokenUints[] = values[2];
+      const userLm2Rewards: PairTokenUints[] = values[3];
 
       const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
-        return populatePoolYields(Lm1s[i], userLm1Interests[i].toString(), userLm1Rewards[i].toString(), decimalsRecord);
+        return populatePoolYields(Lm1s[i], userLm1Interests[i].toTokenAmounts(chainId), userLm1Rewards[i].toTokenAmounts(chainId), decimalsRecord);
       });
 
       const Lm2InterestsAndRewards = indexRange(0, Lm2s.length).map((i: number) => {
-        return populatePoolYields(Lm2s[i], userLm2Interests[i].toString(), userLm2Rewards[i].toString(), decimalsRecord);
+        return populatePoolYields(Lm2s[i], userLm2Interests[i].toTokenAmounts(chainId), userLm2Rewards[i].toTokenAmounts(chainId), decimalsRecord);
       });
 
       return Lm1InterestsAndRewards.concat(Lm2InterestsAndRewards);
@@ -409,7 +392,7 @@ export class StakingPool {
         ]
         const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.stake(...args);
         return stakingPoolContract.connect(signer).stake(...args, getGasLimit(gasEstimate));
-      } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
+      } else if (this.isLmV2()) {
         const args: any[] = [
           await signer.getAddress(),
           BN.from(amount.rawAmount())
@@ -443,7 +426,7 @@ export class StakingPool {
         ];
         const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.withdraw(...args);
         return stakingPoolContract.connect(signer).withdraw(...args, getGasLimit(gasEstimate));
-      } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
+      } else if (this.isLmV2()) {
         const args: any[] = [
           await signer.getAddress(),
           BN.from(amount.rawAmount())
@@ -475,11 +458,11 @@ export class StakingPool {
     }
 
     const getTotalStaked = async (): Promise<StakedAmount> => {
-      if (this.contractType == StakingPoolType.LmV1 || this.contractType == StakingPoolType.LmV1Multi) {
+      if (this.isLmV1()) {
         const totalStakeLP: BN = (await stakingPoolContract.readExpiryData(expiry)).totalStakeLP;
         const marketLPPrice: BigNumber = await market.methods(signer, chainId).getLPPriceBigNumber();
         return populateStakedAmount(totalStakeLP, marketLPPrice);
-      } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
+      } else if (this.isLmV2()) {
         const totalStakeLP: BN = await stakingPoolContract.totalStake();
         const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, signer, chainId});
         return populateStakedAmount(totalStakeLP, marketLPPrice);
@@ -494,11 +477,11 @@ export class StakingPool {
     }
 
     const balanceOf = async(address: string): Promise<StakedAmount> => {
-      if (this.contractType == StakingPoolType.LmV1 || this.contractType == StakingPoolType.LmV1Multi) {
+      if (this.isLmV1()) {
         const stakedLP: BN = (await stakingPoolContract.readUserSpecificExpiryData(expiry, address)).balances;
         const marketLPPrice: BigNumber = await market.methods(signer, chainId).getLPPriceBigNumber();
         return populateStakedAmount(stakedLP, marketLPPrice);
-      } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
+      } else if (this.isLmV2()) {
         const stakedLP: BN = await stakingPoolContract.balances(address);
         const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, signer, chainId});
         return populateStakedAmount(stakedLP, marketLPPrice);
@@ -540,7 +523,7 @@ export class StakingPool {
     }
 
     const rewardAprs = async(): Promise<AprInfo[]> => {
-      if (this.contractType == StakingPoolType.LmV1 || this.contractType == StakingPoolType.LmV1Multi) {
+      if (this.isLmV1()) {
         const stakedUSDValue: BigNumber = new BigNumber((await getTotalStaked()).valuation.amount);
         const startTime: BN = await stakingPoolContract.startTime();
         const curTime: number = await getCurrentTimestamp(signer.provider);
@@ -563,7 +546,7 @@ export class StakingPool {
           origin: 'Pendle',
           apr: rewardApr.toFixed(DecimalsPrecision)
         }]
-      } else if (this.contractType == StakingPoolType.LmV2 || this.contractType == StakingPoolType.LmV2Multi) {
+      } else if (this.isLmV2()) {
         const stakedUSDValue: BigNumber = new BigNumber((await getTotalStaked()).valuation.amount);
         const startTime: BN = await stakingPoolContract.startTime();
         const curTime: number = await getCurrentTimestamp(signer.provider);
@@ -622,5 +605,21 @@ export class StakingPool {
       balanceOf,
       rewardAprs
     }
+  }
+
+  public isLmV1(): boolean {
+    return StakingPool.isLmV1ByType(this.contractType);
+  }
+
+  public isLmV2(): boolean {
+    return StakingPool.isLmV2ByType(this.contractType);
+  }
+
+  public static isLmV1ByType(contractType: StakingPoolType): boolean {
+    return contractType == StakingPoolType.LmV1 || contractType == StakingPoolType.LmV1Multi;
+  }
+
+  public static isLmV2ByType(contractType: StakingPoolType): boolean {
+    return contractType == StakingPoolType.LmV2 || contractType == StakingPoolType.LmV2Multi;
   }
 }

@@ -5,27 +5,33 @@ export const kovanContracts: NetworkContractAddresses = {
     OTs: [
         {
             address: '0xcabd309d0337b40935064f94fa8d5b79dc484df6',
-            yieldTokenAddress: '0xe12afec5aa12cf614678f9bfeeb98ca9bb95b5b0'
+            yieldTokenAddress: '0xe12afec5aa12cf614678f9bfeeb98ca9bb95b5b0',
+            forgeIdInBytes: forgeIdsInBytes.AAVE
         },
         {
             address: '0x0bd27a73f06f2ec9aea8df6ade306b6a4e0851ff',
             yieldTokenAddress: '0xe12afec5aa12cf614678f9bfeeb98ca9bb95b5b0',
+            forgeIdInBytes: forgeIdsInBytes.AAVE
         },
         {
             address: '0x3d213f7813d6071aa7f29182c89e40db4093b95d',
             yieldTokenAddress: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
+            forgeIdInBytes: forgeIdsInBytes.COMPOUND
         },
         {
             address: '0x6a9f015e02937b5c59dd21d30219743d641f5291',
-            yieldTokenAddress: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad'
+            yieldTokenAddress: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
+            forgeIdInBytes: forgeIdsInBytes.COMPOUND
         },
         {
             address: '0x4217abf12cbfedcdc0e8a30a4f384be58989db51',
-            yieldTokenAddress: '0xcec1967d0ea74e2efe7eda4dfa323e8252e57550'
+            yieldTokenAddress: '0xcec1967d0ea74e2efe7eda4dfa323e8252e57550',
+            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_COMPLEX
         },
         {
             address: '0x994963c5501e7600f48d6d7154f3a10d6a33f4ae',
-            yieldTokenAddress: '0x0db5af4b374e810f6e5a15ccc3d65e28cc4dbec7'
+            yieldTokenAddress: '0x0db5af4b374e810f6e5a15ccc3d65e28cc4dbec7',
+            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_SIMPLE
         }
     ],
     YTs: [

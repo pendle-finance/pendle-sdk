@@ -125,19 +125,6 @@ export const getCurrentEpochId = (currentTime: number | BN, startTime: number | 
   return BN.from(currentTime).sub(startTime).div(epochDuration).add(1).toNumber();
 }
 
-export const getDecimal = async (decimalsRecord: Record<string, number>, address: string, provider?: JsonRpcProvider): Promise<number> => {
-  address = address.toLowerCase();
-  if (decimalsRecord[address] === undefined) {
-    if (provider === undefined) {
-      throw Error(`Decimals for token ${address} not found, no Provider is provided.`);
-    }
-    const tokenContract = new Contract(address, contracts.IERC20.abi, provider!);
-    const d: BN = await tokenContract.decimals();
-    decimalsRecord[address] = d.toNumber();
-  }
-  return decimalsRecord[address];
-}
-
 export const xor = (a: boolean, b: boolean) => a != b;
 
 export const getGasLimit = (estimate: BN) => { return { gasLimit: Math.trunc(estimate.toNumber() * gasBuffer) } }

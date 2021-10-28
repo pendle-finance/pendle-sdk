@@ -51,6 +51,7 @@ export type PENDLEMARKETNFO = {
 export type OTINFO = {
     address: string,
     yieldTokenAddress: string,
+    forgeIdInBytes: string,
     rewardTokenAddresses?: string[],
 }
     

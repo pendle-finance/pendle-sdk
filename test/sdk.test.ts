@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
-jest.setTimeout(30000);
+jest.setTimeout(300000);
 
 const dummyUser = '0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb'; // Mainnet test account
 
@@ -20,7 +20,7 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it.only('claim yields', async() => {
+  it('claim yields', async() => {
     const sdk = new Sdk(signer);
     console.log("estimate")
     const res = await sdk.estimateGasForClaimYields({
@@ -40,7 +40,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(market, null, '  '));
   });
 
-  it.skip('Market.methods.fetchInterests', async () => {
+  it('Market.methods.fetchInterests', async () => {
     const userInterests = await PendleMarket.methods(signer, 1).fetchInterests(
       dummyUser
     );
@@ -66,11 +66,11 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer
     ).fetchClaimableYields(
-      dummyAddress
+      '0x90B3654e6EeB6b062De39008593C5f5a9843830b'
     );
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });

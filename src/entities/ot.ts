@@ -1,13 +1,14 @@
-import { providers, Contract } from "ethers";
+import { providers } from "ethers";
 import { TokenAmount } from "./tokenAmount";
 import { distributeConstantsByNetwork, indexRange, isSameAddress } from "../helpers";
 import { MARKETINFO, NetworkInfo, OTINFO } from "../networks";
 import { Token } from "./token";
-import { contracts } from "../contracts";
-import { zeroAddress } from "../constants";
+import { forgeIdsInBytes } from "../constants";
+import { TrioTokenUints } from "./multiTokens";
+import { RedeemProxy } from "./redeemProxy";
 
 export type OtReward = {
-    reward: TokenAmount
+    reward: TokenAmount[]
     address: string
 }
 
@@ -16,11 +17,13 @@ export const OT_NOT_EXIST: string = "No OT is found at the given address";
 export class Ot extends Token {
     public readonly yieldBearingAddress: string;
     public readonly priceFeedMarketAddress: string | undefined;
+    public readonly forgeIdInBytes: string;
 
-    public constructor(address: string, decimals: number, yieldBearingAddress: string, expiry?: number, priceFeedMarketAddress?: string) {
+    public constructor(address: string, decimals: number, yieldBearingAddress: string, forgeIdInBytes: string, expiry?: number, priceFeedMarketAddress?: string) {
         super(address, decimals, expiry);
         this.yieldBearingAddress = yieldBearingAddress;
         this.priceFeedMarketAddress = priceFeedMarketAddress;
+        this.forgeIdInBytes = forgeIdInBytes
     }
 
     public static find(address: string, chainId?: number): Ot {
@@ -43,6 +46,7 @@ export class Ot extends Token {
             address.toLowerCase(),
             networkInfo.decimalsRecord[address.toLowerCase()],
             otInfo.yieldTokenAddress,
+            otInfo.forgeIdInBytes,
             0, // expiry not used
             priceFeedMarketAddress
         )
@@ -50,35 +54,18 @@ export class Ot extends Token {
 
     public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-        const OTs: OTINFO[] = networkInfo.contractAddresses.OTs;
-        const redeemProxyContract = new Contract(
-            networkInfo.contractAddresses.misc.PendleRedeemProxy,
-            contracts.PendleRedeemProxy.abi,
-            signer.provider
-        );
+        const OTs: OTINFO[] = networkInfo.contractAddresses.OTs.filter((OTInfo: OTINFO) => Ot.hasRewardsByForgeId(OTInfo.forgeIdInBytes));
+
         const fetchRewards = async (userAddress: string): Promise<OtReward[]> => {
 
-            const userRewards = await redeemProxyContract.callStatic.redeemOts(
+            const userRewards: TrioTokenUints[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemOts(
                 OTs.map((OTInfo: OTINFO) => OTInfo.address),
-                { from: userAddress }
+                userAddress
             );
             const formattedResult: OtReward[] = indexRange(0, OTs.length).map((i: number) => {
-                const OTInfo: OTINFO = OTs[i];
-                if (OTInfo.rewardTokenAddresses === undefined) {
-                    return {
-                        address: OTInfo.address,
-                        reward: new TokenAmount(
-                            new Token(zeroAddress, 0),
-                            '0'
-                        )
-                    };
-                }
                 return {
-                    address: OTInfo.address,
-                    reward: new TokenAmount(
-                        new Token(OTInfo.rewardTokenAddresses![0], networkInfo.decimalsRecord[OTInfo.rewardTokenAddresses![0]]),
-                        userRewards[i].amountRewardOne.toString()
-                    )
+                    address: OTs[i].address,
+                    reward: userRewards[i].toTokenAmounts(chainId)
                 }
             })
             return formattedResult;
@@ -87,5 +74,13 @@ export class Ot extends Token {
         return {
             fetchRewards
         }
+    }
+
+    private static hasRewardsByForgeId(forgeId: string) {
+        return !(forgeId == forgeIdsInBytes.SUSHISWAP_SIMPLE || forgeId == forgeIdsInBytes.JOE_SIMPLE)
+    }
+
+    public hasRewards(): boolean {
+        return Ot.hasRewardsByForgeId(this.forgeIdInBytes)
     }
 }

@@ -4,7 +4,7 @@ import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
-import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getDecimal, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH } from '../helpers'
+import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH, indexRange } from '../helpers'
 import { CurrencyAmount, dummyCurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
@@ -18,6 +18,7 @@ import { TRANSACTION } from './transactions/types';
 import { fetchTokenPrice } from '../fetchers/priceFetcher';
 
 import BigNumber from 'bignumber.js';
+import { RedeemProxy } from './redeemProxy';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -192,32 +193,20 @@ export class PendleMarket extends Market {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const markets: PENDLEMARKETNFO[] = networkInfo.contractAddresses.pendleMarkets;
 
-    const redeemProxyContract = new Contract(
-      networkInfo.contractAddresses.misc.PendleRedeemProxy,
-      contracts.PendleRedeemProxy.abi,
-      signer.provider
-    );
-
-    const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
-
     const fetchInterests = async (
       userAddress: string
     ): Promise<YtOrMarketInterest[]> => {
-      const formattedResult: YtOrMarketInterest[] = [];
-      const userInterests = await redeemProxyContract.callStatic.redeemMarkets(
+      const userInterests: TokenAmount[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemMarkets(
         markets.map((marketInfo: any) => marketInfo.address),
-        { from: userAddress }
+        userAddress
       );
-      for (let i = 0; i < markets.length; i++) {
-        const marketInfo = markets[i];
-        formattedResult.push({
-          address: marketInfo.address,
-          interest: new TokenAmount(
-            new Token(marketInfo.rewardTokenAddresses[0], await getDecimal(decimalsRecord, marketInfo.rewardTokenAddresses[0], signer.provider)),
-            userInterests[i].toString()
-          ),
-        });
-      }
+      const formattedResult: YtOrMarketInterest[] = indexRange(0, markets.length).map((i: number) => {
+        return {
+          address: markets[i].address,
+          interest: userInterests[i]
+        }
+      });
+
       return formattedResult;
     };
 
@@ -261,6 +250,7 @@ export class PendleMarket extends Market {
 
     const getUnderlyingYieldRate = async({underlyingAsset, yieldBearingAsset}: {underlyingAsset: string, yieldBearingAsset: string}): Promise<number> => {
 
+      if (chainId == 42) return 0; // return 0 for kovan 
       var underlyingYieldRate: number = 0;
       switch (yieldContract.forgeIdInBytes) {
         case forgeIdsInBytes.AAVE:
