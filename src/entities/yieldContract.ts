@@ -5,7 +5,7 @@ import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
 import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
-import { rmul, rdiv, cmul } from "../math/mathLib";
+import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,

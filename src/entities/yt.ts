@@ -2,9 +2,9 @@ import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { NetworkInfo, PENDLEMARKETNFO, YTINFO } from "../networks";
 import { distributeConstantsByNetwork, isSameAddress, indexRange } from "../helpers";
-import { providers, Contract, utils } from "ethers";
-import { contracts } from "../contracts";
+import { providers, utils } from "ethers";
 import { YieldContract } from "./yieldContract";
+import { RedeemProxy } from "./redeemProxy";
 
 export type YtOrMarketInterest = {
     address: string;
@@ -54,11 +54,6 @@ export class Yt extends Token {
     ): Record<string, any> {
 
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-        const redeemProxyContract = new Contract(
-            networkInfo.contractAddresses.misc.PendleRedeemProxy,
-            contracts.PendleRedeemProxy.abi,
-            signer.provider
-        );
 
         const YTs: YTINFO[] = networkInfo.contractAddresses.YTs;
 
@@ -66,19 +61,16 @@ export class Yt extends Token {
             userAddress: string,
         ): Promise<YtOrMarketInterest[]> => {
 
-            const userInterests = await redeemProxyContract.callStatic.redeemXyts(
+            const userInterests: TokenAmount[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemXyts(
                 YTs.map((YTInfo: any) => YTInfo.address),
-                { from: userAddress }
+                userAddress
             );
             
             const formattedResult: YtOrMarketInterest[] = indexRange(0, YTs.length).map((i: number) => {
                 const YTInfo = YTs[i];
                 return {
                     address: YTInfo.address,
-                    interest: new TokenAmount(
-                        new Token(YTInfo.rewardTokenAddresses[0], networkInfo.decimalsRecord[YTInfo.rewardTokenAddresses[0]]),
-                        userInterests[i].toString()
-                    ),
+                    interest: userInterests[i]
                 }
             })
             return formattedResult;

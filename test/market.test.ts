@@ -7,7 +7,7 @@ import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(300000);
 
-const chainId: number = 43114;
+const chainId: number = 1;
 const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
 function getMainnetTokens() {
@@ -68,7 +68,7 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        market = PendleMarket.find('0x50d3a2991db715e51c55a5ec06488e91522029d2', chainId)
+        market = PendleMarket.find('0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', chainId)
     });
 
     it.only("PendleMarket.readMarketDetails", async () => {

@@ -47,7 +47,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it('YT.methods.fetchInterests', async () => {
+  it.only('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
@@ -66,7 +66,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer
     ).fetchClaimableYields(

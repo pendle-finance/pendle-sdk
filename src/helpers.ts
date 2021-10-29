@@ -1,4 +1,4 @@
-import { BigNumber as BN, Contract, Bytes, utils, providers } from 'ethers';
+import { BigNumber as BN, Bytes, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
 import { contracts } from "./contracts";

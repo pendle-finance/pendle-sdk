@@ -5,7 +5,7 @@ import { PendleMarket } from "./market";
 import { Yt } from "./yt";
 import { contracts } from "../contracts";
 import { distributeConstantsByNetwork, getGasLimit, indexRange, isSameAddress } from "../helpers";
-import { LMINFO, MARKETINFO, NetworkInfo, OTINFO, PENDLEMARKETNFO, YTINFO } from "../networks";
+import { LMINFO, NetworkInfo, OTINFO, PENDLEMARKETNFO, YTINFO } from "../networks";
 import { Ot } from "./ot";
 import { GasInfo, getGasPrice } from "../fetchers/gasPriceFetcher";
 import { TokenAmount } from "./tokenAmount";
@@ -161,7 +161,8 @@ export class RedeemProxy {
                     lmV1: lmV1RedeemRequests,
                     lmV2: lmV2RedeemRequests,
                     tokensDistribution: []
-                }
+                },
+                userAddress
             ]
         }
 
@@ -300,8 +301,8 @@ export class RedeemProxy {
                             const ytInfo: YTINFO = networkInfo.contractAddresses.YTs.find((y: YTINFO) => isSameAddress(y.address, ytAddresses[i]))!;
                             return new TokenAmount(
                                 new Token(
-                                    ytInfo.address,
-                                    networkInfo.decimalsRecord[ytInfo.address]
+                                    ytInfo.rewardTokenAddresses[0],
+                                    networkInfo.decimalsRecord[ytInfo.rewardTokenAddresses[0]]
                                 ),
                                 userInterests[i].toString()
                             )
@@ -314,7 +315,7 @@ export class RedeemProxy {
                             const ytInfo: YTINFO = networkInfo.contractAddresses.YTs.find((y: YTINFO) => isSameAddress(y.address, ytAddresses[i]))!;
                             return new TokenAmount(
                                 new Token(
-                                    ytInfo.address,
+                                    ytInfo.rewardTokenAddresses[0],
                                     networkInfo.decimalsRecord[ytInfo.address]
                                 ),
                                 userInterests[i].toString()

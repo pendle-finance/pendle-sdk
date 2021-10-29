@@ -5,7 +5,7 @@ import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
 import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, getGasLimit, isSameAddress, xor, getABIByForgeId, getGasLimitWithETH, indexRange } from '../helpers'
-import { CurrencyAmount, dummyCurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
+import { CurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
   TransactionFetcher,
@@ -315,10 +315,11 @@ export class PendleMarket extends Market {
       promises.push(getPastLiquidityValue().then((res: CurrencyAmount) => liquidityYesterday = res));
       const swapFee: BN = await pendleDataContract.swapFee();
       const protocolFee: BN = await pendleDataContract.protocolSwapFee();
+      await Promise.all(promises);
+
       const swapFeeApr: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
 
       const { ytPrice, impliedYield }: { ytPrice: number, impliedYield: number } = await getYTPriceAndImpliedYield(marketReserves);
-      await Promise.all(promises);
 
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],

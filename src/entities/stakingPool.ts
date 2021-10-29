@@ -191,12 +191,6 @@ export class StakingPool {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const stakingPools: LMINFO[] = networkInfo.contractAddresses.stakingPools;
 
-    const redeemProxyContract = new Contract(
-      networkInfo.contractAddresses.misc.PendleRedeemProxy,
-      contracts.PendleRedeemProxy.abi,
-      signer.provider
-    );
-
     const liquidityRewardsProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleLiquidityRewardsProxy,
       contracts.PendleLiquidityRewardsProxy.abi,

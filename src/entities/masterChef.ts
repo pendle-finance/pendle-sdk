@@ -67,8 +67,6 @@ export class MasterChef {
                     treasuryPercent = values[4];
                     investorPercent = values[5];
                 });
-                const underlyingLpContract: Contract = new Contract(poolInfo!.lpToken, contracts.IERC20.abi);
-                const lpBalance: BN = await underlyingLpContract.balanceOf(masterChefV2Address);
                 const joeTokenAddress: string = (await masterChefV2.joe()).toLowerCase();
                 const joeRewardForThisPool: BN = ONE_DAY
                     .mul(totalJoePerSec!)

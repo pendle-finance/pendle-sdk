@@ -9,13 +9,13 @@ import { Token } from "./token";
 import { Contract } from "ethers";
 import { StakingPool } from "./stakingPool";
 import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
-import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, getGasLimit, getGasLimitWithETH, isSameAddress } from "../helpers";
+import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, getGasLimitWithETH, isSameAddress } from "../helpers";
 import { contracts } from "../contracts";
-import { PendleMarket, Market, OtherMarketDetails, MarketDetails, AddDualLiquidityDetails } from "./market";
+import { PendleMarket, Market, OtherMarketDetails, AddDualLiquidityDetails } from "./market";
 import { calcOtherTokenAmount, calcShareOfPool, calcSlippedDownAmount, calcSlippedUpAmount, DecimalsPrecision } from "../math/marketMath";
 import BigNumber from "bignumber.js";
 import { fetchValuation } from "../fetchers/priceFetcher";
-import { CurrencyAmount, dummyCurrencyAmount, ZeroCurrencyAmount } from "./currencyAmount";
+import { CurrencyAmount, ZeroCurrencyAmount } from "./currencyAmount";
 import { MasterChef } from "./masterChef";
 
 export enum Action {
