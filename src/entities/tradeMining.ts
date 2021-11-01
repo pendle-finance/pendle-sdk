@@ -42,7 +42,9 @@ export class TradeMining {
     signer: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
-    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(
+      chainId || 43114
+    );
     const pendleSubgraphSdk = new PendleTradeMiningQuerySet(chainId || 43114);
 
     const getTopTraders = async ({
@@ -93,22 +95,23 @@ export class TradeMining {
       user = user.tradeMiningUsers[0];
 
       let rank = 0;
-      for (const trader of topTraders) {
-        rank++;
+      const trader = topTraders.find((trader, index) => {
+        rank = index + 1;
+        return trader.wallet === user.userAddress;
+      });
 
-        if (trader.wallet === user.userAddress) {
-          return {
-            rank,
-            tradedVolume: trader.tradedVolume,
-          };
-        }
-      }
+      if (!trader)
+        return {
+          rank: -1,
+          tradedVolume: {
+            currency: 'USD',
+            amount: parseFloat(user.volumeUSD).toFixed(2),
+          },
+        };
+
       return {
-        rank: -1,
-        tradedVolume: {
-          currency: 'USD',
-          amount: parseFloat(user.volumeUSD).toFixed(2),
-        },
+        rank,
+        tradedVolume: trader.tradedVolume,
       };
     };
 
