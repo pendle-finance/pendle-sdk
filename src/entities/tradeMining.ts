@@ -1,7 +1,7 @@
-import { providers, Contract, BigNumber as BN } from 'ethers';
+import { providers } from 'ethers';
 import { PendleTradeMiningQuerySet } from '@pendle/subgraph-sdk';
 import { NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, getCurrentTimestamp } from '../helpers';
+import { distributeConstantsByNetwork } from '../helpers';
 import { TokenAmount } from './tokenAmount';
 import { Token } from './token';
 
@@ -39,7 +39,7 @@ type GetUserRankResponse = {
 
 export class TradeMining {
   public methods(
-    signer: providers.JsonRpcSigner,
+    _: providers.JsonRpcSigner,
     chainId?: number
   ): Record<string, any> {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(
@@ -138,7 +138,7 @@ export class TradeMining {
     const getPhaseRewards = (query: DefaultTradeMiningQUery): TokenAmount => {
       const pendleToken = new Token(
         networkInfo.contractAddresses.tokens.PENDLE,
-        18
+        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.PENDLE]
       );
       const phaseRewards = new TokenAmount(
         pendleToken,
