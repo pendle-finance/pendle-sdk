@@ -246,8 +246,8 @@ export class RedeemProxy {
                             const marketInfo: PENDLEMARKETNFO = networkInfo.contractAddresses.pendleMarkets.find((m: PENDLEMARKETNFO) => isSameAddress(m.address, marketsAddresses[i]))!;
                             return new TokenAmount(
                                 new Token(
-                                    marketInfo.address,
-                                    networkInfo.decimalsRecord[marketInfo.address]
+                                    marketInfo.rewardTokenAddresses[0],
+                                    networkInfo.decimalsRecord[marketInfo.rewardTokenAddresses[0]]
                                 ),
                                 userInterests[i].toString()
                             )
@@ -260,8 +260,8 @@ export class RedeemProxy {
                             const marketInfo: PENDLEMARKETNFO = networkInfo.contractAddresses.pendleMarkets.find((m: PENDLEMARKETNFO) => isSameAddress(m.address, marketsAddresses[i]))!;
                             return new TokenAmount(
                                 new Token(
-                                    marketInfo.address,
-                                    networkInfo.decimalsRecord[marketInfo.address]
+                                    marketInfo.rewardTokenAddresses[0],
+                                    networkInfo.decimalsRecord[marketInfo.rewardTokenAddresses[0]]
                                 ),
                                 userInterests[i].toString()
                             )

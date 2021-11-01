@@ -40,14 +40,14 @@ describe('Sdk', () => {
     console.log(JSON.stringify(market, null, '  '));
   });
 
-  it('Market.methods.fetchInterests', async () => {
+  it.only('Market.methods.fetchInterests', async () => {
     const userInterests = await PendleMarket.methods(signer, 1).fetchInterests(
       dummyUser
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('YT.methods.fetchInterests', async () => {
+  it('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, 1).fetchInterests(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );

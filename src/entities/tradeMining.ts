@@ -135,7 +135,7 @@ export class TradeMining {
       };
     };
 
-    const getPhaseRewards = (query: DefaultTradeMiningQUery): TokenAmount => {
+    const getPhaseRewards = (_: DefaultTradeMiningQUery): TokenAmount => {
       const pendleToken = new Token(
         networkInfo.contractAddresses.tokens.PENDLE,
         networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.PENDLE]
