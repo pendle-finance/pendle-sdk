@@ -14,6 +14,7 @@ const PendleSLPLiquidityMining = require('@pendle/core/build/artifacts/contracts
 const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleRedeemProxyETH.sol/PendleRedeemProxyETH.json');
 const PendleRedeemProxyMulti = require('../abis/PendleRedeemProxyMulti.json');
 const PendleLiquidityRewardsProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleLiquidityRewardsProxy.sol/PendleLiquidityRewardsProxy.json');
+const PendleLiquidityRewardsReaderMulti = require('../abis/PendleLiquidityRewardsReaderMulti.json');
 const PendleSingleSidedStaking = require('@pendle/single-staking/build/artifacts/contracts/SingleStaking.sol/SingleStaking.json');
 const PendleSingleStakingManager = require('@pendle/single-staking/build/artifacts/contracts/SingleStakingManager.sol/SingleStakingManager.json');
 const PendleWrapper = require('@pendle/core/build/artifacts/contracts/proxies/PendleWrapper.sol/PendleWrapper.json');
@@ -39,6 +40,7 @@ export const contracts = {
   PendleRedeemProxy,
   PendleRedeemProxyMulti,
   PendleLiquidityRewardsProxy,
+  PendleLiquidityRewardsReaderMulti,
   PendleSushiswapComplexForge,
   PendleSushiswapSimpleForge,
   PendleAaveV2Forge,

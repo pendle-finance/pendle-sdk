@@ -44,6 +44,7 @@ export class RedeemProxy {
         var proxyVersion: ProxyVersion;
         var redeemProxyContract: Contract;
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+        
         if (chainId === undefined || chainId == 1 || chainId == 42) {
             proxyVersion = ProxyVersion.OldSingle;
             redeemProxyContract = new Contract(networkInfo.contractAddresses.misc.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, signer.provider);

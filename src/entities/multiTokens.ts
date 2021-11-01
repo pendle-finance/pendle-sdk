@@ -112,6 +112,8 @@ export class PairTokenUints {
         this.uints = uints;
     }
 
+    public static EMPTY = PairTokenUints.fromOne(zeroAddress, ZERO);
+
     public static fromOne(tokenA: string, uintA: BN): PairTokenUints {
         if (tokenA === undefined) tokenA = zeroAddress;
         return new PairTokenUints(
