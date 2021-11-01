@@ -1,4 +1,4 @@
-import { OneClickWrapper, Token, EXP_2022, EXP_2021, YieldContract, forgeIdsInBytes, Action, TokenAmount } from "../src";
+import { OneClickWrapper, Token, EXP_2022, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails } from "../src";
 import { NetworkInfo } from '../src/networks';
 
 import { ethers, BigNumber as BN, utils } from 'ethers';
@@ -89,8 +89,17 @@ describe("One click wrapper", () => {
     console.log(JSON.stringify(res, null, '  '));
   })
 
-  it.only('apr', async() => {
+  it('apr', async() => {
     const res = await wrapper.methods(signer, chainId).apr(Action.stakeOT);
+    console.log(JSON.stringify(res, null, '  '));
+  })
+
+  it.only('send', async() => {
+    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+      Tokens.WETH,
+      BN.from(10).pow(20).toString()
+    ), 0.01)
+    const res = await wrapper.methods(signer, chainId).send(Action.stakeOTYT, sim_res.transactions, 0.01);
     console.log(JSON.stringify(res, null, '  '));
   })
 })

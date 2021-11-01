@@ -550,6 +550,7 @@ export class OneClickWrapper {
                 const currentTime: BN = BN.from(await getCurrentTimestamp(signer.provider));
                 const deadline: BN = currentTime.add(ONE_MINUTE.mul(60).mul(3));
                 dataAddLiqUniFork.deadline = deadline.toNumber();
+                dataTknz.uniFork = dataAddLiqUniFork;
 
                 var dataAddLiqOT: DataAddLiqOT = {} as DataAddLiqOT, dataAddLiqYT: DataAddLiqYT = {} as DataAddLiqYT;
                 if (action == Action.stakeOT || action == Action.stakeOTYT) {
