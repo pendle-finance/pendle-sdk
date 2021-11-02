@@ -92,8 +92,7 @@ export async function fetchOtPrice(ot: Ot, signer: providers.JsonRpcSigner, chai
 
 export async function fetchYtPrice(yt: Yt, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
   const market: PendleMarket = PendleMarket.find(yt.priceFeedMarketAddress, chainId);
-  const marketdetails: MarketDetails = await market.methods(signer, chainId).readMarketDetails();
-  return new BigNumber(marketdetails.otherDetails.YTPrice.amount);
+  return await market.methods(signer, chainId).getYTPrice();
 }
 
 export async function fetchCTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number|undefined): Promise<BigNumber> {

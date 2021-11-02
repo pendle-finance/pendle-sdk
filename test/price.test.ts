@@ -1,24 +1,27 @@
 import { fetchTokenPrice } from "../src/fetchers/priceFetcher";
 import { ethers, Contract } from 'ethers';
 import { fetchAaveYield, fetchCompoundYield } from "../src/fetchers/externalYieldRateFetcher";
-jest.setTimeout(30000);
+const chainId: number = 43114;
+
+jest.setTimeout(300000);
 
 describe("price fetcher", () => {
     let provider: ethers.providers.JsonRpcProvider;
     let signer: any;
     beforeAll(async () => {
-        const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
-    
+        const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
+            : chainId == 42 ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
+                : `https://api.avax.network/ext/bc/C/rpc`;
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
       });
-    it('Pendle', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0x37922c69b08babcceae735a31235c81f1d1e8e43", chainId: 1});
+    it.only('Pendle', async() => {
+        const res = await fetchTokenPrice({signer: signer, address: "0x1e48d26642858c06eccde4a16d74c1cf9edefa26", chainId: chainId});
         console.log(res.toString());
     })
 
-    it.only('external rate', async() => {
+    it('external rate', async() => {
         const res = await fetchAaveYield('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
         console.log(res);
     })
