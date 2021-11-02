@@ -310,7 +310,7 @@ export class RedeemProxy {
                     }
 
                     case ProxyVersion.Multi: {
-                        const userInterests: BN[] = await redeemProxyContract.callStatic.redeemXyts(ytAddresses, userAddress);
+                        const userInterests: BN[] = await redeemProxyContract.callStatic.redeemYts(ytAddresses, userAddress);
                         return indexRange(0, ytAddresses.length).map((i: number) => {
                             const ytInfo: YTINFO = networkInfo.contractAddresses.YTs.find((y: YTINFO) => isSameAddress(y.address, ytAddresses[i]))!;
                             return new TokenAmount(
