@@ -248,35 +248,39 @@ export class PendleMarket extends Market {
       return this.marketFactoryId;
     }
 
-    const getUnderlyingYieldRate = async({underlyingAsset, yieldBearingAsset}: {underlyingAsset: string, yieldBearingAsset: string}): Promise<number> => {
+    const getUnderlyingYieldRate = async ({ underlyingAsset, yieldBearingAsset }: { underlyingAsset: string, yieldBearingAsset: string }): Promise<number> => {
 
       if (chainId == 42) return 0; // return 0 for kovan 
       var underlyingYieldRate: number = 0;
-      switch (yieldContract.forgeIdInBytes) {
-        case forgeIdsInBytes.AAVE:
-          underlyingYieldRate = await fetchAaveYield(yieldContract.underlyingAsset.address);
-          break;
+      try {
+        switch (yieldContract.forgeIdInBytes) {
+          case forgeIdsInBytes.AAVE:
+            underlyingYieldRate = await fetchAaveYield(yieldContract.underlyingAsset.address);
+            break;
 
-        case forgeIdsInBytes.COMPOUND:
-          underlyingYieldRate = await fetchCompoundYield(yieldBearingAsset);
-          break;
-        
-        case forgeIdsInBytes.BENQI:
-          underlyingYieldRate = await fetchBenqiYield(underlyingAsset);
-          break;
+          case forgeIdsInBytes.COMPOUND:
+            underlyingYieldRate = await fetchCompoundYield(yieldBearingAsset);
+            break;
 
-        case forgeIdsInBytes.SUSHISWAP_COMPLEX:
-        case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-        case forgeIdsInBytes.JOE_COMPLEX:
-        case forgeIdsInBytes.JOE_SIMPLE:
-          underlyingYieldRate = await fetchSushiForkYield(yieldBearingAsset, chainId);
-          break;
+          case forgeIdsInBytes.BENQI:
+            underlyingYieldRate = await fetchBenqiYield(underlyingAsset);
+            break;
 
-        case forgeIdsInBytes.XJOE:
-          underlyingYieldRate = await fetchXJOEYield();
-          break;
+          case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+          case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+          case forgeIdsInBytes.JOE_COMPLEX:
+          case forgeIdsInBytes.JOE_SIMPLE:
+            underlyingYieldRate = await fetchSushiForkYield(yieldBearingAsset, chainId);
+            break;
 
-        // TODO: add Uniswap support here
+          case forgeIdsInBytes.XJOE:
+            underlyingYieldRate = await fetchXJOEYield();
+            break;
+
+          // TODO: add Uniswap support here
+        }
+      } catch (err) {
+        console.error(err);
       }
       return underlyingYieldRate;
     }
@@ -301,7 +305,7 @@ export class PendleMarket extends Market {
       const yieldBearingAsset: string = Yt.find(this.tokens[0].address, chainId).yieldBearingAddress;
       var promises: Promise<any>[] = [];
       var underlyingYieldRate: number = 0;
-      promises.push(getUnderlyingYieldRate({underlyingAsset, yieldBearingAsset}).then((res: number) => underlyingYieldRate = res));
+      promises.push(getUnderlyingYieldRate({ underlyingAsset, yieldBearingAsset }).then((res: number) => underlyingYieldRate = res));
 
       const currentTime: number = await getCurrentTimestamp(signer.provider);
 
@@ -309,7 +313,7 @@ export class PendleMarket extends Market {
       promises.push(getVolume(currentTime - ONE_DAY.toNumber(), currentTime).then((res: CurrencyAmount) => volumeToday = res));
       promises.push(getVolume(currentTime - ONE_DAY.mul(2).toNumber(), currentTime - ONE_DAY.toNumber()).then((res: CurrencyAmount) => volumeYesterday = res));
 
-      var liquidityToday: CurrencyAmount = ZeroCurrencyAmount; 
+      var liquidityToday: CurrencyAmount = ZeroCurrencyAmount;
       promises.push(getLiquidityValue(marketReserves).then((res: CurrencyAmount) => liquidityToday = res));
       var liquidityYesterday: CurrencyAmount = ZeroCurrencyAmount;
       promises.push(getPastLiquidityValue().then((res: CurrencyAmount) => liquidityYesterday = res));
@@ -826,7 +830,7 @@ export class PendleMarket extends Market {
         case forgeIdsInBytes.COMPOUND:
           principalPerYT = await pendleForgeContract.initialRate(underlyingAsset);
           break;
-        
+
         case forgeIdsInBytes.BENQI:
           principalPerYT = BN.from(1).pow(networkInfo.decimalsRecord[underlyingAsset]);
           break;
@@ -982,7 +986,7 @@ export class SushiMarket extends Market {
         token0Reserve = token1Reserve;
         token1Reserve = t;
       }
-      
+
       const tokenAmount0: TokenAmount = new TokenAmount(
         this.tokens[0],
         token0Reserve.toString()
