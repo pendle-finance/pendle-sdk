@@ -50,6 +50,7 @@ export class RedeemProxy {
         var proxyVersion: ProxyVersion;
         var redeemProxyContract: Contract;
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+        
         if (chainId === undefined || chainId == 1 || chainId == 42) {
             proxyVersion = ProxyVersion.OldSingle;
             redeemProxyContract = new Contract(networkInfo.contractAddresses.misc.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, signer.provider);
@@ -367,7 +368,7 @@ export class RedeemProxy {
                         const redeemRequestsWithValidExpiries: wrappedRequest[] = redeemRequests.filter((w: wrappedRequest) => !w.isInvalidExpiry);
                         const userInterestsWithValidExpiries: PairTokenUints[] = (await redeemProxyContract.callStatic.redeemLmV1(
                             redeemRequestsWithValidExpiries.map((w: wrappedRequest): LmRedeemRequest => w.request), userAddress)
-                        ).map((res: LmRedeemResult) => res.interests);
+                        ).map((res: LmRedeemResult) => PairTokenUints.fromContractPairTokenUints(res.interests));
                         indexRange(0, userInterestsWithValidExpiries.length).forEach((i: number) => {
                             userInterests[redeemRequestsWithValidExpiries[i].index] = userInterestsWithValidExpiries[i]
                         })
@@ -413,7 +414,7 @@ export class RedeemProxy {
                         const redeemRequestsWithValidExpiries: wrappedRequest[] = redeemRequests.filter((w: wrappedRequest) => !w.isInvalidExpiry);
                         const userRewardsWithValidExpiries: PairTokenUints[] = (await redeemProxyContract.callStatic.redeemLmV1(
                             redeemRequestsWithValidExpiries.map((w: wrappedRequest) => w.request), userAddress))
-                            .map((res: LmRedeemResult) => res.rewards);
+                            .map((res: LmRedeemResult) => PairTokenUints.fromContractPairTokenUints(res.rewards));
                         indexRange(0, userRewardsWithValidExpiries.length).forEach((i: number) => {
                             userRewards[redeemRequestsWithValidExpiries[i].index] = userRewardsWithValidExpiries[i]
                         })

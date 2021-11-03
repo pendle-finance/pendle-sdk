@@ -73,7 +73,7 @@ export type PoolAccruingRewards = {
   accruingRewards: FutureEpochRewards[];
 };
 
-const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
+const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeRewards: TokenAmount[], currentEpochId: number, vestingEpoches: number, decimalsRecord: Record<string, number>): PoolAccruingRewards => {
   return {
     address: LmInfo.address,
     inputToken: new Token(
@@ -83,15 +83,10 @@ const populatePoolAccruingRewards = (LmInfo: LMINFO, tentativeReward: BN, curren
     accruingRewards: indexRange(0, vestingEpoches).map((i: number): FutureEpochRewards => {
       return {
         epochId: i + currentEpochId,
-        rewards: [
-          new TokenAmount(
-            new Token(
-              LmInfo.rewardTokenAddresses[0],
-              decimalsRecord[LmInfo.rewardTokenAddresses[0]],
-            ),
-            tentativeReward.div(vestingEpoches).toString()
-          )
-        ]
+        rewards: tentativeRewards.map((t: TokenAmount) => new TokenAmount(
+          t.token,
+          BN.from(t.rawAmount()).div(vestingEpoches).toString()
+        ))
       }
     })
   }
@@ -103,7 +98,7 @@ export type PoolVestedRewards = {
   vestedRewards: FutureEpochRewards[];
 };
 
-const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
+const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: TokenAmount[][], currentEpochId: number, decimalsRecord: Record<string, number>): PoolVestedRewards => {
   return {
     address: LmInfo.address,
     inputToken: new Token(
@@ -113,15 +108,7 @@ const populatePoolVestedRewards = (LmInfo: LMINFO, vestedRewards: BN[], currentE
     vestedRewards: indexRange(0, vestedRewards.length).map((i: number): FutureEpochRewards => {
       return {
         epochId: i + currentEpochId,
-        rewards: [
-          new TokenAmount(
-            new Token(
-              LmInfo.rewardTokenAddresses[0],
-              decimalsRecord[LmInfo.rewardTokenAddresses[0]],
-            ),
-            vestedRewards[i].toString()
-          )
-        ]
+        rewards: vestedRewards[i]
       }
     })
   }
@@ -193,7 +180,7 @@ export class StakingPool {
 
     const liquidityRewardsProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleLiquidityRewardsProxy,
-      contracts.PendleLiquidityRewardsProxy.abi,
+      contracts.PendleLiquidityRewardsReaderMulti.abi,
       signer.provider
     )
 
@@ -259,7 +246,7 @@ export class StakingPool {
       const Lm1AccruingRewardsCalls: Call_MultiCall[] = await Promise.all(Lm1s.map(async function (LmInfo: LMINFO) {
         return {
           target: liquidityRewardsProxyContract.address,
-          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateAccruing(LmInfo.address, LmInfo.expiry, userAddress)).data!
+          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateAccruingV1(LmInfo.address, LmInfo.expiry, userAddress)).data!
         }
       }));
       const Lm2AccruingRewardsCalls: Call_MultiCall[] = await Promise.all(Lm2s.map(async function (LmInfo: LMINFO) {
@@ -278,19 +265,23 @@ export class StakingPool {
         if (rightInd == calls.length) break;
       }
 
-      const userLm1AccruingRewards: BN[] = indexRange(0, Lm1s.length).map((i: number) => {
+      const userLm1AccruingRewards: PairTokenUints[] = indexRange(0, Lm1s.length).map((i: number): PairTokenUints => {
         if (returnedData[i].success) {
-          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateAccruing")[4];
+          return PairTokenUints.fromContractPairTokenUints(
+            (formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsReaderMulti.abi, "redeemAndCalculateAccruingV1")).userTentativeReward
+          );
         } else {
-          return ZERO;
+          return PairTokenUints.EMPTY;
         }
       })
 
-      const userLm2AccruingRewards: BN[] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number) => {
+      const userLm2AccruingRewards: PairTokenUints[] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number): PairTokenUints => {
         if (returnedData[i].success) {
-          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateAccruingV2")[4];
+          return PairTokenUints.fromContractPairTokenUints(
+            (formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsReaderMulti.abi, "redeemAndCalculateAccruingV2")).userTentativeReward
+          );
         } else {
-          return ZERO;
+          return PairTokenUints.EMPTY;
         }
       })
 
@@ -298,10 +289,10 @@ export class StakingPool {
       const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
 
       const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
-        return populatePoolAccruingRewards(Lm1s[i], userLm1AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
+        return populatePoolAccruingRewards(Lm1s[i], userLm1AccruingRewards[i].toTokenAmounts(chainId), currentEpochId, VestingEpoches, decimalsRecord);
       });
       const userLm2AccruingRewardsFormatted = indexRange(0, Lm2s.length).map((i: number) => {
-        return populatePoolAccruingRewards(Lm2s[i], userLm2AccruingRewards[i], currentEpochId, VestingEpoches, decimalsRecord);
+        return populatePoolAccruingRewards(Lm2s[i], userLm2AccruingRewards[i].toTokenAmounts(chainId), currentEpochId, VestingEpoches, decimalsRecord);
       });
       return userLm1AccruingRewardsFormatted.concat(userLm2AccruingRewardsFormatted);
     };
@@ -312,7 +303,7 @@ export class StakingPool {
       const Lm1VestedRewardsCalls: Call_MultiCall[] = await Promise.all(Lm1s.map(async function (LmInfo: LMINFO) {
         return {
           target: liquidityRewardsProxyContract.address,
-          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateVested(LmInfo.address, [LmInfo.expiry], userAddress)).data!
+          callData: (await liquidityRewardsProxyContract.populateTransaction.redeemAndCalculateVestedV1(LmInfo.address, [LmInfo.expiry], userAddress)).data!
         }
       }));
       const Lm2VestedRewardsCalls: Call_MultiCall[] = await Promise.all(Lm2s.map(async function (LmInfo: LMINFO) {
@@ -331,18 +322,18 @@ export class StakingPool {
         if (rightInd == calls.length) break;
       }
 
-      const userLm1VestedRewards: BN[][] = indexRange(0, Lm1s.length).map((i: number) => {
+      const userLm1VestedRewards: PairTokenUints[][] = indexRange(0, Lm1s.length).map((i: number): PairTokenUints[] => {
         if (returnedData[i].success) {
-          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVested")[1];
+          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVested")[1].map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
         } else {
           return Array(VestingEpoches - 1).fill(ZERO);
         }
       })
-      const userLm2VestedRewards: BN[][] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number) => {
+      const userLm2VestedRewards: PairTokenUints[][] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number): PairTokenUints[] => {
         if (returnedData[i].success) {
-          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVestedV2")[1];
+          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVestedV2")[1].map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
         } else {
-          return Array(VestingEpoches - 1).fill(ZERO);
+          return Array(VestingEpoches - 1).fill(PairTokenUints.EMPTY);
         }
       })
 
@@ -350,10 +341,10 @@ export class StakingPool {
       const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
 
       const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
-        return populatePoolVestedRewards(Lm1s[i], userLm1VestedRewards[i], currentEpochId, decimalsRecord);
+        return populatePoolVestedRewards(Lm1s[i], userLm1VestedRewards[i].map((t: PairTokenUints) => t.toTokenAmounts(chainId)), currentEpochId, decimalsRecord);
       });
       const userLm2VestedRewardsFormatted = indexRange(0, Lm2s.length).map((i: number) => {
-        return populatePoolVestedRewards(Lm2s[i], userLm2VestedRewards[i], currentEpochId, decimalsRecord);
+        return populatePoolVestedRewards(Lm2s[i], userLm2VestedRewards[i].map((t: PairTokenUints) => t.toTokenAmounts(chainId)), currentEpochId, decimalsRecord);
       });
       return userLm1VestedRewardsFormatted.concat(userLm2VestedRewardsFormatted);
     };
