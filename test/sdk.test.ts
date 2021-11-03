@@ -1,8 +1,11 @@
-import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHToken, Token } from '../src';
+import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHToken, Token, contracts } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers } from 'ethers';
+import { Contract, ethers, providers } from 'ethers';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
+
+var chainId = 43114;
+
 dotenv.config();
 jest.setTimeout(300000);
 
@@ -13,15 +16,15 @@ describe('Sdk', () => {
   let signer: any;
 
   beforeAll(async () => {
-    const providerUrl = `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`;
-
+    const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://api.avax.network/ext/bc/C/rpc`;
+    
     // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
   });
 
   it('claim yields', async() => {
-    const sdk = new Sdk(signer);
+    const sdk = new Sdk(signer, chainId);
     console.log("estimate")
     const res = await sdk.estimateGasForClaimYields({
       yts: [],
@@ -40,7 +43,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(market, null, '  '));
   });
 
-  it.only('Market.methods.fetchInterests', async () => {
+  it('Market.methods.fetchInterests', async () => {
     const userInterests = await PendleMarket.methods(signer, 1).fetchInterests(
       dummyUser
     );
@@ -48,14 +51,14 @@ describe('Sdk', () => {
   });
 
   it('YT.methods.fetchInterests', async () => {
-    const userInterests = await Yt.methods(signer, 1).fetchInterests(
+    const userInterests = await Yt.methods(signer, chainId).fetchInterests(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
   it('OT.methods.fetchRewards', async() => {
-    const userRewards = await Ot.methods(signer, 1).fetchRewards(
+    const userRewards = await Ot.methods(signer, chainId).fetchRewards(
       '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
     );
     console.log(JSON.stringify(userRewards, null, '  '));
@@ -66,16 +69,19 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+    console.log(provider);
     const interestsAndRewards = await StakingPool.methods(
-      signer
+      signer,
+      chainId
     ).fetchClaimableYields(
-      '0x90B3654e6EeB6b062De39008593C5f5a9843830b'
+      dummyAddress
     );
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
 
   it('StakingPool.methods.fetchAccruingRewards', async () => {
+    console.log(signer)
     const accruingRewards = await StakingPool.methods(
       signer
     ).fetchAccruingRewards(

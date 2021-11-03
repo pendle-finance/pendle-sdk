@@ -8,7 +8,7 @@ import { distributeConstantsByNetwork } from "../src/helpers";
 dotenv.config();
 jest.setTimeout(300000);
 
-const chainId: number = 1;
+const chainId: number = 43114;
 const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
 
@@ -67,14 +67,17 @@ describe("One click wrapper", () => {
   let wrapper: OneClickWrapper;
 
   beforeAll(async () => {
-    const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`;
+    const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://api.avax.network/ext/bc/C/rpc`;
 
     // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.SUSHISWAP_SIMPLE),
-      Tokens.PENDLEETHSLPToken,
+      utils.parseBytes32String(forgeIdsInBytes.JOE_COMPLEX),
+      new Token(
+        '0xa389f9430876455c36478deea9769b7ca4e3ddb1',
+        18
+      ),
       EXP_2022.toNumber()
     );
     wrapper = new OneClickWrapper(yieldContract)
@@ -89,12 +92,12 @@ describe("One click wrapper", () => {
     console.log(JSON.stringify(res, null, '  '));
   })
 
-  it('apr', async() => {
+  it.only('apr', async() => {
     const res = await wrapper.methods(signer, chainId).apr(Action.stakeOT);
     console.log(JSON.stringify(res, null, '  '));
   })
 
-  it.only('send', async() => {
+  it('send', async() => {
     const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
       Tokens.WETH,
       BN.from(10).pow(20).toString()

@@ -37,10 +37,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         {
             address: '0xe2815b8c82c8ed3f5d33c1ba74b4d3536cb467d1',
             yieldTokenAddress: '0xd82b9b055f79d1a244005406988f85ed970797ed',
-            rewardTokenAddresses: [
-                '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
-                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
-            ],
+            rewardTokenAddresses: [],
             forgeIdInBytes: forgeIdsInBytes.JOE_SIMPLE
         },
         {
@@ -268,7 +265,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         }
     ],
     misc: {
-        PendleRedeemProxy: '0x92e5d331642e4e9582392977641a9527a57b3ade',
+        PendleRedeemProxy: '0x4e3df0e67c15380df6ee109af3555f33101276d7',
         PendleLiquidityRewardsProxy: '',
         PendleRouter: '0xd313701e2835ab8fd758e9aa151c8c4200e96658',
         PendleData: '0x010f240e9a5084267d549f1a7edf2a85911250c7',

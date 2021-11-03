@@ -115,7 +115,7 @@ export class Market {
     } catch (error) {
       const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
       const marketInfo: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(address, m.address));
-      if (marketInfo !== undefined && marketInfo.platform == MarketProtocols.Sushiswap) {
+      if (marketInfo !== undefined && (marketInfo.platform == MarketProtocols.Sushiswap || marketInfo.platform == MarketProtocols.TraderJoe)) {
         return new SushiMarket(
           address,
           marketInfo.pair.map((ad: string) => new Token(
