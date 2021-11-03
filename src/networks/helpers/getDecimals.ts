@@ -11,7 +11,7 @@ const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${proce
 // const providerUrl = `http://127.0.0.1:8545`;
 const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-async function getDecimals(contractAddresses: NetworkContractAddresses) {
+export async function getDecimals(contractAddresses: NetworkContractAddresses = avalancheContracts) {
     const decimals: Record<string, number> = {}
     decimals[ETHAddress.toLowerCase()] = 18;
 
