@@ -105,10 +105,10 @@ export function getABIByStakingPoolType(type: StakingPoolType): any {
       return contracts.PendleLiquidityMiningV2Base;
 
     case StakingPoolType.LmV1Multi:
-      return contracts.PendleLiquidityMiningBase; // To-do
+      return contracts.PendleGenericLiquidityMiningMulti;
 
     case StakingPoolType.LmV2Multi:
-      return contracts.PendleLiquidityMiningV2Base; // To-do
+      return contracts.PendleLiquidityMiningBaseV2Multi;
 
     case StakingPoolType.PendleSingleSided:
       return contracts.PendleSingleSidedStaking;

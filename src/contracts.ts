@@ -11,6 +11,7 @@ const IERC20 = require('@pendle/core/build/artifacts/contracts/interfaces/ICToke
 const PendleLiquidityMiningBase = require('@pendle/core/build/artifacts/contracts/core/abstract/PendleLiquidityMiningBase.sol/PendleLiquidityMiningBase.json');
 const PendleLiquidityMiningV2Base = require('@pendle/core/build/artifacts/contracts/core/abstractV2/PendleLiquidityMiningBaseV2.sol/PendleLiquidityMiningBaseV2.json');
 const PendleGenericLiquidityMiningMulti = require('../abis/PendleGenericLiquidityMiningMulti.json');
+const PendleLiquidityMiningBaseV2Multi = require('../abis/PendleLiquidityMiningBaseV2Multi.json');
 const PendleSLPLiquidityMining = require('@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSLPLiquidityMining.sol/PendleSLPLiquidityMining.json');
 const PendleRedeemProxy = require('@pendle/core/build/artifacts/contracts/misc/PendleRedeemProxyETH.sol/PendleRedeemProxyETH.json');
 const PendleRedeemProxyMulti = require('../abis/PendleRedeemProxyMulti.json');
@@ -37,6 +38,7 @@ export const contracts = {
   PendleLiquidityMiningV2Base,
   PendleSLPLiquidityMining,
   PendleGenericLiquidityMiningMulti,
+  PendleLiquidityMiningBaseV2Multi,
   PendleSingleSidedStaking,
   PendleRedeemProxy,
   PendleRedeemProxyMulti,

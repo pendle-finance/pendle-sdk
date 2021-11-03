@@ -1,12 +1,14 @@
 import { StakingPool } from '../src/entities/stakingPool';
-import { ethers } from 'ethers';
+import { Contract, ethers } from 'ethers';
 import * as dotenv from 'dotenv';
-import { dummyAddress } from '../src';
+import { contracts, dummyAddress } from '../src';
+import { distributeConstantsByNetwork } from '../src/helpers';
 
 dotenv.config()
 jest.setTimeout(300000);
 
-const chainId = 1;
+var chainId = 43114;
+
 const PendleSingle: StakingPool = StakingPool.find('0x07282f2ceebd7a65451fcd268b364300d9e6d7f5', '0x808507121b80c02388fad14726482e061b8da827',1);
 const OTPE2022Pool: StakingPool = StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1);
 const OTcDAI2021Pool: StakingPool = StakingPool.find("0x071dc669be57c1b3053f746db20cb3bf54383aea","0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6", 1);
@@ -24,12 +26,12 @@ describe("Staking pools", () => {
     let signer: any;
     let sp: StakingPool;
     beforeAll(async () => {
-        const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`;
+        const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://api.avax.network/ext/bc/C/rpc`;
 
         // const providerUrl = `http://127.0.0.1:8545`;
-        provider = new ethers.providers.JsonRpcProvider(providerUrl);
+        provider = new ethers.providers.JsonRpcProvider(providerUrl, chainId);
         signer = provider.getSigner();
-        sp = sps.OTPE2022Pool;
+        sp = StakingPool.find('0xa90db3286122355309cd161c3aec2ddb28021b6a', '0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId);
     });
     it('Get totalStaked', async() => {
         const totalStake = await sp.methods(signer).getTotalStaked();
@@ -42,7 +44,7 @@ describe("Staking pools", () => {
     })
 
     it.only('Get Reward APRs', async() => {
-        const aprs = await sp.methods(signer).rewardAprs();
+        const aprs = await sp.methods(signer, chainId).rewardAprs();
         console.log(JSON.stringify(aprs, null, '  '));
     })
 })

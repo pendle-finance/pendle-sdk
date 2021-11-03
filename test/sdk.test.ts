@@ -3,6 +3,7 @@ import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHT
 import { Contract, ethers, providers } from 'ethers';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
+import { getDecimals } from '../src/networks/helpers/getDecimals';
 
 var chainId = 43114;
 
@@ -70,7 +71,6 @@ describe('Sdk', () => {
   })
 
   it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
-    console.log(provider);
     const interestsAndRewards = await StakingPool.methods(
       signer,
       chainId
@@ -142,4 +142,5 @@ describe('Sdk', () => {
     ]});
     console.log(JSON.stringify(balances, null,  '  '));
   })
+
 });

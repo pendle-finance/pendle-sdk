@@ -34,6 +34,12 @@ type LmRedeemRequest = {
     mode: LmRedeemMode;
 }
 
+type wrappedRequest = {
+    request: LmRedeemRequest,
+    isInvalidExpiry: boolean,
+    index: number
+};
+
 type LmRedeemResult = {
     rewards: PairTokenUints;
     interests: PairTokenUints;
@@ -61,7 +67,7 @@ export class RedeemProxy {
             userAddress: string
         ): any[] => {
             const ytAddresses: string[] = yts.map((t: Token) => t.address);
-            const otAddresses: string[] = ots.map((t: Token) => Ot.find(t.address)).filter((t: Ot) => t.hasRewards()).map((t: Ot) => t.address);
+            const otAddresses: string[] = ots.map((t: Token) => Ot.find(t.address, chainId)).filter((t: Ot) => t.hasRewards()).map((t: Ot) => t.address);
             const marketAddresses: string[] = lps.map((t: Token) => t.address);
             const lmV1sForInterest: StakingPool[] = interestStakingPools.filter((s: StakingPool) => s.isLmV1());
             const lmV1sExpiriesForInterest: number[] = lmV1sForInterest.map((s: StakingPool) => {
@@ -104,7 +110,7 @@ export class RedeemProxy {
             userAddress: string
         ): any[] => {
             const ytAddresses: string[] = yts.map((t: Token) => t.address);
-            const otAddresses: string[] = ots.map((t: Token) => Ot.find(t.address)).filter((t: Ot) => t.hasRewards()).map((t: Ot) => t.address);
+            const otAddresses: string[] = ots.map((t: Token) => Ot.find(t.address, chainId)).filter((t: Ot) => t.hasRewards()).map((t: Ot) => t.address);
             const marketAddresses: string[] = lps.map((t: Token) => t.address);
 
             const lmV1sForInterest: StakingPool[] = interestStakingPools.filter((s: StakingPool) => s.isLmV1());
@@ -285,7 +291,8 @@ export class RedeemProxy {
                     }
 
                     case ProxyVersion.Multi: {
-                        return await redeemProxyContract.callStatic.redeemOts(otAddresses, userAddress, { from: userAddress });
+                        const userRewards = await redeemProxyContract.callStatic.redeemOts(otAddresses, userAddress, { from: userAddress });
+                        return userRewards.map((t: any) => TrioTokenUints.fromContractTrioTokenUints(t));
                     }
 
                     default:
@@ -296,7 +303,7 @@ export class RedeemProxy {
             redeemXyts: async (ytAddresses: string[], userAddress: string): Promise<TokenAmount[]> => {
                 switch (proxyVersion) {
                     case ProxyVersion.OldSingle: {
-                        const userInterests: BN[] = await redeemProxyContract.callStatic.redeemXyts(ytAddresses, {from: userAddress});
+                        const userInterests: BN[] = await redeemProxyContract.callStatic.redeemXyts(ytAddresses, { from: userAddress });
                         return indexRange(0, ytAddresses.length).map((i: number) => {
                             const ytInfo: YTINFO = networkInfo.contractAddresses.YTs.find((y: YTINFO) => isSameAddress(y.address, ytAddresses[i]))!;
                             return new TokenAmount(
@@ -341,14 +348,30 @@ export class RedeemProxy {
                     }
 
                     case ProxyVersion.Multi: {
-                        const redeemRequests: LmRedeemRequest[] = indexRange(0, lmAddresses.length).map((i: number) => {
+                        const userExpiriesOnAllLmV1s: BN[][] = await Promise.all(indexRange(0, lmAddresses.length).map(async (i: number): Promise<BN[]> => {
+                            const LMContract: Contract = new Contract(lmAddresses[i], contracts.PendleGenericLiquidityMiningMulti.abi, signer.provider);
+                            return await LMContract.readUserExpiries(userAddress);
+                        }))
+                        const userInterests: PairTokenUints[] = new Array(lmAddresses.length).fill(PairTokenUints.EMPTY);
+                        const redeemRequests: wrappedRequest[] = indexRange(0, lmAddresses.length).map((i: number): wrappedRequest => {
                             return {
-                                addr: lmAddresses[i],
-                                expiry: expiries[i].toNumber(),
-                                mode: LmRedeemMode.INTEREST
+                                request: {
+                                    addr: lmAddresses[i],
+                                    expiry: expiries[i].toNumber(),
+                                    mode: LmRedeemMode.INTEREST
+                                },
+                                isInvalidExpiry: userExpiriesOnAllLmV1s[i].find((exp: BN) => exp.eq(expiries[i])) === undefined,
+                                index: i
                             }
                         })
-                        return (await redeemProxyContract.callStatic.redeemLmV1(redeemRequests, userAddress)).map((res: LmRedeemResult) => res.interests);
+                        const redeemRequestsWithValidExpiries: wrappedRequest[] = redeemRequests.filter((w: wrappedRequest) => !w.isInvalidExpiry);
+                        const userInterestsWithValidExpiries: PairTokenUints[] = (await redeemProxyContract.callStatic.redeemLmV1(
+                            redeemRequestsWithValidExpiries.map((w: wrappedRequest): LmRedeemRequest => w.request), userAddress)
+                        ).map((res: LmRedeemResult) => res.interests);
+                        indexRange(0, userInterestsWithValidExpiries.length).forEach((i: number) => {
+                            userInterests[redeemRequestsWithValidExpiries[i].index] = userInterestsWithValidExpiries[i]
+                        })
+                        return userInterests;
                     }
 
                     default:
@@ -369,14 +392,32 @@ export class RedeemProxy {
                     }
 
                     case ProxyVersion.Multi: {
-                        const redeemRequests: LmRedeemRequest[] = indexRange(0, lmAddresses.length).map((i: number) => {
+                        const userExpiriesOnAllLmV1s: BN[][] = await Promise.all(indexRange(0, lmAddresses.length).map(async (i: number): Promise<BN[]> => {
+                            const LMContract: Contract = new Contract(lmAddresses[i], contracts.PendleLiquidityMiningBase.abi, signer.provider);
+                            const userExpiries: BN[] = await LMContract.readUserExpiries(userAddress);
+                            return userExpiries;
+                        }))
+                        const userRewards: PairTokenUints[] = new Array(lmAddresses.length).fill(PairTokenUints.EMPTY);
+
+                        const redeemRequests: wrappedRequest[] = indexRange(0, lmAddresses.length).map((i: number): wrappedRequest => {
                             return {
-                                addr: lmAddresses[i],
-                                expiry: expiries[i].toNumber(),
-                                mode: LmRedeemMode.REWARDS
+                                request: {
+                                    addr: lmAddresses[i],
+                                    expiry: expiries[i].toNumber(),
+                                    mode: LmRedeemMode.REWARDS
+                                },
+                                isInvalidExpiry: userExpiriesOnAllLmV1s[i].find((exp: BN) => exp.eq(expiries[i])) === undefined,
+                                index: i
                             }
                         })
-                        return (await redeemProxyContract.callStatic.redeemLmV1(redeemRequests, userAddress)).map((res: LmRedeemResult) => res.rewards);
+                        const redeemRequestsWithValidExpiries: wrappedRequest[] = redeemRequests.filter((w: wrappedRequest) => !w.isInvalidExpiry);
+                        const userRewardsWithValidExpiries: PairTokenUints[] = (await redeemProxyContract.callStatic.redeemLmV1(
+                            redeemRequestsWithValidExpiries.map((w: wrappedRequest) => w.request), userAddress))
+                            .map((res: LmRedeemResult) => res.rewards);
+                        indexRange(0, userRewardsWithValidExpiries.length).forEach((i: number) => {
+                            userRewards[redeemRequestsWithValidExpiries[i].index] = userRewardsWithValidExpiries[i]
+                        })
+                        return userRewards;
                     }
 
                     default:
@@ -402,7 +443,7 @@ export class RedeemProxy {
                                 mode: LmRedeemMode.INTEREST
                             }
                         })
-                        return (await redeemProxyContract.callStatic.redeemLmV2(redeemRequests, userAddress)).map((res: LmRedeemResult) => res.interests)
+                        return (await redeemProxyContract.callStatic.redeemLmV2(redeemRequests, userAddress)).map((res: LmRedeemResult) => PairTokenUints.fromContractPairTokenUints(res.interests))
                     }
 
                     default:
@@ -429,7 +470,7 @@ export class RedeemProxy {
                                 mode: LmRedeemMode.REWARDS
                             }
                         });
-                        return (await redeemProxyContract.callStatic.redeemLmV2(redeemRequests, userAddress)).map((res: LmRedeemResult) => res.rewards);
+                        return (await redeemProxyContract.callStatic.redeemLmV2(redeemRequests, userAddress)).map((res: LmRedeemResult) => PairTokenUints.fromContractPairTokenUints(res.rewards));
                     }
 
                     default:

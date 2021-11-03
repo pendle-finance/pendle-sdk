@@ -54,14 +54,13 @@ export class Ot extends Token {
 
     public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-        const OTs: OTINFO[] = networkInfo.contractAddresses.OTs.filter((OTInfo: OTINFO) => Ot.hasRewardsByForgeId(OTInfo.forgeIdInBytes));
 
         const fetchRewards = async (userAddress: string): Promise<OtReward[]> => {
-
-            const userRewards: TrioTokenUints[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemOts(
+            const OTs: OTINFO[] = networkInfo.contractAddresses.OTs.filter((OTInfo: OTINFO) => Ot.hasRewardsByForgeId(OTInfo.forgeIdInBytes));
+            const userRewards: TrioTokenUints[] = await(RedeemProxy.methods(signer, chainId).callStatic.redeemOts(
                 OTs.map((OTInfo: OTINFO) => OTInfo.address),
                 userAddress
-            );
+            ));
             const formattedResult: OtReward[] = indexRange(0, OTs.length).map((i: number) => {
                 return {
                     address: OTs[i].address,

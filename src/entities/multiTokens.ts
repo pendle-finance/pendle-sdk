@@ -26,6 +26,21 @@ export class TrioTokenUints {
         this.uints = uints;
     }
 
+    public static fromContractTrioTokenUints(t: any): TrioTokenUints {
+        return new TrioTokenUints(
+            {
+                tokenA: t.tokens.tokenA,
+                tokenB: t.tokens.tokenB,
+                tokenC: t.tokens.tokenC,
+            },
+            {
+                uintA: t.uints.uintA,
+                uintB: t.uints.uintB,
+                uintC: t.uints.uintC,
+            }
+        )
+    }
+
     public static fromTwo(tokenA: string, uintA: BN, tokenB: string, uintB: BN): TrioTokenUints {
         if (tokenA === undefined) tokenA = zeroAddress;
         if (tokenB === undefined) tokenB = zeroAddress;
@@ -110,6 +125,19 @@ export class PairTokenUints {
     public constructor(tokens: PairTokens, uints: PairUints) {
         this.tokens = tokens;
         this.uints = uints;
+    }
+
+    public static fromContractPairTokenUints(p: any): PairTokenUints {
+        return new PairTokenUints(
+            {
+                tokenA: p.tokens.tokenA,
+                tokenB: p.tokens.tokenB
+            },
+            {
+                uintA: p.uints.uintA,
+                uintB: p.uints.uintB
+            }
+        )
     }
 
     public static EMPTY = new PairTokenUints(
