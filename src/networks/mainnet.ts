@@ -444,7 +444,7 @@ export const mainnetContracts: NetworkContractAddresses = {
     ],
     misc: {
         PendleRedeemProxy: '0x5d5c1238b1549bcd7ff9e8994045891edd195568',
-        PendleLiquidityRewardsProxy: '0x70e649eb230dbaee72303ac14fa817b81dedcf0b',
+        PendleLiquidityRewardsProxy: '0xa081bf40a06a5885fe5d70521249e8d253dfc2f3',
         PendleRouter: '0x1b6d3e5da9004668e14ca39d1553e9a46fe842b3',
         PendleData: '0xe8a6916576832aa5504092c1cccc46e3bb9491d6',
         PendleSingleStakingManager: '0x747fc744837deda8d1c568d8e90839e5d4495255',

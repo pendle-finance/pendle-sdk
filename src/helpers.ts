@@ -1,9 +1,8 @@
-import { BigNumber as BN, Bytes, utils } from 'ethers';
+import { BigNumber as BN, Bytes, Contract, providers, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY } from './constants'
+import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
-
 export type Call_MultiCall = {
   target: string,
   callData: string
@@ -127,8 +126,6 @@ export const getCurrentEpochId = (currentTime: number | BN, startTime: number | 
 
 export const xor = (a: boolean, b: boolean) => a != b;
 
-export const getGasLimit = (estimate: BN) => { return { gasLimit: Math.trunc(estimate.toNumber() * gasBuffer) } }
-
 export const getGasLimitWithETH = (estimate: BN, value: BN) => { return { gasLimit: Math.trunc(estimate.toNumber() * gasBuffer), value: value } }
 
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
@@ -182,6 +179,16 @@ export const getBlockOneDayEarlier = async (chainId: number | undefined, provide
     }
   }
   return undefined;
+}
+
+export async function submitTransaction(contract: Contract, signer: providers.JsonRpcSigner, funcName: string, args: any[], value: BN = ZERO): Promise<providers.TransactionResponse> {
+  const gasEstimate: BN = await contract.connect(signer).estimateGas[funcName](...args, { value: value });
+  return contract.connect(signer)[funcName](...args, getGasLimitWithETH(gasEstimate, value));
+}
+
+export async function estimateGas(contract: Contract, fromAddress: string, funcName: string, args: any[], value: BN = ZERO): Promise<BN> {
+  const gasEstimate: BN = await contract.estimateGas[funcName](...args, { from: fromAddress, value: value });
+  return BN.from(getGasLimitWithETH(gasEstimate, value).gasLimit);
 }
 
 // export const getGlobalEpochId = (): number => {

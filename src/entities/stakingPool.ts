@@ -1,6 +1,6 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getGasLimit, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, formatOutput } from '../helpers'
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, formatOutput, submitTransaction } from '../helpers'
 import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress, HG } from '../constants';
 import { contracts } from '../contracts';
 import { Token } from './token';
@@ -375,29 +375,25 @@ export class StakingPool {
           expiry,
           BN.from(amount.rawAmount())
         ]
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.stake(...args);
-        return stakingPoolContract.connect(signer).stake(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'stake', args);
       } else if (this.isLmV2()) {
         const args: any[] = [
           await signer.getAddress(),
           BN.from(amount.rawAmount())
         ];
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.stake(...args);
-        return stakingPoolContract.connect(signer).stake(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'stake', args);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const args: any[] = [
           BN.from(amount.rawAmount())
         ]
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.enter(...args);
-        return stakingPoolContract.connect(signer).enter(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'enter', args);
       } else if (this.contractType == StakingPoolType.LmV1Multi) {
         const args: any[] = [
           await signer.getAddress(),
           expiry,
           BN.from(amount.rawAmount())
         ];
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.stakeFor(...args);
-        return stakingPoolContract.connect(signer).stake(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'stakeFor', args);
       } else {
         throw Error(UNSUPPORTED_TYPE)
       }
@@ -409,15 +405,13 @@ export class StakingPool {
           expiry,
           BN.from(amount.rawAmount())
         ];
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.withdraw(...args);
-        return stakingPoolContract.connect(signer).withdraw(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'withdraw', args);
       } else if (this.isLmV2()) {
         const args: any[] = [
           await signer.getAddress(),
           BN.from(amount.rawAmount())
         ];
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.withdraw(...args);
-        return stakingPoolContract.connect(signer).withdraw(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'withdraw', args);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const userAddress: string = await signer.getAddress();
         const userPendleBalance: BN = BN.from((await balanceOf(userAddress)).amount.rawAmount());
@@ -427,16 +421,14 @@ export class StakingPool {
         const args: any[] = [
           shareToRedeem
         ];
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).leave(...args);
-        return stakingPoolContract.connect(signer).leave(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'leave', args);
       } else if (this.contractType == StakingPoolType.LmV1Multi) {
         const args: any[] = [
           await signer.getAddress(),
           expiry,
           BN.from(amount.rawAmount())
         ];
-        const gasEstimate: BN = await stakingPoolContract.connect(signer).estimateGas.withdraw(...args);
-        return stakingPoolContract.connect(signer).withdraw(...args, getGasLimit(gasEstimate));
+        return submitTransaction(stakingPoolContract, signer, 'withdraw', args);
       } else {
         throw Error(UNSUPPORTED_TYPE);
       }

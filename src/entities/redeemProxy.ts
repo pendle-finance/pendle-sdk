@@ -4,7 +4,7 @@ import { StakingPool } from "./stakingPool";
 import { PendleMarket } from "./market";
 import { Yt } from "./yt";
 import { contracts } from "../contracts";
-import { distributeConstantsByNetwork, getGasLimit, indexRange, isSameAddress } from "../helpers";
+import { distributeConstantsByNetwork, estimateGas, indexRange, isSameAddress, submitTransaction } from "../helpers";
 import { LMINFO, NetworkInfo, OTINFO, PENDLEMARKETNFO, YTINFO } from "../networks";
 import { Ot } from "./ot";
 import { GasInfo, getGasPrice } from "../fetchers/gasPriceFetcher";
@@ -208,8 +208,7 @@ export class RedeemProxy {
         }): Promise<providers.TransactionResponse> => {
             const userAddress: string = await signer.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
-            const gasEstimate = await redeemProxyContract.connect(signer).estimateGas.redeem(...args);
-            return redeemProxyContract.connect(signer).redeem(...args, getGasLimit(gasEstimate));
+            return submitTransaction(redeemProxyContract, signer, 'redeem', args);
         }
 
         const estimateGasForClaimYields = async ({
@@ -227,8 +226,7 @@ export class RedeemProxy {
         }): Promise<GasInfo> => {
             const userAddress: string = await signer.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
-            const gasEstimate: BN = await redeemProxyContract.connect(signer).estimateGas.redeem(...args);
-            const gasLimit: BN = BN.from(getGasLimit(gasEstimate).gasLimit);
+            const gasLimit: BN = await estimateGas(redeemProxyContract, await signer.getAddress(), 'redeem', args)
             const gasPrice: BN = await getGasPrice(chainId);
 
             return {

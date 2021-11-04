@@ -1,6 +1,6 @@
 import { providers, BigNumber as BN } from "ethers";
 import { AprInfo } from "./types";
-import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE, ETHAddress } from "../constants";
+import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE, ETHAddress, ZERO } from "../constants";
 import { dummyTokenAmount, TokenAmount } from './tokenAmount';
 import { YieldContract } from "./yieldContract";
 import { Ot } from "./ot";
@@ -9,7 +9,7 @@ import { Token } from "./token";
 import { Contract } from "ethers";
 import { StakingPool } from "./stakingPool";
 import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
-import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, getGasLimitWithETH, isSameAddress } from "../helpers";
+import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, isSameAddress, submitTransaction } from "../helpers";
 import { contracts } from "../contracts";
 import { PendleMarket, Market, OtherMarketDetails, AddDualLiquidityDetails } from "./market";
 import { calcOtherTokenAmount, calcShareOfPool, calcSlippedDownAmount, calcSlippedUpAmount, DecimalsPrecision } from "../math/marketMath";
@@ -284,8 +284,7 @@ export class OneClickWrapper {
 
         const simulateWithFixedInput = async (action: Action, pendleFixture: PendleFixture, fixedInputAmount: TokenAmount, slippage: number): Promise<SimulationDetails> => {
             const transactions: Transaction[] = [];
-            // const user: string = await signer.getAddress()
-            const user: string = '0x12345';
+            const user: string = await signer.getAddress()
             const inAmount: BN = BN.from(fixedInputAmount.rawAmount());
 
             const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
@@ -510,6 +509,7 @@ export class OneClickWrapper {
                     BN.from(10).pow(18).toString()
                 )
                 const testSimulationResult: SimulationDetails = await simulateWithFixedInput(action, pendleFixture, testTokenAmount, slippage);
+                console.log("testSimulationResult",testSimulationResult)
                 const testInputTokenAmount: TokenAmount = testSimulationResult.tokenAmounts.find((t: TokenAmount) => isSameAddress(t.token.address, inputTokenAmount.token.address))!;
                 const scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
                 return unwrapEthInSimulation(scaledSimulation);
@@ -526,9 +526,9 @@ export class OneClickWrapper {
                     } else {
                         return pp;
                     }
-                }, BN.from(0));
+                }, ZERO);
                 return p.add(ethInThisTxn);
-            }, BN.from(0))
+            }, ZERO)
 
             if (isUnderlyingLP()) {
                 const dataTknz: DataTknz = {} as DataTknz;
@@ -583,8 +583,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqOT
                         ];
-                        var gasEstimate: BN = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForOT(...args, {value: maxEthPaid});
-                        return PendleWrapper.connect(signer).insAddDualLiqForOT(...args, getGasLimitWithETH(gasEstimate, maxEthPaid));
+                        return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOT', args, maxEthPaid);
 
                     case Action.stakeYT:
                         args = [
@@ -592,8 +591,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqYT
                         ];
-                        gasEstimate = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForYT(...args, {value: maxEthPaid});
-                        return PendleWrapper.connect(signer).insAddDualLiqForYT(...args, getGasLimitWithETH(gasEstimate, maxEthPaid));
+                        return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForYT', args, maxEthPaid);
 
                     case Action.stakeOTYT:
                         args = [
@@ -602,8 +600,7 @@ export class OneClickWrapper {
                             dataAddLiqOT,
                             dataAddLiqYT
                         ];
-                        gasEstimate = await PendleWrapper.connect(signer).estimateGas.insAddDualLiqForOTandYT(...args, {value: maxEthPaid});
-                        return PendleWrapper.connect(signer).insAddDualLiqForOTandYT(...args, getGasLimitWithETH(gasEstimate, maxEthPaid)); 
+                        return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOTandYT', args, maxEthPaid);
                 }
             } else {
                 return {} as providers.TransactionResponse;
@@ -617,7 +614,7 @@ export class OneClickWrapper {
 
         const getOtRewards = async(underlyingAmount: TokenAmount, pendleFixture: PendleFixture): Promise<AprWithPrincipal[]> => {
             if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_COMPLEX) {
-                const yieldTokenHolderAddress: string = await pendleFixture.forge.yieldTokenHolders(this.yieldContract.underlyingAsset, this.yieldContract.expiry);
+                const yieldTokenHolderAddress: string = await pendleFixture.forge.yieldTokenHolders(this.yieldContract.underlyingAsset.address, this.yieldContract.expiry);
                 const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi);
                 const pid: number = await yieldTokenHolder.pid();
                 const rawAprs: AprInfo[] =  await MasterChef.methods(signer, chainId).getRewardsAprs(pid);
@@ -632,23 +629,13 @@ export class OneClickWrapper {
             return [];
         }
 
-        // const getOtLpRewards = async(otLpAmount: TokenAmount, _: PendleFixture): Promise<AprWithPrincipal[]> => {
-        //     const otherMarketInfo: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(m.address, otLpAmount.token.address));
-        //     if (otherMarketInfo === undefined || otherMarketInfo.masterChefPID === undefined) return [];
-        //     const pid: number = otherMarketInfo.masterChefPID;
-        //     const rawAprs: AprInfo[] =  await MasterChef.methods(signer, chainId).getRewardsAprs(pid);
-        //     const principalValuation: CurrencyAmount = await fetchValuation(otLpAmount, signer, chainId);
-        //     return rawAprs.map((apr: AprInfo) => {
-        //         return {
-        //             apr,
-        //             principal: principalValuation
-        //         }
-        //     })        
-        // }
-
         const getLmRewards = async(stakingPool: StakingPool, inputAmount: TokenAmount): Promise<AprWithPrincipal[]> => {
+            console.log("Getting lm rewards for", stakingPool.address)
             const rawAprs = await stakingPool.methods(signer, chainId).rewardAprs();
+            console.log('rawAprs', rawAprs);
             const principalValuation: CurrencyAmount = await fetchValuation(inputAmount, signer, chainId);
+            console.log('principalValuation', principalValuation);
+
             return rawAprs.map((apr: AprInfo) => {
                 return {
                     apr,
@@ -724,9 +711,11 @@ export class OneClickWrapper {
             }
             var totalPrincipalValuation = new BigNumber(0);
             const testSimulation: SimulationDetails = await simulate(action, inputTokenAmount, 0);
+            console.log(JSON.stringify(testSimulation, null, '  '))
             for (const t of testSimulation.tokenAmounts) {
                 totalPrincipalValuation = totalPrincipalValuation.plus((await fetchValuation(t, signer, chainId)).amount);
             }
+            console.log(totalPrincipalValuation.toFixed(DecimalsPrecision));
 
             var rewardsInfo: rewardsInfo = await getAllRewardsFromTxns(action, testSimulation, pendleFixture);
             const adjustedOTRewards: AprInfo[] = rewardsInfo.otRewards.map((aprWP: AprWithPrincipal) => {
@@ -735,12 +724,15 @@ export class OneClickWrapper {
                     apr: new BigNumber(aprWP.apr.apr).multipliedBy(aprWP.principal.amount).div(totalPrincipalValuation).toFixed(DecimalsPrecision)
                 }
             })
+            console.log('adjustedOTRewards', JSON.stringify(adjustedOTRewards, null, '  '))
             const adjustedYTRewards: AprInfo[] = rewardsInfo.otRewards.map((aprWP: AprWithPrincipal) => {
                 return {
                     origin: aprWP.apr.origin,
                     apr: new BigNumber(aprWP.apr.apr).multipliedBy(aprWP.principal.amount).div(totalPrincipalValuation).toFixed(DecimalsPrecision)
                 }
             })
+            console.log('adjustedYTRewards', JSON.stringify(adjustedYTRewards, null, '  '))
+
             const totalOtApr: BigNumber = adjustedOTRewards.reduce((p: BigNumber, c: AprInfo) => p.plus(new BigNumber(c.apr)), new BigNumber(0));
 
             const totalYtApr: BigNumber = adjustedYTRewards.reduce((p: BigNumber, c: AprInfo) => p.plus(new BigNumber(c.apr)), new BigNumber(0));
