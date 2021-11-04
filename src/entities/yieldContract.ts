@@ -37,7 +37,6 @@ export class YieldContract {
         if (networkInfo.contractAddresses.forges[this.forgeIdInBytes] === undefined) {
             return Error(`No such forge with forgeId ${this.forgeIdInBytes} in this network.`)
         }
-        // const PendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, provider);
         const forgeAddress = networkInfo.contractAddresses.forges[this.forgeIdInBytes];
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.forgeIdInBytes).abi, signer.provider);
         const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);

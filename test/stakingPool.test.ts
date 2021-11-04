@@ -31,10 +31,10 @@ describe("Staking pools", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl, chainId);
         signer = provider.getSigner();
-        sp = StakingPool.find('0xa90db3286122355309cd161c3aec2ddb28021b6a', '0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId);
+        sp = StakingPool.find('0x576faae4b090c2e6693cbd7d54cdb7e8bbe579a6', '0xeeeaeb7a1d7f18e3ea61046a1d21d7b97c82db1a', chainId);
     });
-    it('Get totalStaked', async() => {
-        const totalStake = await sp.methods(signer).getTotalStaked();
+    it.only('Get totalStaked', async() => {
+        const totalStake = await sp.methods(signer, chainId).getTotalStaked();
         console.log(JSON.stringify(totalStake, null, '  '));
     })
 
@@ -43,7 +43,7 @@ describe("Staking pools", () => {
         console.log(JSON.stringify(balance, null, '  '));
     })
 
-    it.only('Get Reward APRs', async() => {
+    it('Get Reward APRs', async() => {
         const aprs = await sp.methods(signer, chainId).rewardAprs();
         console.log(JSON.stringify(aprs, null, '  '));
     })

@@ -48,7 +48,7 @@ export class MasterChef {
                 return aprs;
             } else if (chainId == 43114) {
                 const masterChefV2Address: string = networkInfo.contractAddresses.misc.JOE_MASTERCHEFV2;
-                const masterChefV2: Contract = new Contract(masterChefV2Address, contracts.JoeMasterChef.abi);
+                const masterChefV2: Contract = new Contract(masterChefV2Address, contracts.JoeMasterChef.abi, signer.provider);
 
                 var poolInfo: any, allocPoint: BN, totalAllocPoint: BN, totalJoePerSec: BN, devPercent: BN, treasuryPercent: BN, investorPercent: BN;
                 const promises: Promise<any>[] = [];

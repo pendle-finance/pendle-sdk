@@ -584,7 +584,6 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqOT
                         ];
-                        // console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOT', args, maxEthPaid);
 
                     case Action.stakeYT:
@@ -593,7 +592,6 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqYT
                         ];
-                        // console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForYT', args, maxEthPaid);
 
                     case Action.stakeOTYT:
@@ -603,7 +601,6 @@ export class OneClickWrapper {
                             dataAddLiqOT,
                             dataAddLiqYT
                         ];
-                        // console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOTandYT', args, maxEthPaid);
                 }
             } else {
@@ -619,7 +616,7 @@ export class OneClickWrapper {
         const getOtRewards = async(underlyingAmount: TokenAmount, pendleFixture: PendleFixture): Promise<AprWithPrincipal[]> => {
             if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_COMPLEX) {
                 const yieldTokenHolderAddress: string = await pendleFixture.forge.yieldTokenHolders(this.yieldContract.underlyingAsset.address, this.yieldContract.expiry);
-                const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi);
+                const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi, signer.provider);
                 const pid: number = await yieldTokenHolder.pid();
                 const rawAprs: AprInfo[] =  await MasterChef.methods(signer, chainId).getRewardsAprs(pid);
                 const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
@@ -704,6 +701,7 @@ export class OneClickWrapper {
 
         const apr = async (action: Action): Promise<WrapperAPRInfo> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
+            // console.log(pendleFixture.otStakingPool);
 
             var inputTokenAmount: TokenAmount;
             if (isUnderlyingLP()) {
@@ -721,10 +719,10 @@ export class OneClickWrapper {
             for (const t of testSimulation.tokenAmounts) {
                 totalPrincipalValuation = totalPrincipalValuation.plus((await fetchValuation(t, signer, chainId)).amount);
             }
-            console.log(totalPrincipalValuation.toFixed(DecimalsPrecision));
+            // console.log(totalPrincipalValuation.toFixed(DecimalsPrecision));
 
             var rewardsInfo: rewardsInfo = await getAllRewardsFromTxns(action, testSimulation, pendleFixture);
-            console.log("rewardsInfo", JSON.stringify(rewardsInfo, null, '  '));
+            // console.log("rewardsInfo", JSON.stringify(rewardsInfo, null, '  '));
             const adjustedOTRewards: AprInfo[] = rewardsInfo.otRewards.map((aprWP: AprWithPrincipal) => {
                 return {
                     origin: aprWP.apr.origin,
