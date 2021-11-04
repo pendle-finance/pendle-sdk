@@ -121,7 +121,7 @@ export type DataAddLiqUniFork = {
     amountBMin: string; // theoritical amount - slippage
     deadline: number; // timestamp + 3 hr
     kyberPool: string;
-    kybervReserveRatioBounds: string[];
+    kybervReserveRatioBounds: number[];
 }
 
 export const dummyDataAddLiqUniFork: DataAddLiqUniFork = {
@@ -133,7 +133,7 @@ export const dummyDataAddLiqUniFork: DataAddLiqUniFork = {
     amountBMin: '0',
     deadline: 0,
     kyberPool: zeroAddress,
-    kybervReserveRatioBounds: ['0', '0'],
+    kybervReserveRatioBounds: [0, 0],
 }
 
 export type DataTknz = {
@@ -284,7 +284,8 @@ export class OneClickWrapper {
 
         const simulateWithFixedInput = async (action: Action, pendleFixture: PendleFixture, fixedInputAmount: TokenAmount, slippage: number): Promise<SimulationDetails> => {
             const transactions: Transaction[] = [];
-            const user: string = await signer.getAddress()
+            // const user: string = await signer.getAddress()
+            const user = "0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb";
             const inAmount: BN = BN.from(fixedInputAmount.rawAmount());
 
             const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
@@ -537,8 +538,8 @@ export class OneClickWrapper {
                 dataTknz.expiryYT = this.yieldContract.expiry;
 
                 const dataAddLiqUniFork: DataAddLiqUniFork = {
-                    kyberPool: '0',
-                    kybervReserveRatioBounds: ['0', '0']
+                    kyberPool: zeroAddress,
+                    kybervReserveRatioBounds: [0, 0]
                 } as DataAddLiqUniFork;
                 const addUnderlyingLiqTxn: Transaction = sTxns.find((txn: Transaction) => txn.action == TransactionAction.preMint)!;
                 dataAddLiqUniFork.tokenA = addUnderlyingLiqTxn.paid[0].token.address;
@@ -583,6 +584,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqOT
                         ];
+                        console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOT', args, maxEthPaid);
 
                     case Action.stakeYT:
@@ -591,6 +593,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqYT
                         ];
+                        console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForYT', args, maxEthPaid);
 
                     case Action.stakeOTYT:
@@ -600,6 +603,7 @@ export class OneClickWrapper {
                             dataAddLiqOT,
                             dataAddLiqYT
                         ];
+                        console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOTandYT', args, maxEthPaid);
                 }
             } else {

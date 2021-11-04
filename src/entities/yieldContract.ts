@@ -4,7 +4,7 @@ import { providers, Contract, BigNumber as BN, utils } from "ethers"
 import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
-import { distributeConstantsByNetwork, getABIByForgeId, getGasLimit } from '../helpers'
+import { distributeConstantsByNetwork, getABIByForgeId, submitTransaction } from '../helpers'
 import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
@@ -95,8 +95,7 @@ export class YieldContract {
         }
         const mint = async (toMint: TokenAmount): Promise<providers.TransactionResponse> => {
             const args = [this.forgeIdInBytes, this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), await signer.getAddress()];
-            const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.tokenizeYield(...args);
-            return pendleRouterContract.connect(signer).tokenizeYield(...args, getGasLimit(gasEstimate));
+            return submitTransaction(pendleRouterContract, signer, 'tokenizeYield', args);
         }
         const redeemDetails = async (amountToRedeem: TokenAmount, userAddress: string): Promise<RedeemDetails> => {
             const interestRedeemed: BN = await pendleForgeContract.connect(signer.provider).callStatic.redeemDueInterests(userAddress, this.underlyingAsset.address, this.expiry, { from: networkInfo.contractAddresses.misc.PendleRouter });
@@ -129,8 +128,7 @@ export class YieldContract {
                 this.expiry,
                 toRedeem.rawAmount()
             ];
-            const gasEstimate: BN = await pendleRouterContract.connect(signer).estimateGas.redeemUnderlying(...args);
-            return pendleRouterContract.connect(signer).redeemUnderlying(...args, getGasLimit(gasEstimate))
+            return submitTransaction(pendleRouterContract, signer, 'redeemUnderlying', args);
         }
 
         return {
