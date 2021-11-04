@@ -73,9 +73,9 @@ describe("One click wrapper", () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.JOE_COMPLEX),
+      utils.parseBytes32String(forgeIdsInBytes.JOE_SIMPLE),
       new Token(
-        '0xa389f9430876455c36478deea9769b7ca4e3ddb1',
+        '0xd82b9b055f79d1a244005406988f85ed970797ed',
         18
       ),
       EXP_2022.toNumber()
@@ -83,21 +83,36 @@ describe("One click wrapper", () => {
     wrapper = new OneClickWrapper(yieldContract)
   });
 
-  it('Simulate stake OT', async () => {
-    console.log("IN")
+  it.only('Simulate stake', async () => {
     const res = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
       ETHToken,
       BN.from(10).pow(20).toString()
     ), 0.01)
-    console.log(JSON.stringify(res, null, '  '));
+    console.log(JSON.stringify(res.transactions[0], null, '  '));
+
+    const res1:SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
+      ETHToken,
+      BN.from(10).pow(20).toString()
+    ), 0.01)
+    console.log(JSON.stringify(res1.transactions[0], null, '  '));
+    const res2 = await wrapper.methods(signer, chainId).simulate(Action.stakeYT, new TokenAmount(
+      ETHToken,
+      BN.from(10).pow(20).toString()
+    ), 0.01)
+    console.log(JSON.stringify(res2.transactions[0], null, '  '));
+
   })
 
   it('apr', async() => {
     const res = await wrapper.methods(signer, chainId).apr(Action.stakeOT);
-    console.log(JSON.stringify(res, null, '  '));
+    console.log('stakeOT', JSON.stringify(res, null, '  '));
+    const res1 = await wrapper.methods(signer, chainId).apr(Action.stakeYT);
+    console.log('stakeYT', JSON.stringify(res1, null, '  '));
+    const res2 = await wrapper.methods(signer, chainId).apr(Action.stakeOTYT);
+    console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it.only('send', async() => {
+  it('send', async() => {
     const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
       ETHToken,
       BN.from(10).pow(20).toString()

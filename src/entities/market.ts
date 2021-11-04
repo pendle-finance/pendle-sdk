@@ -320,25 +320,28 @@ export class PendleMarket extends Market {
       const protocolFee: BN = await pendleDataContract.protocolSwapFee();
       await Promise.all(promises);
 
-      const swapFeeApr: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
+      const swapFeeApr: BigNumber = calcSwapFeeAPR(new BigNumber(volumeToday.amount), swapFee, protocolFee, new BigNumber(liquidityToday.amount));
 
-      const { ytPrice, impliedYield }: { ytPrice: number, impliedYield: number } = await getYTPriceAndImpliedYield(marketReserves);
+      const { ytPrice, impliedYield }: { ytPrice: BigNumber, impliedYield: BigNumber } = await getYTPriceAndImpliedYield(marketReserves);
+
+      const volume24hChange: string = new BigNumber(volumeYesterday.amount).lte(0)
+        ? new BigNumber(volumeToday.amount).lte(0) ? '0' : '1'
+        : (new BigNumber(volumeToday.amount).minus(volumeYesterday.amount)).dividedBy(volumeYesterday.amount).toFixed(DecimalsPrecision);
+      const liquidity24HChange: string = new BigNumber(liquidityYesterday.amount).lte(0)
+      ? new BigNumber(liquidityToday.amount).lte(0) ? '0' : '1'
+      : ((new BigNumber(liquidityToday.amount).minus(liquidityYesterday.amount)).dividedBy(liquidityYesterday.amount)).toFixed(DecimalsPrecision);
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],
         otherDetails: {
           dailyVolume: volumeToday,
-          volume24hChange: volumeYesterday.amount === 0
-            ? volumeToday.amount === 0 ? '0' : '1'
-            : ((volumeToday.amount - volumeYesterday.amount) / volumeYesterday.amount).toString(),
+          volume24hChange: volume24hChange,
           liquidity: liquidityToday,
-          liquidity24HChange: liquidityYesterday.amount === 0
-            ? liquidityToday.amount === 0 ? '0' : '1'
-            : ((liquidityToday.amount - liquidityYesterday.amount) / liquidityYesterday.amount).toString(),
+          liquidity24HChange: liquidity24HChange,
           swapFeeApr: swapFeeApr.toFixed(DecimalsPrecision),
           impliedYield: impliedYield.toString(),
           YTPrice: {
             currency: 'USD',
-            amount: ytPrice
+            amount: ytPrice.toFixed(DecimalsPrecision)
           },
           underlyingYieldRate
         }
@@ -731,11 +734,8 @@ export class PendleMarket extends Market {
     }
 
     const getVolume = async (leftBound: number, rightBound: number): Promise<CurrencyAmount> => {
-      let volume: CurrencyAmount = {
-        currency: "USD",
-        amount: 0
-      };
-      let amount: number = 0, page: number = 1;
+      let volume: CurrencyAmount = ZeroCurrencyAmount;
+      let amount: BigNumber = new BigNumber(0), page: number = 1;
       let f: boolean = true;
       while (f) {
         const result: TRANSACTION[] = await transactionFetcher.getSwapTransactions({
@@ -749,7 +749,7 @@ export class PendleMarket extends Market {
         }
         for (let i: number = 0; i < result.length; i++) {
           if (result[i].timestamp! > leftBound && result[i].timestamp! <= rightBound) {
-            amount = amount + (result[i].amount.amount);
+            amount = amount.plus(result[i].amount.amount);
           } else if (result[i].timestamp! <= leftBound) {
             f = false;
             break;
@@ -757,7 +757,7 @@ export class PendleMarket extends Market {
         }
         page = page + 1;
       }
-      volume.amount = amount;
+      volume.amount = amount.toFixed(DecimalsPrecision);
       return volume;
     }
 
@@ -771,7 +771,7 @@ export class PendleMarket extends Market {
       const totalLiquidityUSD: BigNumber = await getLiquidityValueBigNumber(marketReserve);
       return {
         currency: 'USD',
-        amount: parseFloat(totalLiquidityUSD.toFixed(DecimalsPrecision))
+        amount: totalLiquidityUSD.toFixed(DecimalsPrecision)
       };
     }
 
@@ -781,10 +781,7 @@ export class PendleMarket extends Market {
       const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
       if (pastBlockNumber === undefined) {
         console.error("Unable to get block that is 1 day old");
-        return {
-          currency: "USD",
-          amount: 0
-        }
+        return ZeroCurrencyAmount
       }
       const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
       return getLiquidityValue(pastMarketReserves);
@@ -801,7 +798,7 @@ export class PendleMarket extends Market {
       return ytPrice;
     }
 
-    const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: number, impliedYield: number }> => {
+    const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, impliedYield: BigNumber }> => {
       const underlyingPrice: BigNumber = await fetchTokenPrice({ address: underlyingAsset, signer, chainId });
       const ytPrice: BigNumber = await getYTPrice(marketReserves);
       var principalPerYT: BN = BN.from(10).pow(18);
@@ -833,17 +830,17 @@ export class PendleMarket extends Market {
       // means yield is infinite
       if (p.isGreaterThanOrEqualTo(ONE)) {
         return {
-          ytPrice: ytPrice.toNumber(),
-          impliedYield: 999999999
+          ytPrice: ytPrice,
+          impliedYield: new BigNumber(999999999)
         };
       }
       const currentTime: number = await getCurrentTimestamp(signer.provider);
       const daysLeft: BigNumber = new BigNumber(yieldContract.expiry - currentTime).dividedBy(24 * 3600);
 
-      const y_annum: number = calcImpliedYield(p, daysLeft);
+      const y_annum: BigNumber = calcImpliedYield(p, daysLeft);
 
       return {
-        ytPrice: ytPrice.toNumber(),
+        ytPrice: ytPrice,
         impliedYield: y_annum
       };
     }
@@ -901,7 +898,7 @@ export class PendleMarket extends Market {
       var liquidityToday: CurrencyAmount = await getLiquidityValue(marketReserves);
       const swapFee: BN = await pendleDataContract.swapFee();
       const protocolFee: BN = await pendleDataContract.protocolSwapFee();
-      const swapFeeApr: BigNumber = calcSwapFeeAPR(volumeToday.amount, swapFee, protocolFee, liquidityToday.amount);
+      const swapFeeApr: BigNumber = calcSwapFeeAPR(new BigNumber(volumeToday.amount), swapFee, protocolFee, new BigNumber(liquidityToday.amount));
       return swapFeeApr;
     }
 

@@ -52,7 +52,7 @@ PendleMarket.methods(JsonRpcSigner, chainId?).fetchInterests(address) => Promise
 ```
 CurrencyAmount = {
   currency: string,
-  amount: number
+  amount: string
 }
 
 TokenReserveDetails = {

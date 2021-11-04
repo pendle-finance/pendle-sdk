@@ -1,7 +1,7 @@
 import { fetchTokenPrice } from "../src/fetchers/priceFetcher";
 import { ethers, Contract } from 'ethers';
 import { fetchAaveYield, fetchCompoundYield } from "../src/fetchers/externalYieldRateFetcher";
-const chainId: number = 43114;
+const chainId: number = 1;
 
 jest.setTimeout(300000);
 
@@ -17,7 +17,7 @@ describe("price fetcher", () => {
         signer = provider.getSigner();
       });
     it.only('Pendle', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0x1e48d26642858c06eccde4a16d74c1cf9edefa26", chainId: chainId});
+        const res = await fetchTokenPrice({signer: signer, address: "0x808507121b80c02388fad14726482e061b8da827", chainId: chainId});
         console.log(res.toString());
     })
 

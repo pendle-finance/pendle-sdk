@@ -510,7 +510,7 @@ export class OneClickWrapper {
                     BN.from(10).pow(18).toString()
                 )
                 const testSimulationResult: SimulationDetails = await simulateWithFixedInput(action, pendleFixture, testTokenAmount, slippage);
-                console.log("testSimulationResult",testSimulationResult)
+                // console.log("testSimulationResult",testSimulationResult)
                 const testInputTokenAmount: TokenAmount = testSimulationResult.tokenAmounts.find((t: TokenAmount) => isSameAddress(t.token.address, inputTokenAmount.token.address))!;
                 const scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
                 return unwrapEthInSimulation(scaledSimulation);
@@ -584,7 +584,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqOT
                         ];
-                        console.log(JSON.stringify(args, null, '  '))
+                        // console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOT', args, maxEthPaid);
 
                     case Action.stakeYT:
@@ -593,7 +593,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqYT
                         ];
-                        console.log(JSON.stringify(args, null, '  '))
+                        // console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForYT', args, maxEthPaid);
 
                     case Action.stakeOTYT:
@@ -603,7 +603,7 @@ export class OneClickWrapper {
                             dataAddLiqOT,
                             dataAddLiqYT
                         ];
-                        console.log(JSON.stringify(args, null, '  '))
+                        // console.log(JSON.stringify(args, null, '  '))
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOTandYT', args, maxEthPaid);
                 }
             } else {
@@ -634,11 +634,11 @@ export class OneClickWrapper {
         }
 
         const getLmRewards = async(stakingPool: StakingPool, inputAmount: TokenAmount): Promise<AprWithPrincipal[]> => {
-            console.log("Getting lm rewards for", stakingPool.address)
+            // console.log("Getting lm rewards for", stakingPool.address)
             const rawAprs = await stakingPool.methods(signer, chainId).rewardAprs();
-            console.log('rawAprs', rawAprs);
+            // console.log('rawAprs', rawAprs);
             const principalValuation: CurrencyAmount = await fetchValuation(inputAmount, signer, chainId);
-            console.log('principalValuation', principalValuation);
+            // console.log('principalValuation', principalValuation);
 
             return rawAprs.map((apr: AprInfo) => {
                 return {
@@ -693,6 +693,8 @@ export class OneClickWrapper {
             ytRewards = ytRewards.concat(await Promise.all(ytPromises).then((value: AprWithPrincipal[][]) => {
                 return value.flat();
             }));
+            // console.log("otRewards", JSON.stringify(otRewards, null,  '  '))
+            // console.log("ytRewards", JSON.stringify(ytRewards, null,  '  '))
 
             return {
                 otRewards,
@@ -715,27 +717,28 @@ export class OneClickWrapper {
             }
             var totalPrincipalValuation = new BigNumber(0);
             const testSimulation: SimulationDetails = await simulate(action, inputTokenAmount, 0);
-            console.log(JSON.stringify(testSimulation, null, '  '))
+            // console.log(JSON.stringify(testSimulation, null, '  '))
             for (const t of testSimulation.tokenAmounts) {
                 totalPrincipalValuation = totalPrincipalValuation.plus((await fetchValuation(t, signer, chainId)).amount);
             }
             console.log(totalPrincipalValuation.toFixed(DecimalsPrecision));
 
             var rewardsInfo: rewardsInfo = await getAllRewardsFromTxns(action, testSimulation, pendleFixture);
+            console.log("rewardsInfo", JSON.stringify(rewardsInfo, null, '  '));
             const adjustedOTRewards: AprInfo[] = rewardsInfo.otRewards.map((aprWP: AprWithPrincipal) => {
                 return {
                     origin: aprWP.apr.origin,
                     apr: new BigNumber(aprWP.apr.apr).multipliedBy(aprWP.principal.amount).div(totalPrincipalValuation).toFixed(DecimalsPrecision)
                 }
             })
-            console.log('adjustedOTRewards', JSON.stringify(adjustedOTRewards, null, '  '))
-            const adjustedYTRewards: AprInfo[] = rewardsInfo.otRewards.map((aprWP: AprWithPrincipal) => {
+            // console.log('adjustedOTRewards', JSON.stringify(adjustedOTRewards, null, '  '))
+            const adjustedYTRewards: AprInfo[] = rewardsInfo.ytRewards.map((aprWP: AprWithPrincipal) => {
                 return {
                     origin: aprWP.apr.origin,
                     apr: new BigNumber(aprWP.apr.apr).multipliedBy(aprWP.principal.amount).div(totalPrincipalValuation).toFixed(DecimalsPrecision)
                 }
             })
-            console.log('adjustedYTRewards', JSON.stringify(adjustedYTRewards, null, '  '))
+            // console.log('adjustedYTRewards', JSON.stringify(adjustedYTRewards, null, '  '))
 
             const totalOtApr: BigNumber = adjustedOTRewards.reduce((p: BigNumber, c: AprInfo) => p.plus(new BigNumber(c.apr)), new BigNumber(0));
 

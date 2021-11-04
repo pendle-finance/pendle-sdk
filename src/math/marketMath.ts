@@ -169,7 +169,7 @@ export function calcReserveUSDValue(baseTokenAmount: BN, baseTokenDecimal: numbe
         .multipliedBy(baseTokenPrice).div(Math.pow(10, baseTokenDecimal).toString());
 }
 
-export function calcSwapFeeAPR(volume: number, swapFee: BN, protocolFee: BN, liquidity: number): BigNumber {
+export function calcSwapFeeAPR(volume: BigNumber, swapFee: BN, protocolFee: BN, liquidity: BigNumber): BigNumber {
     return new BigNumber(rmul(swapFee, RONE.sub(protocolFee)).toString()).multipliedBy(volume)
         .multipliedBy(365).dividedBy(new BigNumber(RONE.toString()).multipliedBy(liquidity));
 }
@@ -182,8 +182,8 @@ export function calcPrincipalForSLPYT(exchangeRate: BN): BN {
     return rdiv(BN.from(10).pow(18), exchangeRate);
 }
 
-export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): number {
-    return Math.pow((ONE.plus(p.dividedBy(ONE.minus(p)))).toNumber(), (new BigNumber(365).dividedBy(daysLeft)).toNumber()) - 1;
+export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): BigNumber {
+    return new BigNumber(Math.pow((ONE.plus(p.dividedBy(ONE.minus(p)))).toNumber(), (new BigNumber(365).dividedBy(daysLeft)).toNumber()) - 1);
 }
 
 export function calcPrincipalFloat(principalPerYT: BN, ytDecimal: number, underlyingDecimal: number): BigNumber {

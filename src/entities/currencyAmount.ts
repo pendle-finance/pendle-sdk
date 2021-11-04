@@ -1,13 +1,13 @@
 export type CurrencyAmount = {
     currency: string,
-    amount: number
+    amount: string
 };
 export const dummyCurrencyAmount: CurrencyAmount = {
     currency: "USD",
-    amount: 10000
+    amount: '10000'
 };
 
 export const ZeroCurrencyAmount: CurrencyAmount = {
     currency: "USD",
-    amount: 0
+    amount: '0'
 };

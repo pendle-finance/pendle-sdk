@@ -564,7 +564,7 @@ export class StakingPool {
         ),
         valuation: {
           currency: 'USD',
-          amount: calcValuation(price, rawAmount, networkInfo.decimalsRecord[this.inputToken.address]).toNumber()
+          amount: calcValuation(price, rawAmount, networkInfo.decimalsRecord[this.inputToken.address]).toFixed(DecimalsPrecision)
         }
       }
     }

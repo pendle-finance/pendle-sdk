@@ -5,12 +5,13 @@ import BigNumber from "bignumber.js";
 import { ETHAddress, sushiswapSubgraphApi, traderJoeSubgraphApi } from "../constants";
 import { TokenAmount } from "../entities/tokenAmount";
 import { CurrencyAmount } from "../entities/currencyAmount";
-import { PendleMarket, MarketDetails } from "../entities/market";
+import { PendleMarket } from "../entities/market";
 import { providers } from "ethers";
 import { Ot } from "../entities/ot";
 import { Yt } from "../entities/yt";
 import { Contract, BigNumber as BN } from "ethers";
 import { contracts } from "../contracts";
+import { DecimalsPrecision } from "../math/marketMath";
 const axios = require('axios')
 
 export async function fetchPriceFromCoingecko(id: string): Promise<BigNumber> {
@@ -194,6 +195,6 @@ export async function fetchValuation(amount: TokenAmount, signer: providers.Json
   const price: BigNumber = await fetchTokenPrice({ address: amount.token.address, signer, chainId });
   return {
     currency: 'USD',
-    amount: price.multipliedBy(new BigNumber(amount.rawAmount())).dividedBy(new BigNumber(10).pow(networkInfo.decimalsRecord[amount.token.address])).toNumber()
+    amount: price.multipliedBy(new BigNumber(amount.rawAmount())).dividedBy(new BigNumber(10).pow(networkInfo.decimalsRecord[amount.token.address])).toFixed(DecimalsPrecision)
   }
 } 
