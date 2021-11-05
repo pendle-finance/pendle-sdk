@@ -22,7 +22,11 @@ export class TrioTokenUints {
     public uints: TrioUints;
 
     public constructor(tokens: TrioTokens, uints: TrioUints) {
-        this.tokens = tokens;
+        this.tokens = {
+            tokenA: tokens.tokenA.toLowerCase(),
+            tokenB: tokens.tokenB.toLowerCase(),
+            tokenC: tokens.tokenC.toLowerCase(),
+        };
         this.uints = uints;
     }
 
@@ -123,7 +127,10 @@ export class PairTokenUints {
     public uints: PairUints;
 
     public constructor(tokens: PairTokens, uints: PairUints) {
-        this.tokens = tokens;
+        this.tokens = {
+            tokenA: tokens.tokenA.toLowerCase(),
+            tokenB: tokens.tokenB.toLowerCase(),
+        };
         this.uints = uints;
     }
 

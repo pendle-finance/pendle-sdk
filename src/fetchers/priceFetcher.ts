@@ -105,6 +105,14 @@ export async function fetchCTokenPrice(address: string, signer: providers.JsonRp
   return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, signer, chainId}));
 }
 
+export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
+  const JOEContract: Contract = new Contract(JOEAddress, contracts.IERC20.abi, signer.provider);
+  const joeLocked: BN = await JOEContract.balanceOf(xJOEAddress);
+  const xJOEContract: Contract = new Contract(xJOEAddress, contracts.IERC20.abi, signer.provider);
+  const totalSupply: BN = await xJOEContract.totalSupply();
+  return await (await fetchTokenPrice({address: JOEAddress, signer, chainId})).multipliedBy(joeLocked.toString()).dividedBy(totalSupply.toString())
+}
+
 export async function fetchBasicTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
@@ -150,6 +158,9 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
 
       case networkInfo.contractAddresses.tokens.PENDLE:
         return await fetchPriceFromCoingecko('pendle');
+
+      case networkInfo.contractAddresses.tokens.xJOE:
+        return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, signer, chainId);
     }
   }
   throw Error(`Token ${address} is not supported in basic tokens`);

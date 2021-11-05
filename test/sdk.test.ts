@@ -53,14 +53,14 @@ describe('Sdk', () => {
 
   it('YT.methods.fetchInterests', async () => {
     const userInterests = await Yt.methods(signer, chainId).fetchInterests(
-      '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
+      '0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC'
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it('OT.methods.fetchRewards', async() => {
+  it.only('OT.methods.fetchRewards', async() => {
     const userRewards = await Ot.methods(signer, chainId).fetchRewards(
-      '0xea5ed53ec1244a1baf72086c6f5726b1dd913fdc'
+      '0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC'
     );
     console.log(JSON.stringify(userRewards, null, '  '));
   })
@@ -91,7 +91,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
 
-  it.only('StakingPool.methods.fetchVestedRewards', async () => {
+  it('StakingPool.methods.fetchVestedRewards', async () => {
     const vestedRewards = await StakingPool.methods(signer, chainId).fetchVestedRewards(
       dummyUser
     );
