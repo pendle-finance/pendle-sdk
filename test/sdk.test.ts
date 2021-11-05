@@ -28,8 +28,8 @@ describe('Sdk', () => {
     const sdk = new Sdk(signer, chainId);
     console.log("estimate")
     const res = await sdk.estimateGasForClaimYields({
-      yts: [],
-      ots: [],
+      yts: [Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9', chainId)],
+      ots: [Ot.find('0xe55e3b62005a2035d48ac0c41a5a9c799f04892c', chainId)],
       lps: [],
       interestStakingPools: [],
       rewardStakingPools: [StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1),StakingPool.find('0x5b1c59eb6872f88a92469751a034b9b5ada9a73f', '0x944d1727d0b656f497e74044ff589871c330334f', 1)]
@@ -70,7 +70,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods(
       signer,
       chainId
@@ -81,9 +81,9 @@ describe('Sdk', () => {
   });
 
   it('StakingPool.methods.fetchAccruingRewards', async () => {
-    console.log(signer)
     const accruingRewards = await StakingPool.methods(
-      signer
+      signer,
+      chainId
     ).fetchAccruingRewards(
       '0x186e446fbd41dD51Ea2213dB2d3ae18B05A05ba8'
       // dummyUser
@@ -91,8 +91,8 @@ describe('Sdk', () => {
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchVestedRewards', async () => {
-    const vestedRewards = await StakingPool.methods(signer).fetchVestedRewards(
+  it.only('StakingPool.methods.fetchVestedRewards', async () => {
+    const vestedRewards = await StakingPool.methods(signer, chainId).fetchVestedRewards(
       dummyUser
     );
     console.log(JSON.stringify(vestedRewards, null, '  '));

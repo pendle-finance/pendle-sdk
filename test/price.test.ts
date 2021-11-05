@@ -1,6 +1,8 @@
 import { fetchTokenPrice } from "../src/fetchers/priceFetcher";
-import { ethers, Contract } from 'ethers';
-import { fetchAaveYield, fetchCompoundYield } from "../src/fetchers/externalYieldRateFetcher";
+import { ethers, BigNumber as BN } from 'ethers';
+import { fetchAaveYield, fetchCompoundYield, fetchSushiForkYield } from "../src/fetchers/externalYieldRateFetcher";
+import { avalancheContracts } from "../src/networks";
+import { getGasLimitWithETH } from "../src/helpers";
 const chainId: number = 1;
 
 jest.setTimeout(300000);
@@ -16,13 +18,20 @@ describe("price fetcher", () => {
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
       });
-    it.only('Pendle', async() => {
+    it('Pendle', async() => {
         const res = await fetchTokenPrice({signer: signer, address: "0x808507121b80c02388fad14726482e061b8da827", chainId: chainId});
         console.log(res.toString());
     })
 
     it('external rate', async() => {
-        const res = await fetchAaveYield('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
-        console.log(res);
+        for (const om of avalancheContracts.otherMarkets!) {
+            const res = await fetchSushiForkYield(om.address, 43114)
+            console.log('market:', om.address);
+            console.log('yield:', res);
+        }
+    })
+
+    it.only('gas price', async() => {
+        console.log(getGasLimitWithETH(BN.from(123456789), BN.from(0)))
     })
 })

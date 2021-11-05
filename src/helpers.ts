@@ -3,6 +3,7 @@ import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, Stak
 import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
+import { DecimalsPrecision } from './math/marketMath';
 export type Call_MultiCall = {
   target: string,
   callData: string
@@ -18,6 +19,8 @@ export function getFunctionABIByName(abi: any[], name: string): any {
 }
 
 export function formatOutput(returnedData: any, abi: any, name: string) {
+  // console.log(getFunctionABIByName(abi, name))
+  // console.log(returnedData)
   return utils.defaultAbiCoder.decode(getFunctionABIByName(abi, name).outputs.map((f: any) => f.type), returnedData);
 }
 
@@ -126,7 +129,19 @@ export const getCurrentEpochId = (currentTime: number | BN, startTime: number | 
 
 export const xor = (a: boolean, b: boolean) => a != b;
 
-export const getGasLimitWithETH = (estimate: BN, value: BN) => { return { gasLimit: Math.trunc(estimate.toNumber() * gasBuffer), value: value } }
+
+export const getGasLimitWithETH = (estimate: BN, value: BN) => { 
+  var buffer: number = gasBuffer;
+  var bufferedGasLimit: BN = ZERO;
+  var cnter = 0;
+  while (buffer > 0 && cnter < DecimalsPrecision) {
+    bufferedGasLimit = bufferedGasLimit.add(estimate.mul(buffer - (buffer % 1)));
+    buffer = 10 * (buffer % 1);
+    estimate = estimate.div(10);
+    cnter ++;
+  }
+  return { gasLimit: bufferedGasLimit, value: value } 
+}
 
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
   const margin: number = 30;

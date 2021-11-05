@@ -17,6 +17,7 @@ import { MasterChef } from './masterChef';
 import { PairTokens, PairUints } from './types';
 import { RedeemProxy } from './redeemProxy';
 import { PairTokenUints } from './multiTokens';
+import { Interface } from '@ethersproject/abi';
 
 export interface StakingPoolId {
   address: string;
@@ -177,10 +178,13 @@ export class StakingPool {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const stakingPools: LMINFO[] = networkInfo.contractAddresses.stakingPools;
+    const liquidityRewardsReaderABI = contracts.PendleLiquidityRewardsReaderMulti.abi;
+    const liquidityRewardsReaderinterface: Interface = new Interface(liquidityRewardsReaderABI);
+
 
     const liquidityRewardsProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleLiquidityRewardsProxy,
-      contracts.PendleLiquidityRewardsReaderMulti.abi,
+      liquidityRewardsReaderABI,
       signer.provider
     )
 
@@ -192,10 +196,10 @@ export class StakingPool {
 
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
-    const Lm1s: any[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
+    const Lm1s: LMINFO[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
       return StakingPool.isLmV1ByType(stakingPoolInfo.contractType);
     })
-    const Lm2s: any[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
+    const Lm2s: LMINFO[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
       return StakingPool.isLmV2ByType(stakingPoolInfo.contractType);
     })
 
@@ -268,7 +272,7 @@ export class StakingPool {
       const userLm1AccruingRewards: PairTokenUints[] = indexRange(0, Lm1s.length).map((i: number): PairTokenUints => {
         if (returnedData[i].success) {
           return PairTokenUints.fromContractPairTokenUints(
-            (formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsReaderMulti.abi, "redeemAndCalculateAccruingV1")).userTentativeReward
+            (liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateAccruingV1", returnedData[i].returnData)).res.userTentativeReward
           );
         } else {
           return PairTokenUints.EMPTY;
@@ -278,7 +282,7 @@ export class StakingPool {
       const userLm2AccruingRewards: PairTokenUints[] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number): PairTokenUints => {
         if (returnedData[i].success) {
           return PairTokenUints.fromContractPairTokenUints(
-            (formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsReaderMulti.abi, "redeemAndCalculateAccruingV2")).userTentativeReward
+            (liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateAccruingV2", returnedData[i].returnData)).res.userTentativeReward
           );
         } else {
           return PairTokenUints.EMPTY;
@@ -324,14 +328,14 @@ export class StakingPool {
 
       const userLm1VestedRewards: PairTokenUints[][] = indexRange(0, Lm1s.length).map((i: number): PairTokenUints[] => {
         if (returnedData[i].success) {
-          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVested")[1].map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
+          return liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateVestedV1", returnedData[i].returnData).vestedRewards.map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
         } else {
-          return Array(VestingEpoches - 1).fill(ZERO);
+          return Array(VestingEpoches - 1).fill(PairTokenUints.EMPTY);
         }
       })
       const userLm2VestedRewards: PairTokenUints[][] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number): PairTokenUints[] => {
         if (returnedData[i].success) {
-          return formatOutput(returnedData[i].returnData, contracts.PendleLiquidityRewardsProxy.abi, "redeemAndCalculateVestedV2")[1].map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
+          return liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateVestedV2", returnedData[i].returnData).vestedRewards.map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
         } else {
           return Array(VestingEpoches - 1).fill(PairTokenUints.EMPTY);
         }
@@ -526,7 +530,7 @@ export class StakingPool {
         const rewards: TokenAmount[] = await getTotalRewardForOneEpoch(epochData);
         const rewardsValue: BigNumber[] = await Promise.all(rewards.map(async (t: TokenAmount): Promise<BigNumber> => {
           const tokenPrice: BigNumber = await fetchTokenPrice({ address: t.token.address, signer, chainId });
-          const valuation: BigNumber =  await calcValuation(tokenPrice, BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
+          const valuation: BigNumber = await calcValuation(tokenPrice, BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
           return valuation;
         }));
         aprInfos.push({
