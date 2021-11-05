@@ -279,7 +279,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         WETH: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
         PENDLE: '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
         qiUSDC: '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f',
-        xJOE: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'
+        xJOE: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33',
+        QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5'
     },
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0xda5b2b02fa1575b078655523d23092164e1e7c9f",

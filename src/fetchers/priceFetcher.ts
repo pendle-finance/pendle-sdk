@@ -159,6 +159,9 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
       case networkInfo.contractAddresses.tokens.PENDLE:
         return await fetchPriceFromCoingecko('pendle');
 
+      case networkInfo.contractAddresses.tokens.QI:
+        return await fetchPriceFromCoingecko('benqi');
+
       case networkInfo.contractAddresses.tokens.xJOE:
         return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, signer, chainId);
     }
