@@ -432,7 +432,7 @@ export class StakingPool {
           expiry,
           BN.from(amount.rawAmount())
         ];
-        return submitTransaction(stakingPoolContract, signer, 'withdraw', args);
+        return submitTransaction(stakingPoolContract, signer, 'withdrawTo', args);
       } else {
         throw Error(UNSUPPORTED_TYPE);
       }
