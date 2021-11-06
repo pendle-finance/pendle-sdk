@@ -17,7 +17,6 @@ import { MasterChef } from './masterChef';
 import { PairTokens, PairUints } from './types';
 import { RedeemProxy } from './redeemProxy';
 import { PairTokenUints } from './multiTokens';
-import { Interface } from '@ethersproject/abi';
 
 export interface StakingPoolId {
   address: string;
@@ -179,8 +178,6 @@ export class StakingPool {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const stakingPools: LMINFO[] = networkInfo.contractAddresses.stakingPools;
     const liquidityRewardsReaderABI = contracts.PendleLiquidityRewardsReaderMulti.abi;
-    const liquidityRewardsReaderinterface: Interface = new Interface(liquidityRewardsReaderABI);
-
 
     const liquidityRewardsProxyContract = new Contract(
       networkInfo.contractAddresses.misc.PendleLiquidityRewardsProxy,
@@ -272,7 +269,7 @@ export class StakingPool {
       const userLm1AccruingRewards: PairTokenUints[] = indexRange(0, Lm1s.length).map((i: number): PairTokenUints => {
         if (returnedData[i].success) {
           return PairTokenUints.fromContractPairTokenUints(
-            (liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateAccruingV1", returnedData[i].returnData)).res.userTentativeReward
+            (liquidityRewardsProxyContract.interface.decodeFunctionResult("redeemAndCalculateAccruingV1", returnedData[i].returnData)).res.userTentativeReward
           );
         } else {
           return PairTokenUints.EMPTY;
@@ -282,7 +279,7 @@ export class StakingPool {
       const userLm2AccruingRewards: PairTokenUints[] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number): PairTokenUints => {
         if (returnedData[i].success) {
           return PairTokenUints.fromContractPairTokenUints(
-            (liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateAccruingV2", returnedData[i].returnData)).res.userTentativeReward
+            (liquidityRewardsProxyContract.interface.decodeFunctionResult("redeemAndCalculateAccruingV2", returnedData[i].returnData)).res.userTentativeReward
           );
         } else {
           return PairTokenUints.EMPTY;
@@ -328,14 +325,14 @@ export class StakingPool {
 
       const userLm1VestedRewards: PairTokenUints[][] = indexRange(0, Lm1s.length).map((i: number): PairTokenUints[] => {
         if (returnedData[i].success) {
-          return liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateVestedV1", returnedData[i].returnData).vestedRewards.map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
+          return liquidityRewardsProxyContract.interface.decodeFunctionResult("redeemAndCalculateVestedV1", returnedData[i].returnData).vestedRewards.map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
         } else {
           return Array(VestingEpoches - 1).fill(PairTokenUints.EMPTY);
         }
       })
       const userLm2VestedRewards: PairTokenUints[][] = indexRange(Lm1s.length, Lm1s.length + Lm2s.length).map((i: number): PairTokenUints[] => {
         if (returnedData[i].success) {
-          return liquidityRewardsReaderinterface.decodeFunctionResult("redeemAndCalculateVestedV2", returnedData[i].returnData).vestedRewards.map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
+          return liquidityRewardsProxyContract.interface.decodeFunctionResult("redeemAndCalculateVestedV2", returnedData[i].returnData).vestedRewards.map((pt: any) => PairTokenUints.fromContractPairTokenUints(pt));
         } else {
           return Array(VestingEpoches - 1).fill(PairTokenUints.EMPTY);
         }
