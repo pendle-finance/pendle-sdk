@@ -24,15 +24,15 @@ describe('Sdk', () => {
     signer = provider.getSigner();
   });
 
-  it('claim yields', async() => {
+  it.only('claim yields', async() => {
     const sdk = new Sdk(signer, chainId);
     console.log("estimate")
     const res = await sdk.estimateGasForClaimYields({
-      yts: [Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9', chainId)],
-      ots: [Ot.find('0xe55e3b62005a2035d48ac0c41a5a9c799f04892c', chainId)],
+      yts: [Yt.find('0x323a8a76eaf2e3ea8b2c5908763252e01c0d6beb', chainId)],
+      ots: [Ot.find('0x095933f3c6dcdd666f8b65b032a2fc6f529fd074', chainId)],
       lps: [],
       interestStakingPools: [],
-      rewardStakingPools: [StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1),StakingPool.find('0x5b1c59eb6872f88a92469751a034b9b5ada9a73f', '0x944d1727d0b656f497e74044ff589871c330334f', 1)]
+      rewardStakingPools: [StakingPool.find('0x576faae4b090c2e6693cbd7d54cdb7e8bbe579a6', '0xeeeaeb7a1d7f18e3ea61046a1d21d7b97c82db1a', chainId)]
     });
     console.log(res);
   })
@@ -58,7 +58,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('OT.methods.fetchRewards', async() => {
+  it('OT.methods.fetchRewards', async() => {
     const userRewards = await Ot.methods(signer, chainId).fetchRewards(
       '0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC'
     );

@@ -271,7 +271,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         PendleData: '0x9e0d260ab16a55956fa72be7c5aa9c657d1bc6e4',
         MultiCallV2: '0x11b8399bc71e8b67a0f7cca2663612af1ca38536',
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052',
-        PendleWrapper: '0xc4aef72f0f42ed47e216f8dcb3699a39276cbf5f'
+        PendleWrapper: '0x6bf0988b776e670b6b54dc6865bdeb77e4d1f809'
     },
     tokens: {
         USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',

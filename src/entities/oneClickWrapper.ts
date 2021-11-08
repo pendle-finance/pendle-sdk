@@ -102,12 +102,12 @@ const forgeIdToMode: Record<string, number> = {
     [forgeIdsInBytes.XJOE]: 5
 }
 
-export type DataTknzAaveCompound = {
+export type DataTknzSingle = {
     token: string;
     amount: string;
 }
 
-export const dummyDataTknzAaveCompound: DataTknzAaveCompound = {
+export const dummyDataTknzSingle: DataTknzSingle = {
     token: zeroAddress,
     amount: '0'
 }
@@ -137,8 +137,8 @@ export const dummyDataAddLiqUniFork: DataAddLiqUniFork = {
 }
 
 export type DataTknz = {
-    aaveCom: DataTknzAaveCompound;
-    uniFork: DataAddLiqUniFork;
+    single: DataTknzSingle;
+    double: DataAddLiqUniFork;
     forge: string; // address
     expiryYT: number;
 }
@@ -206,11 +206,11 @@ export class OneClickWrapper {
             })!.address;
             const otMarket: Market = Market.find(otMarketAddress, chainId);
             const ytStakingPoolInfo: LMINFO = networkInfo.contractAddresses.stakingPools.find((lm: LMINFO) => {
-                return isSameAddress(lm.inputTokenAddress, ytMarketAddress);
+                return isSameAddress(lm.inputTokenAddress, ytMarketAddress) && lm.active;
             })!;
             const ytStakingPool: StakingPool = StakingPool.find(ytStakingPoolInfo.address, ytStakingPoolInfo.inputTokenAddress, chainId);
             const otStakingPoolInfo: LMINFO = networkInfo.contractAddresses.stakingPools.find((lm: LMINFO) => {
-                return isSameAddress(lm.inputTokenAddress, otMarketAddress);
+                return isSameAddress(lm.inputTokenAddress, otMarketAddress) && lm.active;
             })!;
             const otStakingPool: StakingPool = StakingPool.find(otStakingPoolInfo.address, otStakingPoolInfo.inputTokenAddress, chainId);
             return {
@@ -284,8 +284,7 @@ export class OneClickWrapper {
 
         const simulateWithFixedInput = async (action: Action, pendleFixture: PendleFixture, fixedInputAmount: TokenAmount, slippage: number): Promise<SimulationDetails> => {
             const transactions: Transaction[] = [];
-            // const user: string = await signer.getAddress()
-            const user = "0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb";
+            const user: string = await signer.getAddress()
             const inAmount: BN = BN.from(fixedInputAmount.rawAmount());
 
             const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
@@ -510,7 +509,6 @@ export class OneClickWrapper {
                     BN.from(10).pow(18).toString()
                 )
                 const testSimulationResult: SimulationDetails = await simulateWithFixedInput(action, pendleFixture, testTokenAmount, slippage);
-                // console.log("testSimulationResult",testSimulationResult)
                 const testInputTokenAmount: TokenAmount = testSimulationResult.tokenAmounts.find((t: TokenAmount) => isSameAddress(t.token.address, inputTokenAmount.token.address))!;
                 const scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
                 return unwrapEthInSimulation(scaledSimulation);
@@ -534,7 +532,7 @@ export class OneClickWrapper {
             if (isUnderlyingLP()) {
                 const dataTknz: DataTknz = {} as DataTknz;
                 dataTknz.forge = forgeAddress;
-                dataTknz.aaveCom = dummyDataTknzAaveCompound;
+                dataTknz.single = dummyDataTknzSingle;
                 dataTknz.expiryYT = this.yieldContract.expiry;
 
                 const dataAddLiqUniFork: DataAddLiqUniFork = {
@@ -551,7 +549,7 @@ export class OneClickWrapper {
                 const currentTime: BN = BN.from(await getCurrentTimestamp(signer.provider));
                 const deadline: BN = currentTime.add(ONE_MINUTE.mul(60).mul(3));
                 dataAddLiqUniFork.deadline = deadline.toNumber();
-                dataTknz.uniFork = dataAddLiqUniFork;
+                dataTknz.double = dataAddLiqUniFork;
 
                 var dataAddLiqOT: DataAddLiqOT = {} as DataAddLiqOT, dataAddLiqYT: DataAddLiqYT = {} as DataAddLiqYT;
                 if (action == Action.stakeOT || action == Action.stakeOTYT) {
@@ -584,6 +582,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqOT
                         ];
+                        // console.log(JSON.stringify(args, null, '  '));
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOT', args, maxEthPaid);
 
                     case Action.stakeYT:
@@ -592,6 +591,7 @@ export class OneClickWrapper {
                             dataTknz,
                             dataAddLiqYT
                         ];
+                        // console.log(JSON.stringify(args, null, '  '));
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForYT', args, maxEthPaid);
 
                     case Action.stakeOTYT:
@@ -601,6 +601,7 @@ export class OneClickWrapper {
                             dataAddLiqOT,
                             dataAddLiqYT
                         ];
+                        // console.log(JSON.stringify(args, null, '  '));
                         return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOTandYT', args, maxEthPaid);
                 }
             } else {
