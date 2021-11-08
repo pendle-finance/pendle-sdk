@@ -83,14 +83,14 @@ describe("One click wrapper", () => {
     wrapper = new OneClickWrapper(yieldContract)
   });
 
-  it('Simulate stake', async () => {
-    const res = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+  it.only('Simulate stake', async () => {
+    const res = await wrapper.methods(signer, chainId).simulate(Action.stakeYT, new TokenAmount(
       new Token(
         networkInfo.contractAddresses.tokens.PENDLE,
         18
       ),
-      BN.from(10).pow(20).mul(12).toString()
-    ), 0.01)
+      BN.from(10).pow(20).toString()
+    ), 0.001)
     console.log(JSON.stringify(res, null, '  '));
 
     // const res1:SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
@@ -115,12 +115,12 @@ describe("One click wrapper", () => {
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it.only('send', async() => {
-    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+  it('send', async() => {
+    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
       ETHToken,
       BN.from(10).pow(18).toString()
     ), 0.01)
-    const res = await wrapper.methods(signer, chainId).send(Action.stakeOTYT, sim_res.transactions, 0.01);
+    const res = await wrapper.methods(signer, chainId).send(Action.stakeOT, sim_res.transactions, 0.01);
     console.log(JSON.stringify(res, null, '  '));
   })
 })

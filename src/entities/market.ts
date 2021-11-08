@@ -15,7 +15,7 @@ import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, ca
 import { forgeIdsInBytes, ONE_DAY, ETHAddress, ZERO } from '../constants';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactions/types';
-import { fetchTokenPrice } from '../fetchers/priceFetcher';
+import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
 
 import BigNumber from 'bignumber.js';
 import { RedeemProxy } from './redeemProxy';
@@ -799,33 +799,9 @@ export class PendleMarket extends Market {
     }
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, impliedYield: BigNumber }> => {
-      const underlyingPrice: BigNumber = await fetchTokenPrice({ address: underlyingAsset, signer, chainId });
       const ytPrice: BigNumber = await getYTPrice(marketReserves);
-      var principalPerYT: BN = BN.from(10).pow(18);
-      switch (yieldContract.forgeIdInBytes) {
-        case forgeIdsInBytes.AAVE:
-          principalPerYT = BN.from(10).pow(18);
-          break;
-
-        case forgeIdsInBytes.COMPOUND:
-          principalPerYT = await pendleForgeContract.initialRate(underlyingAsset);
-          break;
-
-        case forgeIdsInBytes.BENQI:
-          principalPerYT = BN.from(1).pow(networkInfo.decimalsRecord[underlyingAsset]);
-          break;
-
-        case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-        case forgeIdsInBytes.SUSHISWAP_COMPLEX:
-        case forgeIdsInBytes.JOE_SIMPLE:
-        case forgeIdsInBytes.JOE_COMPLEX:
-        case forgeIdsInBytes.XJOE:
-          principalPerYT = calcPrincipalForSLPYT(await pendleForgeContract.callStatic.getExchangeRate(underlyingAsset));
-          break
-      }
-      const ytDecimal: number = networkInfo.decimalsRecord[this.tokens[0].address];
-      const principalPerYTFloat: BigNumber = calcPrincipalFloat(principalPerYT, ytDecimal, networkInfo.decimalsRecord[underlyingAsset]);
-      const p: BigNumber = ytPrice.dividedBy(underlyingPrice.multipliedBy(principalPerYTFloat));
+      const principalPerYT: TokenAmount = await yieldContract.methods(signer, chainId).getPrincipalPerYT();
+      const p: BigNumber = ytPrice.dividedBy((await fetchValuation(principalPerYT, signer, chainId)).amount);
 
       // means yield is infinite
       if (p.isGreaterThanOrEqualTo(ONE)) {

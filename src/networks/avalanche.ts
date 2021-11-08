@@ -207,7 +207,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         },
         {
             address: '0xc623caf18efab2c47f419e9529dedf0bdbcd560c',
-            inputTokenAddress: '0xCf5F662B388302836c1c2899446e2267b081c690',
+            inputTokenAddress: '0xcf5f662b388302836c1c2899446e2267b081c690',
             contractType: StakingPoolType.LmV1Multi,
             rewardTokenAddresses: [
                 '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',

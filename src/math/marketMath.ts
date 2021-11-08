@@ -178,8 +178,8 @@ export function calcTokenPriceByMarket(knownPrice: BigNumber, rate: BN, otherDec
     return knownPrice.multipliedBy(rate.toString()).dividedBy(Math.pow(10, otherDecimal));
 }
 
-export function calcPrincipalForSLPYT(exchangeRate: BN): BN {
-    return rdiv(BN.from(10).pow(18), exchangeRate);
+export function calcPrincipalForSLPYT(exchangeRate: BN, principalDecimal: number): BN {
+    return rdiv(BN.from(10).pow(principalDecimal), exchangeRate);
 }
 
 export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): BigNumber {
