@@ -19,7 +19,7 @@ describe("price fetcher", () => {
         signer = provider.getSigner();
       });
     it.only('Pendle', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0xe294a273fea5975675a67b09cb5213a7985addca", chainId: chainId});
+        const res = await fetchTokenPrice({signer: signer, address: "0x095933f3c6dcdd666f8b65b032a2fc6f529fd074", chainId: chainId});
         console.log(res.toString());
     })
 

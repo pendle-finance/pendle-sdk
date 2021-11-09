@@ -204,13 +204,12 @@ export function calcSlippedUpAmount(amount: BN, slippage: number) {
 // return max(valuation, 0.1$)
 export function calcValuation(unitPrice: BigNumber, amount: BN, decimals: number): BigNumber {
     const valuation: BigNumber = unitPrice.multipliedBy(amount.toString()).dividedBy(BN.from(10).pow(decimals).toString());
-    if (valuation.lt(0.1)) {
-        return new BigNumber(0.1);
-    } else {
-        return valuation;
-    }
+    return valuation;
 }
 
 export function calcLMRewardApr(rewardsValue: BigNumber, totalStakeValue: BigNumber, frequencyPerYear: number): BigNumber {
+    if (totalStakeValue.lte(0)) { // avoid division by zero when there is no stake
+        return new BigNumber('999999999');
+    }
     return rewardsValue.multipliedBy(frequencyPerYear).dividedBy(totalStakeValue);
 }

@@ -84,14 +84,22 @@ describe("One click wrapper", () => {
   });
 
   it.only('Simulate stake', async () => {
-    const res = await wrapper.methods(signer, chainId).simulate(Action.stakeYT, new TokenAmount(
+    const res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
       new Token(
         networkInfo.contractAddresses.tokens.PENDLE,
         18
       ),
       BN.from(10).pow(20).toString()
     ), 0.001)
-    console.log(JSON.stringify(res, null, '  '));
+    console.log(JSON.stringify(res.tokenAmounts, null, '  '));
+    const res1: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+      new Token(
+        networkInfo.contractAddresses.tokens.PENDLE,
+        18
+      ),
+      BN.from(10).pow(20).toString()
+    ), 1)
+    console.log(JSON.stringify(res1.tokenAmounts, null, '  '));
 
     // const res1:SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
     //   ETHToken,
