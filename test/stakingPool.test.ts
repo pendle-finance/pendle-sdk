@@ -1,13 +1,13 @@
 import { StakingPool } from '../src/entities/stakingPool';
 import { Contract, ethers } from 'ethers';
 import * as dotenv from 'dotenv';
-import { contracts, dummyAddress } from '../src';
+import { contracts, dummyAddress, Token, TokenAmount } from '../src';
 import { distributeConstantsByNetwork } from '../src/helpers';
 
 dotenv.config()
 jest.setTimeout(300000);
 
-var chainId = 43114;
+var chainId = 1;
 
 const PendleSingle: StakingPool = StakingPool.find('0x07282f2ceebd7a65451fcd268b364300d9e6d7f5', '0x808507121b80c02388fad14726482e061b8da827',1);
 const OTPE2022Pool: StakingPool = StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1);
@@ -30,10 +30,10 @@ describe("Staking pools", () => {
 
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl, chainId);
-        signer = provider.getSigner();
-        sp = StakingPool.find('0x576faae4b090c2e6693cbd7d54cdb7e8bbe579a6', '0xeeeaeb7a1d7f18e3ea61046a1d21d7b97c82db1a', chainId);
+        signer = provider.getSigner('0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb');
+        sp = StakingPool.find('0x0f3bccbfef1dc227f33a11d7a51cd02dead208c8', '0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', chainId);
     });
-    it.only('Get totalStaked', async() => {
+    it('Get totalStaked', async() => {
         const totalStake = await sp.methods(signer, chainId).getTotalStaked();
         console.log(JSON.stringify(totalStake, null, '  '));
     })
@@ -46,5 +46,10 @@ describe("Staking pools", () => {
     it('Get Reward APRs', async() => {
         const aprs = await sp.methods(signer, chainId).rewardAprs();
         console.log(JSON.stringify(aprs, null, '  '));
+    })
+
+    it.only('stake', async() => {
+        const res = await sp.methods(signer, chainId).stake(new TokenAmount(new Token('0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', 18), '1000'));
+        console.log(JSON.stringify(res, null, '  '))
     })
 })
