@@ -783,7 +783,13 @@ export class PendleMarket extends Market {
         console.error("Unable to get block that is 1 day old");
         return ZeroCurrencyAmount
       }
-      const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber });
+      var getPastReserveSuccess: boolean = true;
+      const pastMarketReserves: MarketReservesRaw = await marketContract.getReserves({ blockTag: pastBlockNumber }).catch((err: any) => {
+        getPastReserveSuccess = false;
+      });
+      if (!getPastReserveSuccess) {
+        return ZeroCurrencyAmount;
+      }
       return getLiquidityValue(pastMarketReserves);
     }
 
