@@ -180,7 +180,7 @@ export class StakingPool {
     const liquidityRewardsReaderABI = contracts.PendleLiquidityRewardsReaderMulti.abi;
 
     const liquidityRewardsProxyContract = new Contract(
-      networkInfo.contractAddresses.misc.PendleLiquidityRewardsProxy,
+      networkInfo.contractAddresses.misc.PendleLiquidityRewardsReader,
       liquidityRewardsReaderABI,
       signer.provider
     )

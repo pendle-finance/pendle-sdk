@@ -300,7 +300,7 @@ export const kovanContracts: NetworkContractAddresses = {
     ],
     misc: {
         PendleRedeemProxy: '0x866a680d43cb17f2b65f7ccc3471146a560afada',
-        PendleLiquidityRewardsProxy: '0xb4972941692b3a324af1015dacd78f9df2da3601',
+        PendleLiquidityRewardsReader: '0xb4972941692b3a324af1015dacd78f9df2da3601',
         PendleRouter: '0x85db6e6edb8ec6dfec222b80a54cc7b42f59671e',
         PendleData: '0xb41094b55ae8ce23adfa6c4156c473e6d0e3287e',
         MultiCallV2: '0xf6a6133725d5c77f35883f4a198bcd1aa5bd50a8'
