@@ -207,7 +207,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         },
         {
             address: '0xc623caf18efab2c47f419e9529dedf0bdbcd560c',
-            inputTokenAddress: '0xCf5F662B388302836c1c2899446e2267b081c690',
+            inputTokenAddress: '0xcf5f662b388302836c1c2899446e2267b081c690',
             contractType: StakingPoolType.LmV1Multi,
             rewardTokenAddresses: [
                 '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
@@ -271,7 +271,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         PendleData: '0x9e0d260ab16a55956fa72be7c5aa9c657d1bc6e4',
         MultiCallV2: '0x11b8399bc71e8b67a0f7cca2663612af1ca38536',
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052',
-        PendleWrapper: '0xc4aef72f0f42ed47e216f8dcb3699a39276cbf5f'
+        PendleWrapper: '0x6bf0988b776e670b6b54dc6865bdeb77e4d1f809'
     },
     tokens: {
         USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
@@ -279,7 +279,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         WETH: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
         PENDLE: '0x36366298a3b6836e7030a7ff1964a1f0f44638e6',
         qiUSDC: '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f',
-        xJOE: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'
+        xJOE: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33',
+        QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5'
     },
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0xda5b2b02fa1575b078655523d23092164e1e7c9f",

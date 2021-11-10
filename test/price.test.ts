@@ -3,7 +3,7 @@ import { ethers, BigNumber as BN } from 'ethers';
 import { fetchAaveYield, fetchCompoundYield, fetchSushiForkYield } from "../src/fetchers/externalYieldRateFetcher";
 import { avalancheContracts } from "../src/networks";
 import { getGasLimitWithETH } from "../src/helpers";
-const chainId: number = 1;
+const chainId: number = 43114;
 
 jest.setTimeout(300000);
 
@@ -18,8 +18,8 @@ describe("price fetcher", () => {
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
       });
-    it('Pendle', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0x808507121b80c02388fad14726482e061b8da827", chainId: chainId});
+    it.only('Pendle', async() => {
+        const res = await fetchTokenPrice({signer: signer, address: "0x095933f3c6dcdd666f8b65b032a2fc6f529fd074", chainId: chainId});
         console.log(res.toString());
     })
 
@@ -31,7 +31,7 @@ describe("price fetcher", () => {
         }
     })
 
-    it.only('gas price', async() => {
+    it('gas price', async() => {
         console.log(getGasLimitWithETH(BN.from(123456789), BN.from(0)))
     })
 })

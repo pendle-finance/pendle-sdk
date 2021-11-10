@@ -37,7 +37,7 @@ export class Sdk {
     interestStakingPools: StakingPool[],
     rewardStakingPools: StakingPool[]
   }): Promise<providers.TransactionResponse> {
-    return RedeemProxy.methods(this.signer, this.chainId).claimYields(yts, ots, lps, interestStakingPools, rewardStakingPools);
+    return RedeemProxy.methods(this.signer, this.chainId).claimYields({yts, ots, lps, interestStakingPools, rewardStakingPools});
   }
 
   public async estimateGasForClaimYields({

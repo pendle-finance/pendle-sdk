@@ -1,4 +1,4 @@
-import { OneClickWrapper, Token, EXP_2022, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails, ETHToken } from "../src";
+import { OneClickWrapper, Token, EXP_2022, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails, ETHToken, dummyAddress } from "../src";
 import { NetworkInfo } from '../src/networks';
 
 import { ethers, BigNumber as BN, utils } from 'ethers';
@@ -71,11 +71,11 @@ describe("One click wrapper", () => {
 
     // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
-    signer = provider.getSigner();
+    signer = provider.getSigner('0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC');
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.JOE_COMPLEX),
+      utils.parseBytes32String(forgeIdsInBytes.JOE_SIMPLE),
       new Token(
-        '0xa389f9430876455c36478deea9769b7ca4e3ddb1',
+        '0xd82b9b055f79d1a244005406988f85ed970797ed',
         18
       ),
       EXP_2022.toNumber()
@@ -83,27 +83,38 @@ describe("One click wrapper", () => {
     wrapper = new OneClickWrapper(yieldContract)
   });
 
-  it('Simulate stake', async () => {
-    const res = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
-      ETHToken,
+  it.only('Simulate stake', async () => {
+    const res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+      new Token(
+        networkInfo.contractAddresses.tokens.PENDLE,
+        18
+      ),
       BN.from(10).pow(20).toString()
-    ), 0.01)
-    console.log(JSON.stringify(res.transactions[0], null, '  '));
+    ), 0.001)
+    console.log(JSON.stringify(res.tokenAmounts, null, '  '));
+    const res1: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+      new Token(
+        networkInfo.contractAddresses.tokens.PENDLE,
+        18
+      ),
+      BN.from(10).pow(20).toString()
+    ), 1)
+    console.log(JSON.stringify(res1.tokenAmounts, null, '  '));
 
-    const res1:SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
-      ETHToken,
-      BN.from(10).pow(20).toString()
-    ), 0.01)
-    console.log(JSON.stringify(res1.transactions[0], null, '  '));
-    const res2 = await wrapper.methods(signer, chainId).simulate(Action.stakeYT, new TokenAmount(
-      ETHToken,
-      BN.from(10).pow(20).toString()
-    ), 0.01)
-    console.log(JSON.stringify(res2.transactions[0], null, '  '));
+    // const res1:SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
+    //   ETHToken,
+    //   BN.from(10).pow(20).toString()
+    // ), 0.01)
+    // console.log(JSON.stringify(res1.transactions[0], null, '  '));
+    // const res2 = await wrapper.methods(signer, chainId).simulate(Action.stakeYT, new TokenAmount(
+    //   ETHToken,
+    //   BN.from(10).pow(20).toString()
+    // ), 0.01)
+    // console.log(JSON.stringify(res2.transactions[0], null, '  '));
 
   })
 
-  it.only('apr', async() => {
+  it('apr', async() => {
     const res = await wrapper.methods(signer, chainId).apr(Action.stakeOT);
     console.log('stakeOT', JSON.stringify(res, null, '  '));
     const res1 = await wrapper.methods(signer, chainId).apr(Action.stakeYT);
@@ -113,11 +124,11 @@ describe("One click wrapper", () => {
   })
 
   it('send', async() => {
-    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
+    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
       ETHToken,
-      BN.from(10).pow(20).toString()
+      BN.from(10).pow(18).toString()
     ), 0.01)
-    const res = await wrapper.methods(signer, chainId).send(Action.stakeOTYT, sim_res.transactions, 0.01);
+    const res = await wrapper.methods(signer, chainId).send(Action.stakeOT, sim_res.transactions, 0.01);
     console.log(JSON.stringify(res, null, '  '));
   })
 })
