@@ -734,7 +734,7 @@ export class PendleMarket extends Market {
     }
 
     const getVolume = async (leftBound: number, rightBound: number): Promise<CurrencyAmount> => {
-      let volume: CurrencyAmount = ZeroCurrencyAmount;
+      let volume: CurrencyAmount = Object.assign({}, ZeroCurrencyAmount);
       let amount: BigNumber = new BigNumber(0), page: number = 1;
       let f: boolean = true;
       while (f) {
