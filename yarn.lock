@@ -1537,10 +1537,10 @@
     node-fetch "^2.6.0"
     semver "^6.3.0"
 
-"@pendle/core@1.1.4":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.1.4.tgz#efe3092c926ec2300c70aa5f6baef337cffac743"
-  integrity sha512-Ki+qE7PuiMkwa+/0C8W23D8Zwn4AK1AMda3VWHkjlnM1kJud5FWuVWI8hqCCneBhc/r8AKJCE6nUPs7zwZathQ==
+"@pendle/core@1.1.6":
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.1.6.tgz#87a25edcabd244de7bd77a58aaba6415e9431760"
+  integrity sha512-cUYUulKywMqeJmSnNgTA1v8rPeSyYrVqYoJgAPPfV7bPL81Ghd34cWJg5X3triTgF0j3wR7ZsHtcwcvgm26F8Q==
   dependencies:
     bignumber.js "^9.0.1"
 
