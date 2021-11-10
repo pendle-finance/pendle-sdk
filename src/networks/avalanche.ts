@@ -6,7 +6,7 @@ export const avalancheContracts: NetworkContractAddresses = {
     YTs: [
         {
             address: '0x41e8e841f3c9fe666921eda128ca8e2b143eb136',
-            underlyingAssetAddress: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664x',
+            underlyingAssetAddress: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
             rewardTokenAddresses: ['0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'],
             forgeIdInBytes: forgeIdsInBytes.BENQI,
             expiry: EXP_2023
@@ -76,7 +76,7 @@ export const avalancheContracts: NetworkContractAddresses = {
             address: '0x7552f903e33db53a86167c1e74f0e082bd0740d5',
             pair: [
                 '0x41e8e841f3c9fe666921eda128ca8e2b143eb136',
-                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664x'
+                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
             ],
             rewardTokenAddresses: [
                 '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'
