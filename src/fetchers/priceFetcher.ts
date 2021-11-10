@@ -147,6 +147,7 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
         return new BigNumber(1)
 
       case networkInfo.contractAddresses.tokens.qiUSDC:
+      case networkInfo.contractAddresses.tokens.qiAVAX:
         return await fetchCTokenPrice(address, signer, chainId);
 
       case networkInfo.contractAddresses.tokens.WETH:

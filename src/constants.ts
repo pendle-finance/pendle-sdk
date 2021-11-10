@@ -29,6 +29,7 @@ export const INF = BN.from(2)
   .sub(1);
 export const EXP_2023 = BN.from('1703721600');
 export const EXP_2022 = BN.from("1672272000");
+export const EXP_2022JUN = BN.from("1656547200");
 export const EXP_2021 = BN.from("1640822400");
 export const ONE_DAY = BN.from("86400");
 export const ONE_MINUTE = BN.from("60");
