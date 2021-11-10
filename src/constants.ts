@@ -33,7 +33,10 @@ export const EXP_2022JUN = BN.from("1656547200");
 export const EXP_2021 = BN.from("1640822400");
 export const ONE_DAY = BN.from("86400");
 export const ONE_MINUTE = BN.from("60");
-export const LMStartTime = BN.from("1623888000");
+export const LMStartTime = {
+  1: BN.from("1623888000"),
+  43114: BN.from("1636588800")
+}
 export const LMEpochDuration = BN.from("604800");
 export const ALLOCATION_DENOMINATOR = BN.from("1000000000");
 export const VestingEpoches = 5;

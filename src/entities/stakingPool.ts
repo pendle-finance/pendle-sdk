@@ -1,7 +1,7 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, formatOutput, submitTransaction } from '../helpers'
-import { ZERO, LMEpochDuration, LMStartTime, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress, HG } from '../constants';
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, getLMStartTime, submitTransaction } from '../helpers'
+import { LMEpochDuration, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress, HG } from '../constants';
 import { contracts } from '../contracts';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
@@ -287,7 +287,7 @@ export class StakingPool {
       })
 
       const currentTime: number = await getCurrentTimestamp(signer.provider);
-      const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
+      const currentEpochId = getCurrentEpochId(currentTime, getLMStartTime(chainId), LMEpochDuration);
 
       const userLm1AccruingRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolAccruingRewards(Lm1s[i], userLm1AccruingRewards[i].toTokenAmounts(chainId), currentEpochId, VestingEpoches, decimalsRecord);
@@ -339,7 +339,7 @@ export class StakingPool {
       })
 
       const currentTime: number = await getCurrentTimestamp(signer.provider);
-      const currentEpochId = getCurrentEpochId(currentTime, LMStartTime, LMEpochDuration);
+      const currentEpochId = getCurrentEpochId(currentTime, getLMStartTime(chainId), LMEpochDuration);
 
       const userLm1VestedRewardsFormatted = indexRange(0, Lm1s.length).map((i: number) => {
         return populatePoolVestedRewards(Lm1s[i], userLm1VestedRewards[i].map((t: PairTokenUints) => t.toTokenAmounts(chainId)), currentEpochId, decimalsRecord);

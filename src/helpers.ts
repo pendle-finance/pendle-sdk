@@ -1,6 +1,6 @@
 import { BigNumber as BN, Bytes, Contract, providers, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO } from './constants'
+import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { DecimalsPrecision } from './math/marketMath';
@@ -84,7 +84,7 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
 
     case forgeIdsInBytes.BENQI:
     case forgeIdsInBytes.COMPOUND_UPGRADED:
-      return contracts.PendleCompoundV2Forge; 
+      return contracts.PendleCompoundV2Forge;
 
     case forgeIdsInBytes.JOE_COMPLEX:
       return contracts.PendleSushiswapSimpleForge; // To-do
@@ -123,6 +123,20 @@ export const getCurrentTimestamp = async (provider: JsonRpcProvider): Promise<nu
   return currentTime;
 }
 
+export const getLMStartTime = (chainId: number | undefined): BN => {
+  switch (chainId) {
+    case 1:
+    case undefined:
+      return LMStartTime[1];
+
+    case 43114:
+      return LMStartTime[chainId]
+
+    default:
+      throw Error(`Unknown chainId ${chainId}`);
+  }
+}
+
 export const getCurrentEpochId = (currentTime: number | BN, startTime: number | BN, epochDuration: number | BN): number => {
   return BN.from(currentTime).sub(startTime).div(epochDuration).add(1).toNumber();
 }
@@ -130,7 +144,7 @@ export const getCurrentEpochId = (currentTime: number | BN, startTime: number | 
 export const xor = (a: boolean, b: boolean) => a != b;
 
 
-export const getGasLimitWithETH = (estimate: BN, value: BN) => { 
+export const getGasLimitWithETH = (estimate: BN, value: BN) => {
   var buffer: number = gasBuffer;
   var bufferedGasLimit: BN = ZERO;
   var cnter = 0;
@@ -138,9 +152,9 @@ export const getGasLimitWithETH = (estimate: BN, value: BN) => {
     bufferedGasLimit = bufferedGasLimit.add(estimate.mul(buffer - (buffer % 1)));
     buffer = 10 * (buffer % 1);
     estimate = estimate.div(10);
-    cnter ++;
+    cnter++;
   }
-  return { gasLimit: bufferedGasLimit, value: value } 
+  return { gasLimit: bufferedGasLimit, value: value }
 }
 
 export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
@@ -151,7 +165,7 @@ export const getBlockOneDayEarlier = async (chainId: number | undefined, provide
     case 1:
       scanInterval = ONE_DAY.div(7);
       break
-    
+
     case 42:
       scanInterval = ONE_DAY.div(5);
       break;
