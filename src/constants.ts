@@ -27,6 +27,7 @@ export const ZERO = BN.from(0);
 export const INF = BN.from(2)
   .pow(256)
   .sub(1);
+export const EXP_2023 = BN.from('1703721600');
 export const EXP_2022 = BN.from("1672272000");
 export const EXP_2021 = BN.from("1640822400");
 export const ONE_DAY = BN.from("86400");
@@ -44,7 +45,7 @@ export const decimalsRecords: Record<string, Record<string, number>> = {
 
 export const gasBuffer: number = 1.2;
 
-export const HG = {gasLimit: 100000000}
+export const HG = { gasLimit: 100000000 }
 
 export const sushiswapSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/sushiswap/exchange";
 export const traderJoeSubgraphApi: string = "https://api.thegraph.com/subgraphs/name/traderjoe-xyz/exchange";

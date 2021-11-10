@@ -1,44 +1,44 @@
 import { NetworkContractAddresses, StakingPoolType } from "./types";
-import { EXP_2022, forgeIdsInBytes, marketFactoryIds } from "../constants";
+import { EXP_2022, EXP_2023, forgeIdsInBytes, marketFactoryIds } from "../constants";
 import { MarketProtocols } from "./types";
 
 export const avalancheContracts: NetworkContractAddresses = {
     YTs: [
         {
-            address: '0x365f42f1ac4b6c04e13f5bf001cb60196a12f43b',
+            address: '0x41e8e841f3c9fe666921eda128ca8e2b143eb136',
+            underlyingAssetAddress: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664x',
+            rewardTokenAddresses: ['0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'],
+            forgeIdInBytes: forgeIdsInBytes.BENQI,
+            expiry: EXP_2023
+        },
+        {
+            address: '0x30a6f8949d4ce66918f393318d5f9d3bd1304461',
+            underlyingAssetAddress: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+            rewardTokenAddresses: ['0x5c0401e81bc07ca70fad469b451682c0d747ef1c'],
+            forgeIdInBytes: forgeIdsInBytes.BENQI,
+            expiry: EXP_2023
+        },
+        {
+            address: '0xf35fc7fcc1d64b7e97caaafd7186f860b64e74e9',
             underlyingAssetAddress: '0xd82b9b055f79d1a244005406988f85ed970797ed',
             rewardTokenAddresses: ['0xd82b9b055f79d1a244005406988f85ed970797ed'],
             forgeIdInBytes: forgeIdsInBytes.JOE_SIMPLE,
-            expiry: EXP_2022
+            expiry: EXP_2023
         },
         {
-            address: '0x323a8a76eaf2e3ea8b2c5908763252e01c0d6beb',
-            underlyingAssetAddress: '0xa389f9430876455c36478deea9769b7ca4e3ddb1',
-            rewardTokenAddresses: ['0xa389f9430876455c36478deea9769b7ca4e3ddb1'],
-            forgeIdInBytes: forgeIdsInBytes.JOE_COMPLEX,
-            expiry: EXP_2022
-        },
-        {
-            address: '0xe853ff88b9679b2341abe1a5a77a711ec860bb02',
-            underlyingAssetAddress: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
-            rewardTokenAddresses: ['0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'],
-            forgeIdInBytes: forgeIdsInBytes.BENQI,
-            expiry: EXP_2022
-        },
-        {
-            address: '0x7d5e215406d29a4c5b848aaab473a6a02bd1fb74',
+            address: '0x958dfbd0e1574788ed1d0a34cbc445a5dcce968b',
             underlyingAssetAddress: '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
             rewardTokenAddresses: ['0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'],
             forgeIdInBytes: forgeIdsInBytes.XJOE,
-            expiry: EXP_2022
+            expiry: EXP_2023
         }
     ],
     OTs: [
         {
-            address: '0x095933f3c6dcdd666f8b65b032a2fc6f529fd074',
-            yieldTokenAddress: '0xd82b9b055f79d1a244005406988f85ed970797ed',
+            address: '0xfffe5fc3e511ce11df20684aec435a3e2b7d8136',
+            yieldTokenAddress: '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f',
             rewardTokenAddresses: [],
-            forgeIdInBytes: forgeIdsInBytes.JOE_SIMPLE
+            forgeIdInBytes: forgeIdsInBytes.BENQI
         },
         {
             address: '0x589774bc6a491f4dde5e13cbafe11d906940a492',
