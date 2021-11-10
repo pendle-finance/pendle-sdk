@@ -4,13 +4,14 @@ import { providers, Contract, BigNumber as BN, utils } from "ethers"
 import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO } from '../networks'
-import { distributeConstantsByNetwork, getABIByForgeId, submitTransaction } from '../helpers'
+import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, submitTransaction } from '../helpers'
 import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
 } from './transactions';
 import { TRANSACTION } from "./transactions/types";
+import { calcPrincipalForSLPYT } from "../math/marketMath";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
@@ -130,11 +131,43 @@ export class YieldContract {
             return submitTransaction(pendleRouterContract, signer, 'redeemUnderlying', args);
         }
 
+        const getPrincipalPerYT = async (): Promise<TokenAmount> => {
+            switch (this.forgeIdInBytes) {
+                case forgeIdsInBytes.AAVE:
+                    return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
+
+                case forgeIdsInBytes.COMPOUND:
+                    return new TokenAmount(this.underlyingAsset, (await pendleForgeContract.initialRate(this.underlyingAsset.address)).div(decimalFactor(10)).toString());
+
+                case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+                case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+                case forgeIdsInBytes.JOE_SIMPLE:
+                case forgeIdsInBytes.JOE_COMPLEX:
+                    return new TokenAmount(
+                        this.underlyingAsset,
+                        calcPrincipalForSLPYT(
+                            await pendleForgeContract.callStatic.getExchangeRate(this.underlyingAsset.address),
+                            networkInfo.decimalsRecord[this.underlyingAsset.address]
+                        ).toString()
+                    );
+
+                case forgeIdsInBytes.XJOE:
+                    return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
+
+                case forgeIdsInBytes.BENQI:
+                    return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
+
+                default:
+                    throw Error(`Unsupported forgeId in getPrincipalPerYT ${this.forgeId}`)
+            }
+        }
+
         return {
             mintDetails,
             mint,
             redeemDetails,
             redeem,
+            getPrincipalPerYT
         };
     }
 

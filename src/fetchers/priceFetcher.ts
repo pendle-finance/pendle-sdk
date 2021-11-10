@@ -98,10 +98,10 @@ export async function fetchYtPrice(yt: Yt, signer: providers.JsonRpcSigner, chai
 
 export async function fetchCTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number|undefined): Promise<BigNumber> {
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-  const cTokenContract: Contract = new Contract(address, contracts.ICToken, signer.provider);
-  const underlyingAsset: string = await cTokenContract.underlying();
+  const cTokenContract: Contract = new Contract(address, contracts.ICToken.abi, signer.provider);
+  const underlyingAsset: string = await cTokenContract.callStatic.underlying();
   const exchangeRate: BN = await cTokenContract.callStatic.exchangeRateCurrent();
-  const adjustedExchangeRate: BigNumber = new BigNumber(exchangeRate.toString()).div(decimalFactor(10+networkInfo.decimalsRecord[underlyingAsset]));
+  const adjustedExchangeRate: BigNumber = new BigNumber(exchangeRate.toString()).div(decimalFactor(10 + networkInfo.decimalsRecord[underlyingAsset.toLowerCase()]));
   return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, signer, chainId}));
 }
 
@@ -158,6 +158,9 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
 
       case networkInfo.contractAddresses.tokens.PENDLE:
         return await fetchPriceFromCoingecko('pendle');
+
+      case networkInfo.contractAddresses.tokens.QI:
+        return await fetchPriceFromCoingecko('benqi');
 
       case networkInfo.contractAddresses.tokens.xJOE:
         return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, signer, chainId);

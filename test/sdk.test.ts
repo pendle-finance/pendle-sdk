@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 import { getDecimals } from '../src/networks/helpers/getDecimals';
 
-var chainId = 43114;
+var chainId = 1;
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -18,21 +18,21 @@ describe('Sdk', () => {
 
   beforeAll(async () => {
     const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` : `https://api.avax.network/ext/bc/C/rpc`;
-    
+
     // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
-    signer = provider.getSigner();
+    signer = provider.getSigner('0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb');
   });
 
-  it('claim yields', async() => {
+  it('claim yields', async () => {
     const sdk = new Sdk(signer, chainId);
     console.log("estimate")
-    const res = await sdk.estimateGasForClaimYields({
-      yts: [Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9', chainId)],
-      ots: [Ot.find('0xe55e3b62005a2035d48ac0c41a5a9c799f04892c', chainId)],
+    const res = await sdk.claimYields({
+      yts: [],
+      ots: [],
       lps: [],
       interestStakingPools: [],
-      rewardStakingPools: [StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1),StakingPool.find('0x5b1c59eb6872f88a92469751a034b9b5ada9a73f', '0x944d1727d0b656f497e74044ff589871c330334f', 1)]
+      rewardStakingPools: [StakingPool.find("0x5b1c59eb6872f88a92469751a034b9b5ada9a73f", "0xb26c86330fc7f97533051f2f8cd0a90c2e82b5ee", chainId)]
     });
     console.log(res);
   })
@@ -58,14 +58,14 @@ describe('Sdk', () => {
     console.log(JSON.stringify(userInterests, null, '  '));
   });
 
-  it.only('OT.methods.fetchRewards', async() => {
+  it('OT.methods.fetchRewards', async () => {
     const userRewards = await Ot.methods(signer, chainId).fetchRewards(
       '0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC'
     );
     console.log(JSON.stringify(userRewards, null, '  '));
   })
 
-  it.skip('YT.find', async() => {
+  it.skip('YT.find', async () => {
     const xyt: Yt = Yt.find('0xffaf22db1ff7e4983b57ca9632f796f68ededef9');
     console.log(JSON.stringify(xyt, null, '  '))
   })
@@ -91,14 +91,14 @@ describe('Sdk', () => {
     console.log(JSON.stringify(accruingRewards, null, '  '));
   });
 
-  it('StakingPool.methods.fetchVestedRewards', async () => {
+  it.only('StakingPool.methods.fetchVestedRewards', async () => {
     const vestedRewards = await StakingPool.methods(signer, chainId).fetchVestedRewards(
       dummyUser
     );
     console.log(JSON.stringify(vestedRewards, null, '  '));
   });
 
-  it('Sdk.fetchValuations', async() => {
+  it('Sdk.fetchValuations', async () => {
     const sdk = new Sdk(signer, 1);
     const valuations = await sdk.fetchValuations([new TokenAmount(
       ETHToken,
@@ -128,19 +128,21 @@ describe('Sdk', () => {
     console.log(JSON.stringify(valuations, null, '  '));
   })
 
-  it('TokenAmounts.balancesOf', async() => {
+  it('TokenAmounts.balancesOf', async () => {
     const networkInfo = distributeConstantsByNetwork(1);
-    const balances = await TokenAmount.methods(signer, 1).balancesOf({user: dummyAddress, tokens:[
-      new Token(
-        networkInfo.contractAddresses.tokens.USDC,
-        6
-      ),
-      new Token(
-        '0xbcca60bb61934080951369a648fb03df4f96263c',
-        6
-      )
-    ]});
-    console.log(JSON.stringify(balances, null,  '  '));
+    const balances = await TokenAmount.methods(signer, 1).balancesOf({
+      user: dummyAddress, tokens: [
+        new Token(
+          networkInfo.contractAddresses.tokens.USDC,
+          6
+        ),
+        new Token(
+          '0xbcca60bb61934080951369a648fb03df4f96263c',
+          6
+        )
+      ]
+    });
+    console.log(JSON.stringify(balances, null, '  '));
   })
 
 });

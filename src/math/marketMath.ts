@@ -178,8 +178,8 @@ export function calcTokenPriceByMarket(knownPrice: BigNumber, rate: BN, otherDec
     return knownPrice.multipliedBy(rate.toString()).dividedBy(Math.pow(10, otherDecimal));
 }
 
-export function calcPrincipalForSLPYT(exchangeRate: BN): BN {
-    return rdiv(BN.from(10).pow(18), exchangeRate);
+export function calcPrincipalForSLPYT(exchangeRate: BN, principalDecimal: number): BN {
+    return rdiv(BN.from(10).pow(principalDecimal), exchangeRate);
 }
 
 export function calcImpliedYield(p: BigNumber, daysLeft: BigNumber): BigNumber {
@@ -204,13 +204,12 @@ export function calcSlippedUpAmount(amount: BN, slippage: number) {
 // return max(valuation, 0.1$)
 export function calcValuation(unitPrice: BigNumber, amount: BN, decimals: number): BigNumber {
     const valuation: BigNumber = unitPrice.multipliedBy(amount.toString()).dividedBy(BN.from(10).pow(decimals).toString());
-    if (valuation.lt(0.1)) {
-        return new BigNumber(0.1);
-    } else {
-        return valuation;
-    }
+    return valuation;
 }
 
 export function calcLMRewardApr(rewardsValue: BigNumber, totalStakeValue: BigNumber, frequencyPerYear: number): BigNumber {
+    if (totalStakeValue.lte(0)) { // avoid division by zero when there is no stake
+        return new BigNumber('999999999');
+    }
     return rewardsValue.multipliedBy(frequencyPerYear).dividedBy(totalStakeValue);
 }
