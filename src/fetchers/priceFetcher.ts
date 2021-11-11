@@ -110,12 +110,16 @@ export async function fetchCTokenPrice(address: string, signer: providers.JsonRp
   return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, signer, chainId}));
 }
 
-export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
+export async function getxJOEExchangeRate(xJOEAddress: string, JOEAddress: string, signer: providers.JsonRpcSigner, blockTag?: number): Promise<BigNumber> {
   const JOEContract: Contract = new Contract(JOEAddress, contracts.IERC20.abi, signer.provider);
-  const joeLocked: BN = await JOEContract.balanceOf(xJOEAddress);
+  const joeLocked: BN = await JOEContract.balanceOf(xJOEAddress, {blockTag: blockTag === undefined ? "latest": blockTag});
   const xJOEContract: Contract = new Contract(xJOEAddress, contracts.IERC20.abi, signer.provider);
-  const totalSupply: BN = await xJOEContract.totalSupply();
-  return await (await fetchTokenPrice({address: JOEAddress, signer, chainId})).multipliedBy(joeLocked.toString()).dividedBy(totalSupply.toString())
+  const totalSupply: BN = await xJOEContract.totalSupply({blockTag: blockTag === undefined ? "latest": blockTag});
+  return new BigNumber(joeLocked.toString()).div(totalSupply.toString())
+}
+
+export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
+  return (await fetchTokenPrice({address: JOEAddress, signer, chainId})).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, signer))
 }
 
 export async function fetchBasicTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {

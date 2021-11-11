@@ -213,3 +213,7 @@ export function calcLMRewardApr(rewardsValue: BigNumber, totalStakeValue: BigNum
     }
     return rewardsValue.multipliedBy(frequencyPerYear).dividedBy(totalStakeValue);
 }
+
+export function calcCompoundYield(ratio: BigNumber, frequency: number): BigNumber {
+    return new BigNumber(Math.pow(ratio.toNumber(), frequency) - 1)
+}

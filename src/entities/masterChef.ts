@@ -2,7 +2,7 @@ import { providers } from "ethers";
 import { TokenAmount } from "./tokenAmount";
 import { Contract, BigNumber as BN } from "ethers";
 import { NetworkInfo } from "../networks";
-import { distributeConstantsByNetwork, getBlockOneDayEarlier } from "../helpers";
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier } from "../helpers";
 import { contracts } from "../contracts";
 import BigNumber from "bignumber.js";
 import { fetchTokenPrice, fetchValuation } from "../fetchers/priceFetcher";
@@ -25,7 +25,7 @@ export class MasterChef {
                 const totalAllocPoint: BN = await masterChefContract.totalAllocPoint();
                 const globalSushiPerBlock: BN = await masterChefContract.sushiPerBlock();
                 const blockNumber: number = await signer.provider.getBlockNumber();
-                const blockNumberOneDayAgo: number = (await getBlockOneDayEarlier(chainId, signer.provider))!;
+                const blockNumberOneDayAgo: number = (await getBlocksomeDurationEarlier(ONE_DAY.toNumber(), chainId, signer.provider))!;
                 const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
                 const sushiPerBlock: BN = globalSushiPerBlock.mul(allocPoint).div(totalAllocPoint);
                 const sushiAddress: string = networkInfo.contractAddresses.tokens.SUSHI;

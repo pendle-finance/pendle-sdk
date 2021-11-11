@@ -2,8 +2,11 @@ import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
 import { sushiswapSubgraphApi, traderJoeSubgraphApi, ONE_DAY} from '../constants';
 import { NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, isSameAddress } from '../helpers';
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, isSameAddress } from '../helpers';
 import { getCurrentTimestamp } from '@pendle/subgraph-sdk/src/utils/helpers';
+import { BigNumber as BN, providers } from "ethers"
+import { getxJOEExchangeRate } from './priceFetcher';
+import BigNumber from 'bignumber.js';
 const axios = require('axios');
 
 export const fetchAaveYield = async (underlyingAddress: string) => {
@@ -57,17 +60,19 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
               reserveUSD
               date
             }
+            reserveUSD
           }
         }
       `
   )
     .then((data: any) => {
       const pair = data.pairs[0]
+
       const volumeUSD = pair.hourData.reduce((accumulator: any, hourData: any) => {
         return accumulator.plus(hourData.volumeUSD)
       }, new BigNumberjs(0))
 
-      const reserveUSD = pair.hourData[0].reserveUSD
+      const reserveUSD = pair.reserveUSD;
 
       if (!pair) throw Error('Pair or data doesnt exist')
 
@@ -93,12 +98,27 @@ export async function fetchBenqiYield(underlyingAddress: string): Promise<number
   const response = await axios.get(benqiAPI).then((res: any) => res.data);
   for (const t in networkInfo.contractAddresses.tokens) {
     if (isSameAddress(networkInfo.contractAddresses.tokens[t], underlyingAddress)) {
+      if (t == "WETH") return response["AVAX"].supply;
       return response[t].supply;
     }
   }
   return 0;
 }
 
-export async function fetchXJOEYield(): Promise<number> {
-  return 0.2;
+export async function fetchXJOEYield(signer: providers.JsonRpcSigner, chainId?: number): Promise<number> {
+  if (chainId != 43114) throw Error(`Invalid chainId: ${chainId} in fetchXJOEYield`);
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+  const JOEAddress: string = networkInfo.contractAddresses.tokens.JOE;
+  const xJOEAddress: string = networkInfo.contractAddresses.tokens.xJOE;
+
+  const blockNumberOneDayAgo : number | undefined = await getBlocksomeDurationEarlier(ONE_DAY.mul(7).toNumber(), chainId, signer.provider);
+  if (blockNumberOneDayAgo === undefined) {
+    throw Error(`Unable to get block number in the past in fetchXJOEYield`);
+  }
+  var currentExchangeRate: BigNumber, pastExchangeRate: BigNumber;
+  var promises = [];
+  promises.push(getxJOEExchangeRate(xJOEAddress, JOEAddress, signer).then((r: BigNumber) => {currentExchangeRate = r}));
+  promises.push(getxJOEExchangeRate(xJOEAddress, JOEAddress, signer, blockNumberOneDayAgo).then((r: BigNumber) => {pastExchangeRate = r}));
+  await Promise.all(promises);
+  return currentExchangeRate!.div(pastExchangeRate!).minus(1).multipliedBy(52).toNumber();
 }

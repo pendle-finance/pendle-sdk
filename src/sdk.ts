@@ -32,12 +32,12 @@ export class Sdk {
     rewardStakingPools = [],
     tokensToDistribute = []
   }: {
-    yts: Token[],
-    ots: Token[],
-    lps: Token[],
-    interestStakingPools: StakingPool[],
-    rewardStakingPools: StakingPool[],
-    tokensToDistribute: Token[]
+    yts?: Token[],
+    ots?: Token[],
+    lps?: Token[],
+    interestStakingPools?: StakingPool[],
+    rewardStakingPools?: StakingPool[],
+    tokensToDistribute?: Token[]
   }): Promise<providers.TransactionResponse> {
     return RedeemProxy.methods(this.signer, this.chainId).claimYields({yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute});
   }
@@ -55,7 +55,7 @@ export class Sdk {
     lps?: Token[],
     interestStakingPools?: StakingPool[],
     rewardStakingPools?: StakingPool[],
-    tokensToDistribute: Token[]
+    tokensToDistribute?: Token[]
   }): Promise<GasInfo> {
     return RedeemProxy.methods(this.signer, this.chainId).estimateGasForClaimYields({yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute})
   }

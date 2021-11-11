@@ -4,7 +4,7 @@ import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
-import { distributeConstantsByNetwork, getBlockOneDayEarlier, getCurrentTimestamp, isSameAddress, xor, getABIByForgeId, indexRange, submitTransaction } from '../helpers'
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, getCurrentTimestamp, isSameAddress, xor, getABIByForgeId, indexRange, submitTransaction } from '../helpers'
 import { CurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
@@ -275,7 +275,7 @@ export class PendleMarket extends Market {
             break;
 
           case forgeIdsInBytes.XJOE:
-            underlyingYieldRate = await fetchXJOEYield();
+            underlyingYieldRate = await fetchXJOEYield(signer, chainId);
             break;
 
           // TODO: add Uniswap support here
@@ -779,7 +779,7 @@ export class PendleMarket extends Market {
     const getPastLiquidityValue = async (): Promise<CurrencyAmount> => {
       if (chainId == 42) return ZeroCurrencyAmount  // If Kovan, then return 0 since we do not have access to achived state
 
-      const pastBlockNumber: number | undefined = await getBlockOneDayEarlier(chainId, signer.provider);
+      const pastBlockNumber: number | undefined = await getBlocksomeDurationEarlier(ONE_DAY.toNumber(), chainId, signer.provider);
       if (pastBlockNumber === undefined) {
         console.error("Unable to get block that is 1 day old");
         return ZeroCurrencyAmount

@@ -1,6 +1,6 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlockOneDayEarlier, Call_MultiCall, Result_MultiCall, getLMStartTime, submitTransaction } from '../helpers'
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlocksomeDurationEarlier, Call_MultiCall, Result_MultiCall, getLMStartTime, submitTransaction } from '../helpers'
 import { LMEpochDuration, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress, HG } from '../constants';
 import { contracts } from '../contracts';
 import { Token } from './token';
@@ -17,6 +17,7 @@ import { MasterChef } from './masterChef';
 import { PairTokens, PairUints } from './types';
 import { RedeemProxy } from './redeemProxy';
 import { PairTokenUints } from './multiTokens';
+import { ONE_DAY } from '../constants';
 
 export interface StakingPoolId {
   address: string;
@@ -544,7 +545,7 @@ export class StakingPool {
         const singleStakingManager: Contract = new Contract(networkInfo.contractAddresses.misc.PendleSingleStakingManager, contracts.PendleSingleStakingManager.abi, signer.provider);
         const rewardPerBlock: BN = await singleStakingManager.rewardPerBlock();
         const blockNumber: number = await signer.provider.getBlockNumber();
-        const blockNumberOneDayAgo: number = (await getBlockOneDayEarlier(chainId, signer.provider))!;
+        const blockNumberOneDayAgo: number = (await getBlocksomeDurationEarlier(ONE_DAY.toNumber(),chainId, signer.provider))!;
         const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
         const PENDLEContract: Contract = new Contract(this.inputToken.address, contracts.IERC20.abi, signer.provider);
         const PendleStaked: BN = await PENDLEContract.balanceOf(this.address);

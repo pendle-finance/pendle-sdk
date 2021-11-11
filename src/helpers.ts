@@ -157,7 +157,7 @@ export const getGasLimitWithETH = (estimate: BN, value: BN) => {
   return { gasLimit: bufferedGasLimit, value: value }
 }
 
-export const getBlockOneDayEarlier = async (chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
+export const getBlocksomeDurationEarlier = async (duration: number, chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
   const margin: number = 30;
   var scanInterval: BN;
   switch (chainId) {
@@ -175,11 +175,11 @@ export const getBlockOneDayEarlier = async (chainId: number | undefined, provide
       break
 
     default:
-      throw Error(`Unsupported chain ${chainId} in getBlockOneDayEarlier`)
+      throw Error(`Unsupported chain ${chainId} in getBlocksomeDurationEarlier`)
   }
   const latestBlockNumber = await provider.getBlockNumber();
   const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
-  const targetTime: number = currentTime - ONE_DAY.toNumber();
+  const targetTime: number = currentTime - duration;
   var rightBound: BN = BN.from(await provider.getBlockNumber());
   var leftBound: BN = rightBound;
   while (true) {
