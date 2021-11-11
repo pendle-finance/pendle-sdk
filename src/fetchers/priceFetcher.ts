@@ -99,7 +99,12 @@ export async function fetchYtPrice(yt: Yt, signer: providers.JsonRpcSigner, chai
 export async function fetchCTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number|undefined): Promise<BigNumber> {
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
   const cTokenContract: Contract = new Contract(address, contracts.ICToken.abi, signer.provider);
-  const underlyingAsset: string = await cTokenContract.callStatic.underlying();
+  var underlyingAsset: string;
+  if (isSameAddress(address, networkInfo.contractAddresses.tokens.qiAVAX)) {
+    underlyingAsset = ETHAddress;
+  } else {
+    underlyingAsset = await cTokenContract.callStatic.underlying();
+  }
   const exchangeRate: BN = await cTokenContract.callStatic.exchangeRateCurrent();
   const adjustedExchangeRate: BigNumber = new BigNumber(exchangeRate.toString()).div(decimalFactor(10 + networkInfo.decimalsRecord[underlyingAsset.toLowerCase()]));
   return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, signer, chainId}));
@@ -148,6 +153,7 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
 
       case networkInfo.contractAddresses.tokens.qiUSDC:
       case networkInfo.contractAddresses.tokens.qiAVAX:
+        console.log('Grabbing cToken price');
         return await fetchCTokenPrice(address, signer, chainId);
 
       case networkInfo.contractAddresses.tokens.WETH:
