@@ -1,8 +1,9 @@
 import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
-import { sushiswapSubgraphApi, traderJoeSubgraphApi } from '../constants';
+import { sushiswapSubgraphApi, traderJoeSubgraphApi, ONE_DAY} from '../constants';
 import { NetworkInfo } from '../networks';
 import { distributeConstantsByNetwork, isSameAddress } from '../helpers';
+import { getCurrentTimestamp } from '@pendle/subgraph-sdk/src/utils/helpers';
 const axios = require('axios');
 
 export const fetchAaveYield = async (underlyingAddress: string) => {
@@ -44,14 +45,17 @@ export const fetchCompoundYield = async (yieldBearingAddress: string) => {
 }
 
 export const fetchSushiForkYield = async (poolAddress: string, chainId?: number): Promise<number> => { //chainId
+  const currentTime = getCurrentTimestamp()
+  const dateAfter = currentTime - ONE_DAY.toNumber();
   const yieldRate: number = await request(
     chainId === undefined || chainId == 1 ? sushiswapSubgraphApi : traderJoeSubgraphApi,
     gql`
         {
           pairs(where: { id: "${poolAddress}" }) {
-            hourData(first: 24, orderBy: date, orderDirection: desc) {
+            hourData(first: 24, where: {date_gt: ${dateAfter}}, orderBy: date, orderDirection: desc) {
               volumeUSD
               reserveUSD
+              date
             }
           }
         }
@@ -59,7 +63,6 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
   )
     .then((data: any) => {
       const pair = data.pairs[0]
-
       const volumeUSD = pair.hourData.reduce((accumulator: any, hourData: any) => {
         return accumulator.plus(hourData.volumeUSD)
       }, new BigNumberjs(0))
