@@ -108,6 +108,7 @@ export class RedeemProxy {
             lps: Token[],
             interestStakingPools: StakingPool[],
             rewardStakingPools: StakingPool[],
+            tokensToDistribute: Token[],
             userAddress: string
         ): any[] => {
             const ytAddresses: string[] = yts.map((t: Token) => t.address);
@@ -167,7 +168,7 @@ export class RedeemProxy {
                     markets: marketAddresses,
                     lmV1: lmV1RedeemRequests,
                     lmV2: lmV2RedeemRequests,
-                    tokensDistribution: []
+                    tokensDistribution: tokensToDistribute.map((t: Token) => t.address)
                 },
                 userAddress
             ]
@@ -179,6 +180,7 @@ export class RedeemProxy {
             lps: Token[],
             interestStakingPools: StakingPool[],
             rewardStakingPools: StakingPool[],
+            tokensToDistribute: Token[],
             userAddress: string
         ): any[] => {
             switch (proxyVersion) {
@@ -186,7 +188,7 @@ export class RedeemProxy {
                     return constructArgsForClaimYieldsOld(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
 
                 case ProxyVersion.Multi:
-                    return constructArgsForClaimYieldsMulti(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
+                    return constructArgsForClaimYieldsMulti(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
 
                 default:
                     throw Error(`Invalid proxy version.`)
@@ -198,16 +200,18 @@ export class RedeemProxy {
             ots = [],
             lps = [],
             interestStakingPools = [],
-            rewardStakingPools = []
+            rewardStakingPools = [],
+            tokensToDistribute = []
         }: {
             yts: Token[],
             ots: Token[],
             lps: Token[],
             interestStakingPools: StakingPool[],
-            rewardStakingPools: StakingPool[]
+            rewardStakingPools: StakingPool[],
+            tokensToDistribute: Token[]
         }): Promise<providers.TransactionResponse> => {
             const userAddress: string = await signer.getAddress();
-            const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
+            const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
             return submitTransaction(redeemProxyContract, signer, 'redeem', args);
         }
 
@@ -216,16 +220,18 @@ export class RedeemProxy {
             ots = [],
             lps = [],
             interestStakingPools = [],
-            rewardStakingPools = []
+            rewardStakingPools = [],
+            tokensToDistribute = []
         }: {
             yts?: Token[],
             ots?: Token[],
             lps?: Token[],
             interestStakingPools?: StakingPool[],
-            rewardStakingPools?: StakingPool[]
+            rewardStakingPools?: StakingPool[],
+            tokensToDistribute: Token[]
         }): Promise<GasInfo> => {
             const userAddress: string = await signer.getAddress();
-            const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, userAddress);
+            const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
             const gasLimit: BN = await estimateGas(redeemProxyContract, userAddress, 'redeem', args)
             const gasPrice: BN = await getGasPrice(chainId);
 
@@ -475,7 +481,31 @@ export class RedeemProxy {
                     default:
                         throw Error(`Invalid proxy version.`);
                 }
-            }
+            },
+
+            redeemTokenDist: async(tokenAddresses: string[], userAddress: string): Promise<TokenAmount[]> => {
+                switch (proxyVersion) {
+                    case ProxyVersion.OldSingle: {
+                        throw Error(`Redeem proxy on ${chainId || 1} does not support claiming token distribution`);
+                    }
+
+                    case ProxyVersion.Multi: {
+                        const redeemResults: BN[] = await redeemProxyContract.connect(signer).callStatic.redeemTokenDist(tokenAddresses, userAddress);
+                        return indexRange(0, tokenAddresses.length).map((i: number): TokenAmount => {
+                            return new TokenAmount(
+                                new Token(
+                                    tokenAddresses[i],
+                                    networkInfo.decimalsRecord[tokenAddresses[i]]
+                                ),
+                                redeemResults[i].toString()
+                            )
+                        })
+                    }
+
+                    default:
+                        throw Error(`Invalid proxy version.`);
+                }
+            }   
         }
 
         return {

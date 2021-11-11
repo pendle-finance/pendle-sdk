@@ -29,15 +29,17 @@ export class Sdk {
     ots = [],
     lps = [],
     interestStakingPools = [],
-    rewardStakingPools = []
+    rewardStakingPools = [],
+    tokensToDistribute = []
   }: {
     yts: Token[],
     ots: Token[],
     lps: Token[],
     interestStakingPools: StakingPool[],
-    rewardStakingPools: StakingPool[]
+    rewardStakingPools: StakingPool[],
+    tokensToDistribute: Token[]
   }): Promise<providers.TransactionResponse> {
-    return RedeemProxy.methods(this.signer, this.chainId).claimYields({yts, ots, lps, interestStakingPools, rewardStakingPools});
+    return RedeemProxy.methods(this.signer, this.chainId).claimYields({yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute});
   }
 
   public async estimateGasForClaimYields({
@@ -45,14 +47,16 @@ export class Sdk {
     ots = [],
     lps = [],
     interestStakingPools = [],
-    rewardStakingPools = []
+    rewardStakingPools = [],
+    tokensToDistribute = []
   }: {
     yts?: Token[],
     ots?: Token[],
     lps?: Token[],
     interestStakingPools?: StakingPool[],
-    rewardStakingPools?: StakingPool[]
+    rewardStakingPools?: StakingPool[],
+    tokensToDistribute: Token[]
   }): Promise<GasInfo> {
-    return RedeemProxy.methods(this.signer, this.chainId).estimateGasForClaimYields({yts, ots, lps, interestStakingPools, rewardStakingPools})
+    return RedeemProxy.methods(this.signer, this.chainId).estimateGasForClaimYields({yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute})
   }
 }

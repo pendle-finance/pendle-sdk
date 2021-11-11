@@ -18,12 +18,14 @@ export class Ot extends Token {
     public readonly yieldBearingAddress: string;
     public readonly priceFeedMarketAddress: string | undefined;
     public readonly forgeIdInBytes: string;
+    public readonly rewardTokenAddresses: string[];
 
-    public constructor(address: string, decimals: number, yieldBearingAddress: string, forgeIdInBytes: string, expiry?: number, priceFeedMarketAddress?: string) {
+    public constructor(address: string, decimals: number, yieldBearingAddress: string, forgeIdInBytes: string, expiry: number, rewardTokens: string[], priceFeedMarketAddress?: string) {
         super(address, decimals, expiry);
         this.yieldBearingAddress = yieldBearingAddress;
         this.priceFeedMarketAddress = priceFeedMarketAddress;
-        this.forgeIdInBytes = forgeIdInBytes
+        this.forgeIdInBytes = forgeIdInBytes;
+        this.rewardTokenAddresses = rewardTokens;
     }
 
     public static find(address: string, chainId?: number): Ot {
@@ -48,6 +50,7 @@ export class Ot extends Token {
             otInfo.yieldTokenAddress,
             otInfo.forgeIdInBytes,
             0, // expiry not used
+            otInfo.rewardTokenAddresses === undefined ? [] : otInfo.rewardTokenAddresses,
             priceFeedMarketAddress
         )
     }

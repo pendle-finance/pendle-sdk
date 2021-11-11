@@ -19,6 +19,7 @@ import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
 
 import BigNumber from 'bignumber.js';
 import { RedeemProxy } from './redeemProxy';
+import { Ot } from './ot';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -977,9 +978,22 @@ export class SushiMarket extends Market {
       }
     }
 
+    const fetchRewardsFromOtReserves = async(userAddress: string): Promise<TokenAmount[]> => {
+      var res: TokenAmount[] = [];
+      for (const t of this.tokens) {
+        try {
+          const ot: Ot = Ot.find(t.address, chainId);
+          const redeemResults: TokenAmount[] = await RedeemProxy.methods(signer, chainId).redeemTokenDist(ot.rewardTokenAddresses, userAddress);
+          res = res.concat(redeemResults.filter((tokenAmount: TokenAmount) => BN.from(tokenAmount.rawAmount()).gt(0)));
+        } catch(err) {}
+      }
+      return res;
+    }
+
     return {
       getSwapFeeApr,
-      readMarketDetails
+      readMarketDetails,
+      fetchRewardsFromOtReserves
     }
   }
 }
