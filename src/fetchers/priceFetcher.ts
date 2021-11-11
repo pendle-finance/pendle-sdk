@@ -153,7 +153,6 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
 
       case networkInfo.contractAddresses.tokens.qiUSDC:
       case networkInfo.contractAddresses.tokens.qiAVAX:
-        console.log('Grabbing cToken price');
         return await fetchCTokenPrice(address, signer, chainId);
 
       case networkInfo.contractAddresses.tokens.WETH:
