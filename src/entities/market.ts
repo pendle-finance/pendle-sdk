@@ -914,6 +914,7 @@ export class PendleMarket extends Market {
 export type OtherMarketDetails = {
   tokenReserves: TokenAmount[],
   rates: TokenAmount[],
+  liquidity: CurrencyAmount,
   totalSupplyLP: string
 }
 
@@ -962,6 +963,11 @@ export class SushiMarket extends Market {
       );
       const rateOfToken0: BN = calcUnweightedRate(token0Reserve, token1Reserve, networkInfo.decimalsRecord[this.tokens[0].address]);
       const rateOfToken1: BN = calcUnweightedRate(token1Reserve, token0Reserve, networkInfo.decimalsRecord[this.tokens[1].address]);
+      const singleSidedLiquidity: CurrencyAmount = await fetchValuation(tokenAmount0, signer, chainId);
+      const liquidity: CurrencyAmount = {
+        currency: singleSidedLiquidity.currency,
+        amount: new BigNumber(singleSidedLiquidity.amount).multipliedBy(2).toFixed(DecimalsPrecision)
+      }
       return {
         tokenReserves: [tokenAmount0, tokenAmount1],
         rates: [
@@ -974,6 +980,7 @@ export class SushiMarket extends Market {
             rateOfToken1.toString()
           )
         ],
+        liquidity,
         totalSupplyLP: totalSupplyLP.toString()
       }
     }
