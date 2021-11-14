@@ -306,7 +306,7 @@ export class OneClickWrapper {
                     underlyingLp.address,
                     networkInfo.decimalsRecord[underlyingLp.address]
                 ),
-                inAmount.mul(BN.from(underlyingLPDetails.totalSupplyLP)).div(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()).toString()
+                inAmount.mul(BN.from(underlyingLPDetails.otherDetails.totalSupplyLP)).div(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()).toString()
             )
             transactions.push({
                 action: TransactionAction.preMint,
@@ -352,7 +352,7 @@ export class OneClickWrapper {
                         pendleFixture.otMarket.address,
                         networkInfo.decimalsRecord[pendleFixture.otMarket.address]
                     ),
-                    BN.from(otMarketDetail.totalSupplyLP).mul(otAmount.rawAmount()).div(otReserve).toString()
+                    BN.from(otMarketDetail.otherDetails.totalSupplyLP).mul(otAmount.rawAmount()).div(otReserve).toString()
                 )
                 transactions.push({
                     action: TransactionAction.addLiquidity,

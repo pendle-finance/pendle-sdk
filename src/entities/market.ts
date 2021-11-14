@@ -329,8 +329,8 @@ export class PendleMarket extends Market {
         ? new BigNumber(volumeToday.amount).lte(0) ? '0' : '1'
         : (new BigNumber(volumeToday.amount).minus(volumeYesterday.amount)).dividedBy(volumeYesterday.amount).toFixed(DecimalsPrecision);
       const liquidity24HChange: string = new BigNumber(liquidityYesterday.amount).lte(0)
-      ? new BigNumber(liquidityToday.amount).lte(0) ? '0' : '1'
-      : ((new BigNumber(liquidityToday.amount).minus(liquidityYesterday.amount)).dividedBy(liquidityYesterday.amount)).toFixed(DecimalsPrecision);
+        ? new BigNumber(liquidityToday.amount).lte(0) ? '0' : '1'
+        : ((new BigNumber(liquidityToday.amount).minus(liquidityYesterday.amount)).dividedBy(liquidityYesterday.amount)).toFixed(DecimalsPrecision);
       return {
         tokenReserves: [ytReserveDetails, baseTokenReserveDetails],
         otherDetails: {
@@ -913,9 +913,11 @@ export class PendleMarket extends Market {
 
 export type OtherMarketDetails = {
   tokenReserves: TokenAmount[],
-  rates: TokenAmount[],
-  liquidity: CurrencyAmount,
-  totalSupplyLP: string
+  otherDetails: {
+    rates: TokenAmount[],
+    liquidity: CurrencyAmount,
+    totalSupplyLP: string
+  }
 }
 
 export class SushiMarket extends Market {
@@ -970,29 +972,31 @@ export class SushiMarket extends Market {
       }
       return {
         tokenReserves: [tokenAmount0, tokenAmount1],
-        rates: [
-          new TokenAmount(
-            this.tokens[1],
-            rateOfToken0.toString()
-          ),
-          new TokenAmount(
-            this.tokens[0],
-            rateOfToken1.toString()
-          )
-        ],
-        liquidity,
-        totalSupplyLP: totalSupplyLP.toString()
+        otherDetails: {
+          rates: [
+            new TokenAmount(
+              this.tokens[1],
+              rateOfToken0.toString()
+            ),
+            new TokenAmount(
+              this.tokens[0],
+              rateOfToken1.toString()
+            )
+          ],
+          liquidity,
+          totalSupplyLP: totalSupplyLP.toString()
+        }
       }
     }
 
-    const fetchRewardsFromOtReserves = async(userAddress: string): Promise<TokenAmount[]> => {
+    const fetchRewardsFromOtReserves = async (userAddress: string): Promise<TokenAmount[]> => {
       var res: TokenAmount[] = [];
       for (const t of this.tokens) {
         try {
           const ot: Ot = Ot.find(t.address, chainId);
           const redeemResults: TokenAmount[] = await RedeemProxy.methods(signer, chainId).redeemTokenDist(ot.rewardTokenAddresses, userAddress);
           res = res.concat(redeemResults.filter((tokenAmount: TokenAmount) => BN.from(tokenAmount.rawAmount()).gt(0)));
-        } catch(err) {}
+        } catch (err) { }
       }
       return res;
     }
