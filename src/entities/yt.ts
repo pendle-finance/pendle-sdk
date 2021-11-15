@@ -92,7 +92,8 @@ export class Yt extends Token {
                 ytInfo[0].underlyingAssetAddress,
                 networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
             ),
-            this.expiry!
+            this.expiry!,
+            chainId
         )
     }
 }

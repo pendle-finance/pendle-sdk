@@ -12,8 +12,12 @@ export function cmul(x: BN, y: BN) : BN {
     return x.mul(y).div(BN.from(10).pow(18));
 }
 
-export function rdiv(x: BN, y: BN): BN{
+export function rdiv(x: BN, y: BN): BN {
     return (y.div(2)).add(x.mul(RONE)).div(y);
+}
+
+export function cdiv(x: BN, y: BN): BN {
+    return x.mul(BN.from(10).pow(18)).div(y);
 }
 
 export function fpart(value: BN): BN {

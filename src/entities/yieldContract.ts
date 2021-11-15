@@ -3,8 +3,8 @@ import { TokenAmount } from "./tokenAmount";
 import { providers, Contract, BigNumber as BN, utils } from "ethers"
 import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
-import { NetworkInfo, OTINFO } from '../networks'
-import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, submitTransaction } from '../helpers'
+import { NetworkInfo, OTINFO, YTINFO } from '../networks'
+import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, isSameAddress, submitTransaction } from '../helpers'
 import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
@@ -22,12 +22,21 @@ export class YieldContract {
     public readonly forgeId: string;
     public readonly underlyingAsset: Token;
     public readonly expiry: number;
+    public readonly chainId?: number;
+    public readonly yieldToken: Token;
 
-    public constructor(_forgeId: string, _underlyingAsset: Token, _expiry: number) {
+    public constructor(_forgeId: string, _underlyingAsset: Token, _expiry: number, _chainId?: number) {
         this.forgeIdInBytes = utils.formatBytes32String(_forgeId);
         this.underlyingAsset = _underlyingAsset;
         this.expiry = _expiry;
-        this.forgeId = _forgeId
+        this.forgeId = _forgeId;
+        this.chainId = _chainId;
+        const networkInfo: NetworkInfo = distributeConstantsByNetwork(this.chainId);
+        const ytInfo: YTINFO = networkInfo.contractAddresses.YTs.find((yt: YTINFO) => isSameAddress(yt.underlyingAssetAddress, _underlyingAsset.address))!;
+        this.yieldToken = new Token(
+            ytInfo.rewardTokenAddresses[0],
+            networkInfo.decimalsRecord[ytInfo.rewardTokenAddresses[0]]
+        );
     }
 
     public methods(
