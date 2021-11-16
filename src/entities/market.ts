@@ -183,7 +183,8 @@ export class PendleMarket extends Market {
         ytInfo[0].underlyingAssetAddress,
         networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
       ),
-      this.tokens[0].expiry!
+      this.tokens[0].expiry!,
+      chainId
     )
   }
 

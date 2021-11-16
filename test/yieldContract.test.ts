@@ -80,7 +80,8 @@ describe("Yiled Contract", () => {
     yContract = new YieldContract(
       utils.parseBytes32String(forgeIdsInBytes.BENQI),
       Tokens.USDCToken,
-      EXP_2022.toNumber()
+      EXP_2022.toNumber(),
+      chainId
     );
   });
 

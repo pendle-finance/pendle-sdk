@@ -78,7 +78,8 @@ describe("One click wrapper", () => {
         '0xd82b9b055f79d1a244005406988f85ed970797ed',
         18
       ),
-      EXP_2022.toNumber()
+      EXP_2022.toNumber(),
+      chainId
     );
     wrapper = new OneClickWrapper(yieldContract)
   });
