@@ -1,4 +1,6 @@
 import { dummyAddress, ETHAddress } from "../constants";
+import { distributeConstantsByNetwork } from "../helpers";
+import { NetworkInfo } from "../networks";
 
 export class Token {
   public readonly address: string;
@@ -9,6 +11,16 @@ export class Token {
     this.address = address.toLowerCase();
     this.decimals = decimals;
     this.expiry = expiry;
+  }
+
+  public static find({address, chainId, expiry}:{address: string, chainId?: number, expiry?: number}): Token {
+    address = address.toLowerCase();
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const decimals: number = networkInfo.decimalsRecord[address];
+    if (decimals === undefined) {
+      throw new Error(`Unable to get decimals of token ${address}`);
+    }
+    return new Token(address, decimals, expiry)
   }
 }
 
