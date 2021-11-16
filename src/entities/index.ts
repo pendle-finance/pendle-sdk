@@ -8,4 +8,3 @@ export * from './transactionFetcher';
 export * from './yieldContract';
 export * from './types';
 export * from './oneClickWrapper';
-export * from './tradeMining';
