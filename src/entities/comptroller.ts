@@ -68,19 +68,19 @@ export class Comptroller {
 
                     promises = [];
                     const QiRewardPerDay: TokenAmount = new TokenAmount(
-                        Token.find({address: networkInfo.contractAddresses.tokens.Qi, chainId}),
+                        Token.find(networkInfo.contractAddresses.tokens.Qi, chainId),
                         supplySpeedForQi!.mul(ONE_DAY).toString()
                     )
                     var QiRewardPerDayValuation: CurrencyAmount;
                     promises.push(fetchValuation(QiRewardPerDay, signer, chainId).then((res: CurrencyAmount) => QiRewardPerDayValuation = res));
                     const AvaxRewardPerDay: TokenAmount = new TokenAmount(
-                        Token.find({address: ETHAddress, chainId}),
+                        Token.find(ETHAddress, chainId),
                         supplySpeedForAvax!.mul(ONE_DAY).toString()
                     )
                     var AvaxRewardPerDayValuation: CurrencyAmount;
                     promises.push(fetchValuation(AvaxRewardPerDay, signer, chainId).then((res: CurrencyAmount) => AvaxRewardPerDayValuation = res));
                     const totalQiTokenSupply: TokenAmount = new TokenAmount(
-                        Token.find({address: qiOrCToken.address, chainId}),
+                        Token.find(qiOrCToken.address, chainId),
                         totalSupply!.toString()
                     )
                     var totalDepositValuation: CurrencyAmount;

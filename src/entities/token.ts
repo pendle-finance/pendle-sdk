@@ -13,7 +13,7 @@ export class Token {
     this.expiry = expiry;
   }
 
-  public static find({address, chainId, expiry}:{address: string, chainId?: number, expiry?: number}): Token {
+  public static find(address: string, chainId?: number, expiry?: number): Token {
     address = address.toLowerCase();
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const decimals: number = networkInfo.decimalsRecord[address];
