@@ -9,8 +9,8 @@ import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
     ForgeQuery,
-} from './transactions';
-import { TRANSACTION } from "./transactions/types";
+} from './transactionFetcher';
+import { TRANSACTION } from "./transactionFetcher/types";
 import { calcPrincipalForSLPYT } from "../math/marketMath";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;

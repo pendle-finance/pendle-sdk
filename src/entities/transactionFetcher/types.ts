@@ -1,4 +1,4 @@
-import{ Address, TokenAmount } from '../'
+import{ Address, TokenAmount } from '..'
 import { CurrencyAmount } from '../currencyAmount'
 
 export type TRANSACTION = {

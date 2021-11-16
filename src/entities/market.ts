@@ -10,11 +10,11 @@ import { YieldContract } from './yieldContract';
 import {
   TransactionFetcher,
   PendleAmmQuery,
-} from './transactions';
+} from './transactionFetcher';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
 import { forgeIdsInBytes, ONE_DAY, ETHAddress, ZERO } from '../constants';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield } from '../fetchers/externalYieldRateFetcher';
-import { TRANSACTION } from './transactions/types';
+import { TRANSACTION } from './transactionFetcher/types';
 import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
 
 import BigNumber from 'bignumber.js';

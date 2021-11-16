@@ -25,7 +25,8 @@ const JoeMasterChef = require('../abis/JoeMasterChefABI.json');
 const MultiCallV2 = require('../abis/MulticallV2.json');
 const UniswapV2Pair = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Pair.sol/IUniswapV2Pair.json');
 const ICToken = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
-const IQiToken = require('@pendle/core/build/artifacts/contracts/interfaces/IQiToken.sol/IQiToken.json')
+const IQiToken = require('@pendle/core/build/artifacts/contracts/interfaces/IQiToken.sol/IQiToken.json');
+const BenqiComptroller = require('../abis/BenqiComptroller.json');
 
 //TODO: User proper IERC20
 
@@ -57,5 +58,6 @@ export const contracts = {
   MultiCallV2,
   UniswapV2Pair,
   ICToken,
-  IQiToken
+  IQiToken,
+  BenqiComptroller
 };
