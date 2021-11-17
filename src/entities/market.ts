@@ -117,7 +117,7 @@ export class Market {
       const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
       const marketInfo: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(address, m.address));
       if (marketInfo !== undefined && (marketInfo.platform == MarketProtocols.Sushiswap || marketInfo.platform == MarketProtocols.TraderJoe)) {
-        return new SushiMarket(
+        return new UniForkMarket(
           address,
           marketInfo.pair.map((ad: string) => new Token(
             ad,
@@ -921,11 +921,32 @@ export type OtherMarketDetails = {
   }
 }
 
-export class SushiMarket extends Market {
+export class UniForkMarket extends Market {
   public constructor(address: string, pair: Token[]) {
     super(address, pair, MarketProtocols.Sushiswap);
   }
 
+  public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    
+    const fetchClaimableRewardsFromOTMarkets = async(markets: UniForkMarket[], userAddress: string): Promise<TokenAmount[]> => {
+      const rawResult: TokenAmount[][] = await Promise.all(markets.map(async (m: UniForkMarket) => {
+        return m.methods(signer, chainId).fetchRewardsFromOtReserves(userAddress);
+      }));
+      const flattenedResult = rawResult.flat();
+      const tokenSet: Set<string> = new Set();
+      const res: TokenAmount[] = [];
+      for (var i = 0; i < flattenedResult.length; i ++) {
+        if (tokenSet.has(flattenedResult[i].token.address)) continue;
+        tokenSet.add(flattenedResult[i].token.address);
+        res.push(flattenedResult[i]);
+      }
+      return res;
+    }
+    
+    return {
+      fetchClaimableRewardsFromOTMarkets
+    }
+  }
   public methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
