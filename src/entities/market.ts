@@ -1018,7 +1018,7 @@ export class UniForkMarket extends Market {
           const ot: Ot = Ot.find(t.address, chainId);
           const redeemResults: TokenAmount[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemTokenDist(ot.rewardTokenAddresses, userAddress);
           res = res.concat(redeemResults.filter((tokenAmount: TokenAmount) => BN.from(tokenAmount.rawAmount()).gt(0)));
-        } catch (err) { console.error(err)}
+        } catch (err) { }
       }
       return res;
     }

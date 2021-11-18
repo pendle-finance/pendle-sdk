@@ -3,7 +3,7 @@ import { dummyToken, dummyTokenAmount, EXP_2022, Market, PendleMarket, Token, To
 import { ethers, BigNumber as BN } from 'ethers';
 import * as dotenv from 'dotenv';
 import { NetworkInfo } from '../src/networks';
-import { distributeConstantsByNetwork } from '../src/helpers';
+import { distributeConstantsByNetwork, indexRange } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(300000);
 
@@ -164,9 +164,10 @@ describe("Market", () => {
     })
 
     it.only('redeem OT market LP rewards', async() => {
-        const otMarket: Market = Market.find('0x5f973e06a59d0bafe464faf36d5b3b06e075c543', chainId);
-        const otMarket2: Market = Market.find('0xd1f377b881010cb97ab0890a5ef908c45bcf13f9', chainId);
-        const res = await UniForkMarket.methods(signer, chainId).fetchClaimableRewardsFromOTMarkets([otMarket, otMarket2], '0x0D207520DF136bFc84c7a2932383362b8ae4fC61' );
+        const networkInfo = distributeConstantsByNetwork(chainId);
+        const res = await UniForkMarket.methods(signer, chainId).fetchClaimableRewardsFromOTMarkets(indexRange(1,4).map((i: number) => {
+            return Market.find(networkInfo.contractAddresses.otherMarkets![i].address, chainId);
+        }), '0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
         console.log(JSON.stringify(res, null, '  '));
     })
 })

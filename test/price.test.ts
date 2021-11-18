@@ -21,7 +21,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0xd5736ba0be93c99a10e2264e8e4ebd54633306f8", chainId: chainId});
+        const res = await fetchTokenPrice({signer: signer, address: "0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd", chainId: chainId});
         console.log(res.toString());
     })
 

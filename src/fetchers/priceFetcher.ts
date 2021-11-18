@@ -205,7 +205,7 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
     if (otherMarket !== undefined && (otherMarket.platform == MarketProtocols.Sushiswap || otherMarket.platform == MarketProtocols.TraderJoe)) {
       return await fetchSLPPrice({ address, signer, chainId });
     }
-    throw Error(`Unsupported token ${address} in fetch toke price`)
+    throw Error(`Unsupported token ${address} with chainId ${chainId} in fetch toke price`);
   } else if (chainId == 42) {
     return new BigNumber(1); // returning dummy data since it's kovan
   } else {
