@@ -4,6 +4,7 @@ import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYiel
 import { avalancheContracts } from "../src/networks";
 import { decimalFactor, getGasLimitWithETH } from "../src/helpers";
 import { EXP_2023, forgeIdsInBytes, Token, TokenAmount, YieldContract } from "../src";
+import { getGasPrice } from "../src/fetchers/gasPriceFetcher";
 const chainId: number = 43114;
 
 jest.setTimeout(300000);
@@ -20,8 +21,8 @@ describe("price fetcher", () => {
         signer = provider.getSigner();
       });
 
-    it.only('price', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd", chainId: chainId});
+    it('price', async() => {
+        const res = await fetchTokenPrice({signer: signer, address: "0x41e8e841f3c9fe666921eda128ca8e2b143eb136", chainId: chainId});
         console.log(res.toString());
     })
 
@@ -34,7 +35,7 @@ describe("price fetcher", () => {
         console.log(await fetchXJOEYield(signer, chainId))
     })
 
-    it('gas price', async() => {
-        console.log(getGasLimitWithETH(BN.from(123456789), BN.from(0)))
+    it.only('gas price', async() => {
+        console.log(await getGasPrice(chainId));
     })
 })
