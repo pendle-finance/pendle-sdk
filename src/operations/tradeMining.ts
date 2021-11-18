@@ -142,7 +142,7 @@ export class TradeMining {
       );
       const phaseRewards = new TokenAmount(
         pendleToken,
-        '750000000000000000000000'
+        '75000000000000000000000'
       );
 
       return phaseRewards;
