@@ -1,4 +1,4 @@
-import { dummyToken, dummyTokenAmount, EXP_2022, Market, PendleMarket, Token, TokenAmount, YieldContract } from '../src';
+import { dummyToken, dummyTokenAmount, EXP_2022, Market, PendleMarket, Token, TokenAmount, UniForkMarket, YieldContract } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, BigNumber as BN } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -67,12 +67,12 @@ describe("Market", () => {
                 : `https://api.avax.network/ext/bc/C/rpc`;
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        signer = provider.getSigner();
+        signer = provider.getSigner('0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
         // market = PendleMarket.find('0x574d9626f0bfde8b48cb762154dabf052812ccc6', chainId)
-        market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
+        // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 
-    it.only("PendleMarket.readMarketDetails", async () => {
+    it("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods(signer, chainId).readMarketDetails();
 
         console.log(JSON.stringify(marketDetails, null, '  '));
@@ -161,5 +161,12 @@ describe("Market", () => {
         const sushiMarket = Market.find('0x37922c69b08babcceae735a31235c81f1d1e8e43', 1);
         const response = await sushiMarket.methods(signer, 1).readMarketDetails();
         console.log(JSON.stringify(response, null, '  '));
+    })
+
+    it.only('redeem OT market LP rewards', async() => {
+        const otMarket: Market = Market.find('0x5f973e06a59d0bafe464faf36d5b3b06e075c543', chainId);
+        const otMarket2: Market = Market.find('0xd1f377b881010cb97ab0890a5ef908c45bcf13f9', chainId);
+        const res = await UniForkMarket.methods(signer, chainId).fetchClaimableRewardsFromOTMarkets([otMarket, otMarket2], '0x0D207520DF136bFc84c7a2932383362b8ae4fC61' );
+        console.log(JSON.stringify(res, null, '  '));
     })
 })
