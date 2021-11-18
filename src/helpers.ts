@@ -122,6 +122,10 @@ export const getCurrentTimestamp = async (provider: JsonRpcProvider): Promise<nu
   const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
   return currentTime;
 }
+export function getCurrentTimestampLocal() {
+  let curHour = Math.floor(Date.now() / 1000);
+  return curHour;
+}
 
 export const getLMStartTime = (chainId: number | undefined): BN => {
   switch (chainId) {

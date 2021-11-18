@@ -2,8 +2,7 @@ import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
 import { sushiswapSubgraphApi, traderJoeSubgraphApi, ONE_DAY} from '../constants';
 import { NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, isSameAddress } from '../helpers';
-import { getCurrentTimestamp } from '@pendle/subgraph-sdk/src/utils/helpers';
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, isSameAddress, getCurrentTimestampLocal } from '../helpers';
 import { BigNumber as BN, providers } from "ethers"
 import { getxJOEExchangeRate } from './priceFetcher';
 import BigNumber from 'bignumber.js';
@@ -48,7 +47,7 @@ export const fetchCompoundYield = async (yieldBearingAddress: string) => {
 }
 
 export const fetchSushiForkYield = async (poolAddress: string, chainId?: number): Promise<number> => { //chainId
-  const currentTime = getCurrentTimestamp()
+  const currentTime = getCurrentTimestampLocal()
   const dateAfter = currentTime - ONE_DAY.toNumber();
   const yieldRate: number = await request(
     chainId === undefined || chainId == 1 ? sushiswapSubgraphApi : traderJoeSubgraphApi,
