@@ -27,10 +27,7 @@ export async function fetchPendleMarketData(
   const baseTokenDecimals: BN = await baseTokenContract.decimals();
 
   const market = new PendleMarket(marketAddress.toLowerCase(), [
-    new Token(
-      ytTokenAddress,
-      ytTokenDecimals.toNumber()
-    ),
+    new Token(ytTokenAddress, ytTokenDecimals.toNumber()),
     new Token(baseTokenAddress, baseTokenDecimals.toNumber()),
   ]);
   return market;

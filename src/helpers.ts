@@ -1,18 +1,32 @@
 import { BigNumber as BN, Bytes, Contract, providers, utils } from 'ethers';
-import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime } from './constants'
-import { contracts } from "./contracts";
+import {
+  mainnetContracts,
+  kovanContracts,
+  avalancheContracts,
+  NetworkInfo,
+  StakingPoolType,
+} from './networks';
+import {
+  decimalsRecords,
+  forgeIdsInBytes,
+  gasBuffer,
+  ONE_MINUTE,
+  ONE_DAY,
+  ZERO,
+  LMStartTime,
+} from './constants';
+import { contracts } from './contracts';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { DecimalsPrecision } from './math/marketMath';
 export type Call_MultiCall = {
-  target: string,
-  callData: string
-}
+  target: string;
+  callData: string;
+};
 
 export type Result_MultiCall = {
-  success: boolean,
+  success: boolean;
   returnData: Bytes;
-}
+};
 
 export function getFunctionABIByName(abi: any[], name: string): any {
   return abi.find((f: any) => f.name == name);
@@ -21,9 +35,11 @@ export function getFunctionABIByName(abi: any[], name: string): any {
 export function formatOutput(returnedData: any, abi: any, name: string) {
   // console.log(getFunctionABIByName(abi, name))
   // console.log(returnedData)
-  return utils.defaultAbiCoder.decode(getFunctionABIByName(abi, name).outputs.map((f: any) => f.type), returnedData);
+  return utils.defaultAbiCoder.decode(
+    getFunctionABIByName(abi, name).outputs.map((f: any) => f.type),
+    returnedData
+  );
 }
-
 
 export const decimalFactor = (decimal: number): string => {
   return BN.from(10)
@@ -32,8 +48,8 @@ export const decimalFactor = (decimal: number): string => {
 };
 
 export const isSameAddress = (address1: string, address2: string): boolean => {
-  return address1.toLowerCase() == address2.toLowerCase()
-}
+  return address1.toLowerCase() == address2.toLowerCase();
+};
 
 export const indexRange = (start: number, end: number): number[] => {
   const arr = [];
@@ -44,28 +60,29 @@ export const indexRange = (start: number, end: number): number[] => {
 };
 
 export const distributeConstantsByNetwork = (chainId?: number): NetworkInfo => {
-  if (chainId === undefined || chainId == 1) { // Default to mainnet
+  if (chainId === undefined || chainId == 1) {
+    // Default to mainnet
     return {
       chainId: 1,
       contractAddresses: mainnetContracts,
-      decimalsRecord: decimalsRecords.mainnet
-    }
+      decimalsRecord: decimalsRecords.mainnet,
+    };
   } else if (chainId == 42) {
     return {
       chainId: 42,
       contractAddresses: kovanContracts,
-      decimalsRecord: decimalsRecords.kovan
-    }
+      decimalsRecord: decimalsRecords.kovan,
+    };
   } else if (chainId == 43114) {
     return {
       chainId: 43114,
       contractAddresses: avalancheContracts,
-      decimalsRecord: decimalsRecords.avalanche
-    }
+      decimalsRecord: decimalsRecords.avalanche,
+    };
   } else {
-    throw Error("Unsupported Network");
+    throw Error('Unsupported Network');
   }
-}
+};
 
 export function getABIByForgeId(forgeIdInBytes: string): any {
   switch (forgeIdInBytes) {
@@ -93,7 +110,7 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
       return contracts.PendleSushiswapSimpleForge; // To-do
 
     default: {
-      throw Error("Unsupported Forge Id");
+      throw Error('Unsupported Forge Id');
     }
   }
 }
@@ -117,11 +134,14 @@ export function getABIByStakingPoolType(type: StakingPoolType): any {
   }
 }
 
-export const getCurrentTimestamp = async (provider: JsonRpcProvider): Promise<number> => {
+export const getCurrentTimestamp = async (
+  provider: JsonRpcProvider
+): Promise<number> => {
   const latestBlockNumber = await provider.getBlockNumber();
-  const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
+  const currentTime: number = (await provider.getBlock(latestBlockNumber))
+    .timestamp;
   return currentTime;
-}
+};
 export function getCurrentTimestampLocal() {
   let curHour = Math.floor(Date.now() / 1000);
   return curHour;
@@ -134,41 +154,54 @@ export const getLMStartTime = (chainId: number | undefined): BN => {
       return LMStartTime[1];
 
     case 43114:
-      return LMStartTime[chainId]
+      return LMStartTime[chainId];
 
     default:
       throw Error(`Unknown chainId ${chainId}`);
   }
-}
+};
 
-export const getCurrentEpochId = (currentTime: number | BN, startTime: number | BN, epochDuration: number | BN): number => {
-  return BN.from(currentTime).sub(startTime).div(epochDuration).add(1).toNumber();
-}
+export const getCurrentEpochId = (
+  currentTime: number | BN,
+  startTime: number | BN,
+  epochDuration: number | BN
+): number => {
+  return BN.from(currentTime)
+    .sub(startTime)
+    .div(epochDuration)
+    .add(1)
+    .toNumber();
+};
 
 export const xor = (a: boolean, b: boolean) => a != b;
-
 
 export const getGasLimitWithETH = (estimate: BN, value: BN) => {
   var buffer: number = gasBuffer;
   var bufferedGasLimit: BN = ZERO;
   var cnter = 0;
   while (buffer > 0 && cnter < DecimalsPrecision) {
-    bufferedGasLimit = bufferedGasLimit.add(estimate.mul(buffer - (buffer % 1)));
+    bufferedGasLimit = bufferedGasLimit.add(
+      estimate.mul(buffer - (buffer % 1))
+    );
     buffer = 10 * (buffer % 1);
     estimate = estimate.div(10);
     cnter++;
   }
-  return { gasLimit: bufferedGasLimit, value: value }
-}
+  return { gasLimit: bufferedGasLimit, value: value };
+};
 
-export const getBlocksomeDurationEarlier = async (duration: number, chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
+export const getBlocksomeDurationEarlier = async (
+  duration: number,
+  chainId: number | undefined,
+  provider: JsonRpcProvider
+): Promise<number | undefined> => {
   const margin: number = 30;
   var scanInterval: BN;
   switch (chainId) {
     case undefined:
     case 1:
       scanInterval = ONE_DAY.div(7);
-      break
+      break;
 
     case 42:
       scanInterval = ONE_DAY.div(5);
@@ -176,19 +209,27 @@ export const getBlocksomeDurationEarlier = async (duration: number, chainId: num
 
     case 43114:
       scanInterval = ONE_DAY;
-      break
+      break;
 
     default:
-      throw Error(`Unsupported chain ${chainId} in getBlocksomeDurationEarlier`)
+      throw Error(
+        `Unsupported chain ${chainId} in getBlocksomeDurationEarlier`
+      );
   }
   const latestBlockNumber = await provider.getBlockNumber();
-  const currentTime: number = (await provider.getBlock(latestBlockNumber)).timestamp;
+  const currentTime: number = (await provider.getBlock(latestBlockNumber))
+    .timestamp;
   const targetTime: number = currentTime - duration;
   var rightBound: BN = BN.from(await provider.getBlockNumber());
   var leftBound: BN = rightBound;
   while (true) {
-    const block = await provider.getBlock(rightBound.sub(scanInterval).toNumber());
-    if (block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() && block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()) {
+    const block = await provider.getBlock(
+      rightBound.sub(scanInterval).toNumber()
+    );
+    if (
+      block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() &&
+      block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()
+    ) {
       return rightBound.sub(scanInterval).toNumber();
     }
     if (block.timestamp < targetTime - ONE_MINUTE.mul(margin).toNumber()) {
@@ -202,7 +243,10 @@ export const getBlocksomeDurationEarlier = async (duration: number, chainId: num
   while (l < r) {
     var mid: number = Math.trunc((l + r) / 2);
     const block = await provider.getBlock(mid);
-    if (block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() && block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()) {
+    if (
+      block.timestamp >= targetTime - ONE_MINUTE.mul(margin).toNumber() &&
+      block.timestamp <= targetTime + ONE_MINUTE.mul(margin).toNumber()
+    ) {
       return mid;
     }
     if (block.timestamp > targetTime) {
@@ -212,15 +256,34 @@ export const getBlocksomeDurationEarlier = async (duration: number, chainId: num
     }
   }
   return undefined;
+};
+
+export async function submitTransaction(
+  contract: Contract,
+  signer: providers.JsonRpcSigner,
+  funcName: string,
+  args: any[],
+  value: BN = ZERO
+): Promise<providers.TransactionResponse> {
+  const gasEstimate: BN = await contract
+    .connect(signer)
+    .estimateGas[funcName](...args, { value: value });
+  return contract
+    .connect(signer)
+    [funcName](...args, getGasLimitWithETH(gasEstimate, value));
 }
 
-export async function submitTransaction(contract: Contract, signer: providers.JsonRpcSigner, funcName: string, args: any[], value: BN = ZERO): Promise<providers.TransactionResponse> {
-  const gasEstimate: BN = await contract.connect(signer).estimateGas[funcName](...args, { value: value });
-  return contract.connect(signer)[funcName](...args, getGasLimitWithETH(gasEstimate, value));
-}
-
-export async function estimateGas(contract: Contract, fromAddress: string, funcName: string, args: any[], value: BN = ZERO): Promise<BN> {
-  const gasEstimate: BN = await contract.estimateGas[funcName](...args, { from: fromAddress, value: value });
+export async function estimateGas(
+  contract: Contract,
+  fromAddress: string,
+  funcName: string,
+  args: any[],
+  value: BN = ZERO
+): Promise<BN> {
+  const gasEstimate: BN = await contract.estimateGas[funcName](...args, {
+    from: fromAddress,
+    value: value,
+  });
   return BN.from(getGasLimitWithETH(gasEstimate, value).gasLimit);
 }
 

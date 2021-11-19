@@ -1,4 +1,4 @@
-import { providers, } from 'ethers';
+import { providers } from 'ethers';
 import { Token, TokenAmount, StakingPool } from './entities';
 import { CurrencyAmount } from './entities/currencyAmount';
 import { fetchValuation } from './fetchers';
@@ -15,11 +15,18 @@ export class Sdk {
     this.chainId = chainId;
   }
 
-  public async fetchValuations(amounts: TokenAmount[], chainId?: number): Promise<CurrencyAmount[]> {
-    const response: CurrencyAmount[] = new Array<CurrencyAmount>(amounts.length);
+  public async fetchValuations(
+    amounts: TokenAmount[],
+    chainId?: number
+  ): Promise<CurrencyAmount[]> {
+    const response: CurrencyAmount[] = new Array<CurrencyAmount>(
+      amounts.length
+    );
     const promises = indexRange(0, amounts.length).map(async (i: number) => {
-      await fetchValuation(amounts[i], this.signer, chainId).then((r: CurrencyAmount) => response[i] = r);
-    })
+      await fetchValuation(amounts[i], this.signer, chainId).then(
+        (r: CurrencyAmount) => (response[i] = r)
+      );
+    });
     await Promise.all(promises);
     return response;
   }
@@ -30,16 +37,23 @@ export class Sdk {
     lps = [],
     interestStakingPools = [],
     rewardStakingPools = [],
-    tokensToDistribute = []
+    tokensToDistribute = [],
   }: {
-    yts?: Token[],
-    ots?: Token[],
-    lps?: Token[],
-    interestStakingPools?: StakingPool[],
-    rewardStakingPools?: StakingPool[],
-    tokensToDistribute?: Token[]
+    yts?: Token[];
+    ots?: Token[];
+    lps?: Token[];
+    interestStakingPools?: StakingPool[];
+    rewardStakingPools?: StakingPool[];
+    tokensToDistribute?: Token[];
   }): Promise<providers.TransactionResponse> {
-    return RedeemProxy.methods(this.signer, this.chainId).claimYields({yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute});
+    return RedeemProxy.methods(this.signer, this.chainId).claimYields({
+      yts,
+      ots,
+      lps,
+      interestStakingPools,
+      rewardStakingPools,
+      tokensToDistribute,
+    });
   }
 
   public async estimateGasForClaimYields({
@@ -48,15 +62,25 @@ export class Sdk {
     lps = [],
     interestStakingPools = [],
     rewardStakingPools = [],
-    tokensToDistribute = []
+    tokensToDistribute = [],
   }: {
-    yts?: Token[],
-    ots?: Token[],
-    lps?: Token[],
-    interestStakingPools?: StakingPool[],
-    rewardStakingPools?: StakingPool[],
-    tokensToDistribute?: Token[]
+    yts?: Token[];
+    ots?: Token[];
+    lps?: Token[];
+    interestStakingPools?: StakingPool[];
+    rewardStakingPools?: StakingPool[];
+    tokensToDistribute?: Token[];
   }): Promise<GasInfo> {
-    return RedeemProxy.methods(this.signer, this.chainId).estimateGasForClaimYields({yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute})
+    return RedeemProxy.methods(
+      this.signer,
+      this.chainId
+    ).estimateGasForClaimYields({
+      yts,
+      ots,
+      lps,
+      interestStakingPools,
+      rewardStakingPools,
+      tokensToDistribute,
+    });
   }
 }

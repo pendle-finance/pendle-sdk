@@ -1,5 +1,5 @@
 import { request, gql } from 'graphql-request';
-import { PendleSubgraphUrlMapping } from "../../constants"
+import { PendleSubgraphUrlMapping } from '../../constants';
 import { TokenAmount } from '../tokenAmount';
 import { Token } from '../token';
 import { Address } from '../types';
@@ -25,13 +25,13 @@ const networkMapping: Record<string | number, number> = {
   42: 42,
   kovan: 42,
   43114: 43114,
-  avalanche: 43114
+  avalanche: 43114,
 };
 
 const chainIdToNetworkMapping: Record<number, string> = {
   1: 'mainnet',
   42: 'kovan',
-  43114: 'avalanche'
+  43114: 'avalanche',
 };
 
 export class TransactionFetcher {
@@ -174,7 +174,10 @@ export class TransactionFetcher {
     return response.redeemYieldTokens.map((redeemObj: any) => ({
       action: 'Redeem',
       hash: redeemObj.id,
-      amount: { currency: 'USD', amount: parseFloat(redeemObj.redeemedValueUSD) },
+      amount: {
+        currency: 'USD',
+        amount: parseFloat(redeemObj.redeemedValueUSD),
+      },
       paid: [
         new TokenAmount(
           new Token(redeemObj.xytAsset.id, redeemObj.xytAsset.decimals),
@@ -199,7 +202,9 @@ export class TransactionFetcher {
     }));
   }
 
-  public async getSwapTransactions(queryObj: PendleAmmQuery): Promise<TRANSACTION[]> {
+  public async getSwapTransactions(
+    queryObj: PendleAmmQuery
+  ): Promise<TRANSACTION[]> {
     const query = gql`
     {
       swaps

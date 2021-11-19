@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
-import { TradeMining } from '../src/entities/tradeMining';
 import * as dotenv from 'dotenv';
-import { distributeConstantsByNetwork } from '../src/helpers';
+import { TradeMining } from '../src';
 dotenv.config();
 jest.setTimeout(30000);
 

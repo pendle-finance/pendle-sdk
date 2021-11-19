@@ -54,7 +54,10 @@ export async function advanceTimeAndBlock(time: BN, blockCount: number) {
 
 export async function mineAllPendingTransactions() {
   while (true) {
-    const pendingBlock: any = await provider.send('eth_getBlockByNumber', ['pending', false]);
+    const pendingBlock: any = await provider.send('eth_getBlockByNumber', [
+      'pending',
+      false,
+    ]);
     if (pendingBlock.transactions.length == 0) break;
     await mineBlock();
   }
