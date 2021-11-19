@@ -18,6 +18,7 @@ import { fetchValuation } from "../fetchers/priceFetcher";
 import { CurrencyAmount, ZeroCurrencyAmount } from "./currencyAmount";
 import { MasterChef } from "./masterChef";
 import { cdiv } from "../math/mathLib"
+import { Comptroller } from "./comptroller";
 
 export enum Action {
     stakeOT,
@@ -665,6 +666,17 @@ export class OneClickWrapper {
                 const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi, signer.provider);
                 const pid: number = await yieldTokenHolder.pid();
                 const rawAprs: AprInfo[] = await MasterChef.methods(signer, chainId).getRewardsAprs(pid);
+                const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
+                return rawAprs.map((apr: AprInfo) => {
+                    return {
+                        apr,
+                        principal: principalValuation
+                    }
+                })
+            } else if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.BENQI) {
+                const qiToken: Token = this.yieldContract.yieldToken;
+                const comptroller: Comptroller = new Comptroller({_address: networkInfo.contractAddresses.misc.Comptroller, _protocol: "benqi"});
+                const rawAprs: AprInfo[] = await comptroller.methods(signer, chainId).getSupplierAprs(qiToken);
                 const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
                 return rawAprs.map((apr: AprInfo) => {
                     return {

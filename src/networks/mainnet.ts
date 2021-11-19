@@ -451,6 +451,7 @@ export const mainnetContracts: NetworkContractAddresses = {
         MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696',
         MasterChef: '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd',
         PendleWrapper: '0x82c9d29739333258f08cd3957d2a7ac7f4d53fab', //Dummy
+        Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888'
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
