@@ -53,7 +53,7 @@ export class Comptroller {
 
     public methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
         const networkInfo = distributeConstantsByNetwork(chainId);
-        const comptrolleContract: Contract = new Contract(networkInfo.contractAddresses.misc.Comptroller, getComptrollerABI(this.protocol), signer.provider);
+        const comptrollerContract: Contract = new Contract(networkInfo.contractAddresses.misc.Comptroller, getComptrollerABI(this.protocol).abi, signer.provider);
 
         const getSupplierAprs = async(qiOrCToken: Token): Promise<AprInfo[]> => {
             switch (this.protocol) {
@@ -61,14 +61,14 @@ export class Comptroller {
                     const qiTokenContract: Contract = new Contract(qiOrCToken.address, contracts.IQiToken.abi, signer.provider);
                     var supplySpeedForQi: BN, supplySpeedForAvax: BN, totalSupply: BN;
                     var promises = [];
-                    promises.push(comptrolleContract.rewardSpeeds(BenqiRewardTypes.Qi, qiOrCToken.address).then((res: BN) => supplySpeedForQi = res));
-                    promises.push(comptrolleContract.rewardSpeeds(BenqiRewardTypes.Avax, qiOrCToken.address).then((res: BN) => supplySpeedForAvax = res));
+                    promises.push(comptrollerContract.rewardSpeeds(BenqiRewardTypes.Qi, qiOrCToken.address).then((res: BN) => supplySpeedForQi = res));
+                    promises.push(comptrollerContract.rewardSpeeds(BenqiRewardTypes.Avax, qiOrCToken.address).then((res: BN) => supplySpeedForAvax = res));
                     promises.push(qiTokenContract.totalSupply().then((res: BN) => totalSupply = res));
                     await Promise.all(promises);
 
                     promises = [];
                     const QiRewardPerDay: TokenAmount = new TokenAmount(
-                        Token.find(networkInfo.contractAddresses.tokens.Qi, chainId),
+                        Token.find(networkInfo.contractAddresses.tokens.QI, chainId),
                         supplySpeedForQi!.mul(ONE_DAY).toString()
                     )
                     var QiRewardPerDayValuation: CurrencyAmount;

@@ -17,7 +17,7 @@ import BigNumber from "bignumber.js";
 import { fetchValuation } from "../fetchers/priceFetcher";
 import { CurrencyAmount, ZeroCurrencyAmount } from "./currencyAmount";
 import { MasterChef } from "./masterChef";
-import { cdiv } from "../math/mathLib"
+import { cdiv, rdiv } from "../math/mathLib"
 import { Comptroller } from "./comptroller";
 
 export enum Action {
@@ -334,11 +334,12 @@ export class OneClickWrapper {
                     break;
 
                 case forgeIdsInBytes.BENQI:
+                case forgeIdsInBytes.XJOE:
                     const underlyingAddress: string = this.yieldContract.underlyingAsset.address;
                     const exchangeRate: BN = await pendleForgeContract.connect(signer.provider).callStatic.getExchangeRate(underlyingAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                     outYieldTokenAmount = new TokenAmount(
                         this.yieldContract.yieldToken,
-                        cdiv(inAmount, exchangeRate).toString()
+                        this.yieldContract.useCompoundMath() ? cdiv(inAmount, exchangeRate).toString() : rdiv(inAmount, exchangeRate).toString()
                     )
                     transactions.push({
                         action: TransactionAction.preMint,
@@ -661,31 +662,32 @@ export class OneClickWrapper {
         };
 
         const getOtRewards = async (underlyingAmount: TokenAmount, pendleFixture: PendleFixture): Promise<AprWithPrincipal[]> => {
-            if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.JOE_COMPLEX) {
-                const yieldTokenHolderAddress: string = await pendleFixture.forge.yieldTokenHolders(this.yieldContract.underlyingAsset.address, this.yieldContract.expiry);
-                const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi, signer.provider);
-                const pid: number = await yieldTokenHolder.pid();
-                const rawAprs: AprInfo[] = await MasterChef.methods(signer, chainId).getRewardsAprs(pid);
-                const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
-                return rawAprs.map((apr: AprInfo) => {
-                    return {
-                        apr,
-                        principal: principalValuation
-                    }
-                })
-            } else if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.BENQI) {
-                const qiToken: Token = this.yieldContract.yieldToken;
-                const comptroller: Comptroller = new Comptroller({_address: networkInfo.contractAddresses.misc.Comptroller, _protocol: "benqi"});
-                const rawAprs: AprInfo[] = await comptroller.methods(signer, chainId).getSupplierAprs(qiToken);
-                const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
-                return rawAprs.map((apr: AprInfo) => {
-                    return {
-                        apr,
-                        principal: principalValuation
-                    }
-                })
+            var rawAprs: AprInfo[] = [];
+            switch (this.yieldContract.forgeIdInBytes) {
+                case forgeIdsInBytes.JOE_COMPLEX:
+                case forgeIdsInBytes.XJOE:
+                    const yieldTokenHolderAddress: string = await pendleFixture.forge.yieldTokenHolders(this.yieldContract.underlyingAsset.address, this.yieldContract.expiry);
+                    const yieldTokenHolder: Contract = new Contract(yieldTokenHolderAddress, contracts.PendleTraderJoeYieldTokenHolder.abi, signer.provider);
+                    const pid: number = await yieldTokenHolder.pid();
+                    rawAprs = await MasterChef.methods(signer, chainId).getRewardsAprs(pid);
+                    break;
+
+                case forgeIdsInBytes.BENQI:
+                    const qiToken: Token = this.yieldContract.yieldToken;
+                    const comptroller: Comptroller = new Comptroller({_address: networkInfo.contractAddresses.misc.Comptroller, _protocol: "benqi"});
+                    rawAprs = await comptroller.methods(signer, chainId).getSupplierAprs(qiToken);
+                    break;
+                
+                default:
+                    throw new Error(`Unsupported forgeId ${this.yieldContract.forgeId} in getOtRewards`);
             }
-            return [];
+            const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
+            return rawAprs.map((apr: AprInfo) => {
+                return {
+                    apr,
+                    principal: principalValuation
+                }
+            })
         }
 
         const getLmRewards = async (stakingPool: StakingPool, inputAmount: TokenAmount): Promise<AprWithPrincipal[]> => {
@@ -769,7 +771,10 @@ export class OneClickWrapper {
                     BN.from(10).pow(18).toString()
                 )
             } else {
-                inputTokenAmount = dummyTokenAmount;
+                inputTokenAmount = new TokenAmount(
+                    this.yieldContract.underlyingAsset,
+                    BN.from(10).pow(networkInfo.decimalsRecord[this.yieldContract.underlyingAsset.address]).toString()
+                );
             }
             var totalPrincipalValuation = new BigNumber(0);
             const testSimulation: SimulationDetails = await simulate(action, inputTokenAmount, 0);

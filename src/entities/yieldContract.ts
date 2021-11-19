@@ -39,6 +39,10 @@ export class YieldContract {
         );
     }
 
+    public useCompoundMath (): boolean {
+        return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || this.forgeIdInBytes == forgeIdsInBytes.BENQI;
+    }
+
     public methods(
         signer: providers.JsonRpcSigner,
         chainId?: number
@@ -51,10 +55,6 @@ export class YieldContract {
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.forgeIdInBytes).abi, signer.provider);
         const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
         const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
-
-        const useCompoundMath = (): boolean => {
-            return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || this.forgeIdInBytes == forgeIdsInBytes.BENQI;
-        }
 
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeIdInBytes == forgeIdsInBytes.AAVE || this.forgeIdInBytes == forgeIdsInBytes.COMPOUND) {
@@ -81,7 +81,7 @@ export class YieldContract {
                 const exchangeRate: BN = await pendleForgeContract.connect(signer.provider).callStatic.getExchangeRate(this.underlyingAsset.address, { from: networkInfo.contractAddresses.misc.PendleRouter });
                 const ot: string = (await pendleDataContract.callStatic.otTokens(this.forgeIdInBytes, this.underlyingAsset.address, this.expiry)).toLowerCase();
                 const yt: string = (await pendleDataContract.callStatic.xytTokens(this.forgeIdInBytes, this.underlyingAsset.address, this.expiry)).toLowerCase();
-                const amountToMint: BN = useCompoundMath() ? cmul(BN.from(toMint.rawAmount()), exchangeRate) : rmul(BN.from(toMint.rawAmount()), exchangeRate);
+                const amountToMint: BN = this.useCompoundMath() ? cmul(BN.from(toMint.rawAmount()), exchangeRate) : rmul(BN.from(toMint.rawAmount()), exchangeRate);
                 return [
                     new TokenAmount(
                         new Token(
@@ -176,7 +176,7 @@ export class YieldContract {
             mint,
             redeemDetails,
             redeem,
-            getPrincipalPerYT
+            getPrincipalPerYT,
         };
     }
 

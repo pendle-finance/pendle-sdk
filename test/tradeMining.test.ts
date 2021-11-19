@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { TradeMining } from '../src/entities/tradeMining';
+import { TradeMining } from '../src/operations/tradeMining';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
@@ -19,10 +19,10 @@ describe('Trade Mining', () => {
     signer = provider.getSigner();
     tradeMining = new TradeMining();
   });
-  it('getTopTraders', async () => {
+  it.only('getTopTraders', async () => {
     const data = await tradeMining
       .methods(signer, 43114)
-      .getTopTraders({ phase: 1, house: 'BenQi' });
+      .getTopTraders({ phase: 1, house: 'Pendle' });
     console.log('getTopTraders', data);
   });
 
