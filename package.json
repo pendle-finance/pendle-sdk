@@ -54,6 +54,7 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.3.3",
     "@pendle/core": "1.2.2",
     "@pendle/single-staking": "^0.0.1",
     "@pendle/subgraph-sdk": "1.0.32",

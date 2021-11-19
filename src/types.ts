@@ -1,2 +1,1 @@
-export type GasInfo = {
-    }
+export type GasInfo = {};

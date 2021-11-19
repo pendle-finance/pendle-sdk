@@ -1537,6 +1537,11 @@
     node-fetch "^2.6.0"
     semver "^6.3.0"
 
+"@openzeppelin/contracts@^4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.3.tgz#ff6ee919fc2a1abaf72b22814bfb72ed129ec137"
+  integrity sha512-tDBopO1c98Yk7Cv/PZlHqrvtVjlgK5R4J6jxLwoO7qxK4xqOiZG+zSkIvGFpPZ0ikc3QOED3plgdqjgNTnBc7g==
+
 "@pendle/core@1.2.2":
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.2.2.tgz#8500e6508c212a1c0db5d06385ef8ea693da3eb3"
