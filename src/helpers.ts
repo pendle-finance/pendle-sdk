@@ -1,6 +1,6 @@
 import { BigNumber as BN, Bytes, Contract, providers, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime } from './constants'
+import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime, LMEpochDuration } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { DecimalsPrecision } from './math/marketMath';
@@ -127,7 +127,7 @@ export function getCurrentTimestampLocal() {
   return curHour;
 }
 
-export const getLMStartTime = (chainId: number | undefined): BN => {
+export function getLMStartTime (chainId: number | undefined): BN {
   switch (chainId) {
     case 1:
     case undefined:
@@ -141,14 +141,20 @@ export const getLMStartTime = (chainId: number | undefined): BN => {
   }
 }
 
-export const getCurrentEpochId = (currentTime: number | BN, startTime: number | BN, epochDuration: number | BN): number => {
+export function getCurrentEpochId (currentTime: number | BN, startTime: number | BN, epochDuration: number | BN): number {
   return BN.from(currentTime).sub(startTime).div(epochDuration).add(1).toNumber();
 }
 
-export const xor = (a: boolean, b: boolean) => a != b;
+export async function getCurrentEpochEndTime(signer: providers.JsonRpcSigner, chainId: number) {
+  const currentTime = await getCurrentTimestamp(signer.provider);
+  const epochId = getCurrentEpochId(currentTime, getLMStartTime(chainId), LMEpochDuration)
+  return getLMStartTime(chainId).add(LMEpochDuration.mul(epochId)).toString();
+}
+
+export function xor (a: boolean, b: boolean){ return a != b;}
 
 
-export const getGasLimitWithETH = (estimate: BN, value: BN) => {
+export function getGasLimitWithETH (estimate: BN, value: BN) {
   var buffer: number = gasBuffer;
   var bufferedGasLimit: BN = ZERO;
   var cnter = 0;
@@ -161,7 +167,7 @@ export const getGasLimitWithETH = (estimate: BN, value: BN) => {
   return { gasLimit: bufferedGasLimit, value: value }
 }
 
-export const getBlocksomeDurationEarlier = async (duration: number, chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> => {
+export async function getBlocksomeDurationEarlier  (duration: number, chainId: number | undefined, provider: JsonRpcProvider): Promise<number | undefined> {
   const margin: number = 30;
   var scanInterval: BN;
   switch (chainId) {
