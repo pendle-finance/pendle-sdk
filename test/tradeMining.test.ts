@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { TradeMining } from '../src/operations/tradeMining';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
+import BigNumber from 'bignumber.js';
 dotenv.config();
 jest.setTimeout(30000);
 
@@ -20,10 +21,20 @@ describe('Trade Mining', () => {
     tradeMining = new TradeMining();
   });
   it.only('getTopTraders', async () => {
-    const data = await tradeMining
+    var data = await tradeMining
       .methods(signer, 43114)
-      .getTopTraders({ phase: 1, house: 'Pendle' });
-    console.log('getTopTraders', data);
+      .getTopTraders({ phase: 1, house: 'Pendle', numberOfTraders: 50 });
+    console.log(data.length)
+
+    data = await tradeMining
+      .methods(signer, 43114)
+      .getTopTraders({ phase: 1, house: 'BenQi', numberOfTraders: 50 });
+
+    console.log(data.length)
+    data = await tradeMining
+      .methods(signer, 43114)
+      .getTopTraders({ phase: 1, house: 'TraderJoe', numberOfTraders: 50 });
+    console.log(data.length);
   });
 
   it('getUserRank', async () => {

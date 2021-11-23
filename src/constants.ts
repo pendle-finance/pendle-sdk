@@ -35,6 +35,7 @@ export const ONE_DAY = BN.from("86400");
 export const ONE_MINUTE = BN.from("60");
 export const LMStartTime = {
   1: BN.from("1623888000"),
+  42: BN.from("1625241600"),
   43114: BN.from("1636632000")
 }
 export const LMEpochDuration = BN.from("604800");

@@ -1,5 +1,6 @@
 import { NetworkContractAddresses, StakingPoolType } from "./types";
 import { EXP_2021, EXP_2022, forgeIdsInBytes, marketFactoryIds } from "../constants";
+import { MarketProtocols } from ".";
 
 export const kovanContracts: NetworkContractAddresses = {
     OTs: [
@@ -158,6 +159,51 @@ export const kovanContracts: NetworkContractAddresses = {
             marketFactoryId: marketFactoryIds.GENERIC
         }
     ],
+    otherMarkets: [
+        {
+            address: '0xb55d4f07987e593c5a5052275a50893f200882be',
+            pair: [
+                '0x3d213f7813d6071aa7f29182c89e40db4093b95d',
+                '0xb7a4f3e9097c08da09517b5ab877f7a917224ede'
+            ],
+            platform: MarketProtocols.Sushiswap
+        }, {
+            address: '0xfff220f5c22d3e3ff41ece82702627d2a43f64b0',
+            pair: [
+                '0x6a9f015e02937b5c59dd21d30219743d641f5291',
+                '0xb7a4f3e9097c08da09517b5ab877f7a917224ede'   
+            ],
+            platform: MarketProtocols.Sushiswap
+        }, {
+            address: '0xe0685f1e7e4f67893d0d9b1532992edddb1a305e',
+            pair: [
+                '0xcabd309d0337b40935064f94fa8d5b79dc484df6',
+                '0xb7a4f3e9097c08da09517b5ab877f7a917224ede'
+            ],
+            platform: MarketProtocols.Sushiswap
+        }, {
+            address: '0xfb8d844bfc4ec1e03d9aed3f0db909b46defe95a',
+            pair: [
+                '0x0bd27a73f06f2ec9aea8df6ade306b6a4e0851ff',
+                '0xb7a4f3e9097c08da09517b5ab877f7a917224ede'
+            ],
+            platform: MarketProtocols.Sushiswap
+        }, {
+            address: '0xe109b6099926515dd06fe0467f769894a307a3ae',
+            pair: [
+                '0x994963c5501e7600f48d6d7154f3a10d6a33f4ae',
+                '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
+            ],
+            platform: MarketProtocols.Sushiswap
+        }, {
+            address: '0xead1c2a646f1cf4f8936ae34e9112fd79bab3646',
+            pair: [
+                '0x4217abf12cbfedcdc0e8a30a4f384be58989db51',
+                '0xe22da380ee6b445bb8273c81944adeb6e8450422'
+            ],
+            platform: MarketProtocols.Sushiswap
+        }
+    ],
     stakingPools: [
         {
             address: '0x25fc31df947eb3d92cfbdbbc38ebcf8519be49bc',
@@ -296,12 +342,22 @@ export const kovanContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             active: true
+        },
+        {
+            address: '0x762545bf8fcae6c0d2d4c48af159dc57ec8d2e67',
+            inputTokenAddress: '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033',
+            contractType: StakingPoolType.PendleSingleSided,
+            rewardTokenAddresses: [
+                '0xff3b42ccb73dc70af4bb2a03efcf021b5ad08033'
+            ],
+            interestTokensAddresses: [],
+            active: true
         }
     ],
     misc: {
         PendleRedeemProxy: '0x866a680d43cb17f2b65f7ccc3471146a560afada',
         PendleLiquidityRewardsReader: '0xb4972941692b3a324af1015dacd78f9df2da3601',
-        PendleRouter: '0x85db6e6edb8ec6dfec222b80a54cc7b42f59671e',
+        PendleRouter: '0xA088F289659245af08640A439956256e130aBB9F',
         PendleData: '0xb41094b55ae8ce23adfa6c4156c473e6d0e3287e',
         MultiCallV2: '0xf6a6133725d5c77f35883f4a198bcd1aa5bd50a8'
     },

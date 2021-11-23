@@ -134,7 +134,8 @@ export function getLMStartTime (chainId: number | undefined): BN {
       return LMStartTime[1];
 
     case 43114:
-      return LMStartTime[chainId]
+    case 42:
+      return LMStartTime[chainId];
 
     default:
       throw Error(`Unknown chainId ${chainId}`);
