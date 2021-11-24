@@ -328,7 +328,7 @@ export class RedeemProxy {
                             return new TokenAmount(
                                 new Token(
                                     ytInfo.rewardTokenAddresses[0],
-                                    networkInfo.decimalsRecord[ytInfo.address]
+                                    networkInfo.decimalsRecord[ytInfo.rewardTokenAddresses[0]]
                                 ),
                                 userInterests[i].toString()
                             )
