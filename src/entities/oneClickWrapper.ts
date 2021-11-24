@@ -679,7 +679,7 @@ export class OneClickWrapper {
                     break;
                 
                 default:
-                    throw new Error(`Unsupported forgeId ${this.yieldContract.forgeId} in getOtRewards`);
+                    return [];
             }
             const principalValuation: CurrencyAmount = await fetchValuation(underlyingAmount, signer, chainId);
             return rawAprs.map((apr: AprInfo) => {
