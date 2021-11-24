@@ -122,7 +122,6 @@ export async function fetchXJOEYield(signer: providers.JsonRpcSigner, chainId?: 
       }
     }`
   ).then((data: any) => {
-    console.log(data)
     return data.dayDatas.reduce((s: BigNumber, d: any, index: number): BigNumber => {
       if (index >= 7) {
         return s
