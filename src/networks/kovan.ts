@@ -1,6 +1,6 @@
 import { NetworkContractAddresses, StakingPoolType } from "./types";
 import { EXP_2021, EXP_2022, forgeIdsInBytes, marketFactoryIds } from "../constants";
-import { MarketProtocols } from ".";
+import { MarketProtocols } from "./types";
 
 export const kovanContracts: NetworkContractAddresses = {
     OTs: [

@@ -26,7 +26,7 @@ describe("price fetcher", () => {
         console.log(res.toString());
     })
 
-    it('external rate', async() => {
+    it.only('external rate', async() => {
         // for (const om of avalancheContracts.otherMarkets!) {
         //     const res = await fetchSushiForkYield(om.address, 43114)
         //     console.log('market:', om.address);
@@ -35,7 +35,7 @@ describe("price fetcher", () => {
         console.log(await fetchXJOEYield(signer, chainId))
     })
 
-    it.only('gas price', async() => {
+    it('gas price', async() => {
         console.log(await getGasPrice(chainId));
     })
 })

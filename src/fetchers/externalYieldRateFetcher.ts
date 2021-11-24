@@ -2,10 +2,13 @@ import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
 import { sushiswapSubgraphApi, traderJoeSubgraphApi, ONE_DAY} from '../constants';
 import { NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, isSameAddress, getCurrentTimestampLocal } from '../helpers';
-import { BigNumber as BN, providers } from "ethers"
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, isSameAddress, getCurrentTimestampLocal, getCurrentTimestamp } from '../helpers';
+import { BigNumber as BN, providers, Contract } from "ethers"
 import { getxJOEExchangeRate } from './priceFetcher';
 import BigNumber from 'bignumber.js';
+import { contracts } from '../contracts';
+import { fetchValuation } from '.';
+import { Token, TokenAmount } from '..';
 const axios = require('axios');
 
 export const fetchAaveYield = async (underlyingAddress: string) => {
@@ -106,18 +109,38 @@ export async function fetchBenqiYield(underlyingAddress: string): Promise<number
 
 export async function fetchXJOEYield(signer: providers.JsonRpcSigner, chainId?: number): Promise<number> {
   if (chainId != 43114) throw Error(`Invalid chainId: ${chainId} in fetchXJOEYield`);
+  const dateAfter = (await getCurrentTimestamp(signer.provider)) - ONE_DAY.mul(7).toNumber();
+  const sevenDayTradingVolume: BigNumber = await request(
+    traderJoeSubgraphApi,
+    gql`{
+      dayDatas(where: {factory: "0x9ad6c38be94206ca50bb0d90783181662f0cfa10", date_gte: ${dateAfter}}) {
+        date
+        volumeUSD
+        untrackedVolume
+        txCount
+        __typename
+      }
+    }`
+  ).then((data: any) => {
+    console.log(data)
+    return data.dayDatas.reduce((s: BigNumber, d: any, index: number): BigNumber => {
+      if (index >= 7) {
+        return s
+      };
+      return s.plus(d.volumeUSD);
+    }, new BigNumber(0))
+  })
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
   const JOEAddress: string = networkInfo.contractAddresses.tokens.JOE;
   const xJOEAddress: string = networkInfo.contractAddresses.tokens.xJOE;
-
-  const blockNumberOneDayAgo : number | undefined = await getBlocksomeDurationEarlier(ONE_DAY.mul(7).toNumber(), chainId, signer.provider);
-  if (blockNumberOneDayAgo === undefined) {
-    throw Error(`Unable to get block number in the past in fetchXJOEYield`);
-  }
-  var currentExchangeRate: BigNumber, pastExchangeRate: BigNumber;
-  var promises = [];
-  promises.push(getxJOEExchangeRate(xJOEAddress, JOEAddress, signer).then((r: BigNumber) => {currentExchangeRate = r}));
-  promises.push(getxJOEExchangeRate(xJOEAddress, JOEAddress, signer, blockNumberOneDayAgo).then((r: BigNumber) => {pastExchangeRate = r}));
-  await Promise.all(promises);
-  return currentExchangeRate!.div(pastExchangeRate!).minus(1).multipliedBy(52).toNumber();
+  const JOEContract: Contract = new Contract(JOEAddress, contracts.IERC20.abi, signer.provider);
+  const joeLocked: BN = await JOEContract.balanceOf(xJOEAddress);
+  const joeValuelocked = await fetchValuation(new TokenAmount(
+    new Token(
+      JOEAddress,
+      networkInfo.decimalsRecord[JOEAddress]
+    ),
+    joeLocked.toString()
+  ), signer, chainId);
+  return sevenDayTradingVolume.multipliedBy(365).div(7).multipliedBy(0.0005).div(joeValuelocked.amount).toNumber()
 }
