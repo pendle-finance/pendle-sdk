@@ -492,6 +492,17 @@ export class OneClickWrapper {
             }
         }
 
+        const wrapEthInTransaction = (txn: Transaction): Transaction => {
+            return {
+                action: txn.action,
+                paid: txn.paid.map(wrapEth),
+                maxPaid: txn.maxPaid.map(wrapEth),
+                received: txn.received.map(wrapEth),
+                user: txn.user,
+                protocol: txn.protocol
+            }
+        }
+
         const unwrapEth = (tokenAmount: TokenAmount): TokenAmount => {
             if (isSameAddress(tokenAmount.token.address, networkInfo.contractAddresses.tokens.WETH)) {
                 return new TokenAmount(
@@ -595,7 +606,7 @@ export class OneClickWrapper {
                 dataAddLiqUniFork.deadline = deadline.toNumber();
                 dataTknz.double = dataAddLiqUniFork;
             } else {
-                const preMintTxn: Transaction = sTxns.find((txn: Transaction) => txn.action == TransactionAction.preMint)!;
+                const preMintTxn: Transaction = wrapEthInTransaction(sTxns.find((txn: Transaction) => txn.action == TransactionAction.preMint)!);
                 dataTknz.double = dummyDataAddLiqUniFork;
                 const dataTknzSingle: DataTknzSingle = {
                     token: preMintTxn.maxPaid[0].token.address,

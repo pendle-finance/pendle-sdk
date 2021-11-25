@@ -73,12 +73,12 @@ describe("One click wrapper", () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner('0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC');
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.XJOE),
+      utils.parseBytes32String(forgeIdsInBytes.BENQI),
       new Token(
-        '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
+        '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
         18
       ),
-      EXP_2022JUN.toNumber(),
+      EXP_2023.toNumber(),
       chainId
     );
     wrapper = new OneClickWrapper(yieldContract)
@@ -107,12 +107,12 @@ describe("One click wrapper", () => {
 
   })
 
-  it.only('apr', async() => {
+  it('apr', async() => {
     const res2 = await wrapper.methods(signer, chainId).apr(Action.stakeOTYT);
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it('send', async() => {
+  it.only('send', async() => {
     const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
       ETHToken,
       BN.from(10).pow(18).toString()
