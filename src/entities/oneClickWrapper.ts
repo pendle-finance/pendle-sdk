@@ -597,8 +597,12 @@ export class OneClickWrapper {
             } else {
                 const preMintTxn: Transaction = sTxns.find((txn: Transaction) => txn.action == TransactionAction.preMint)!;
                 dataTknz.double = dummyDataAddLiqUniFork;
-                dataTknz.single.token = preMintTxn.maxPaid[0].token.address;
-                dataTknz.single.amount = preMintTxn.maxPaid[0].rawAmount();
+                const dataTknzSingle: DataTknzSingle = {
+                    token: preMintTxn.maxPaid[0].token.address,
+                    amount: preMintTxn.maxPaid[0].rawAmount()
+                }
+                dataTknz.single = dataTknzSingle;
+                
             }
 
             var dataAddLiqOT: DataAddLiqOT = {} as DataAddLiqOT, dataAddLiqYT: DataAddLiqYT = {} as DataAddLiqYT;

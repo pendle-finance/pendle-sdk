@@ -6,7 +6,7 @@ import { dummyAddress, Ot } from '../src';
 dotenv.config()
 jest.setTimeout(300000);
 
-var chainId = 1;
+var chainId = 43114;
 
 describe("Staking pools", () => {
     let provider: ethers.providers.JsonRpcProvider;
@@ -20,7 +20,7 @@ describe("Staking pools", () => {
     });
     
     it('get rewards', async() => {
-        const res = await Ot.methods(signer, chainId).fetchRewards(dummyAddress);
+        const res = await Ot.methods(signer, chainId).fetchRewards('0xECC5748b1fF6b23f284EC81E8bf034409961d8Dc');
         console.log(JSON.stringify(res, null, '  '));
     })
 })
