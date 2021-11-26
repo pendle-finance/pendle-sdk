@@ -157,13 +157,14 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it('Market.readMarketDetails', async() => {
-        const sushiMarket = Market.find('0x37922c69b08babcceae735a31235c81f1d1e8e43', 1);
-        const response = await sushiMarket.methods(signer, 1).readMarketDetails();
+    it.only('Market.readMarketDetails', async() => {
+        const sushiMarket = UniForkMarket.find('0xd1f377b881010cb97ab0890a5ef908c45bcf13f9', chainId);
+        console.log(sushiMarket.protocol);
+        const response = await sushiMarket.methods(signer, chainId).readMarketDetails();
         console.log(JSON.stringify(response, null, '  '));
     })
 
-    it.only('redeem OT market LP rewards', async() => {
+    it('redeem OT market LP rewards', async() => {
         const networkInfo = distributeConstantsByNetwork(chainId);
         const res = await UniForkMarket.methods(signer, chainId).fetchClaimableRewardsFromOTMarkets(indexRange(1,4).map((i: number) => {
             return Market.find(networkInfo.contractAddresses.otherMarkets![i].address, chainId);

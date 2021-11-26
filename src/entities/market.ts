@@ -4,7 +4,7 @@ import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
-import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, getCurrentTimestamp, isSameAddress, xor, getABIByForgeId, indexRange, submitTransaction } from '../helpers'
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, getCurrentTimestamp, isSameAddress, xor, decimalFactor, indexRange, submitTransaction } from '../helpers'
 import { CurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
@@ -12,7 +12,7 @@ import {
   PendleAmmQuery,
 } from './transactionFetcher';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
-import { forgeIdsInBytes, ONE_DAY, ETHAddress, ZERO } from '../constants';
+import { forgeIdsInBytes, ONE_DAY, ONE_MINUTE, ETHAddress, ZERO } from '../constants';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactionFetcher/types';
 import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
@@ -113,21 +113,14 @@ export class Market {
     try {
       let pendleMarket: PendleMarket = PendleMarket.find(address, chainId);
       return pendleMarket;
-    } catch (error) {
-      const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-      const marketInfo: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(address, m.address));
-      if (marketInfo !== undefined && (marketInfo.platform == MarketProtocols.Sushiswap || marketInfo.platform == MarketProtocols.TraderJoe)) {
-        return new UniForkMarket(
-          address,
-          marketInfo.pair.map((ad: string) => new Token(
-            ad,
-            networkInfo.decimalsRecord[ad]
-          )),
-        )
-      } else {
-        throw new Error(MARKET_NOT_EXIST)
-      }
-    }
+    } catch (error) {}
+    
+    try {
+      let uniForkMarket: UniForkMarket = UniForkMarket.find(address, chainId);
+      return uniForkMarket;
+    } catch (error) {}
+
+    throw new Error(MARKET_NOT_EXIST)
   }
 
   public methods(_: providers.JsonRpcSigner,
@@ -171,21 +164,8 @@ export class PendleMarket extends Market {
   }
 
   public yieldContract(chainId?: number): YieldContract {
-    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const ytInfo: YTINFO[] = networkInfo.contractAddresses.YTs.filter((yt: YTINFO) => isSameAddress(yt.address, this.tokens[0].address));
-    if (ytInfo.length === 0) {
-      throw Error(`YT with address ${this.tokens[0].address} not found on this network`);
-    }
-    this.ytInfo = ytInfo[0];
-    return new YieldContract(
-      utils.parseBytes32String(ytInfo[0].forgeIdInBytes),
-      new Token(
-        ytInfo[0].underlyingAssetAddress,
-        networkInfo.decimalsRecord[ytInfo[0].rewardTokenAddresses[0]]
-      ),
-      this.tokens[0].expiry!,
-      chainId
-    )
+    const yt: Yt = Yt.find(this.tokens[0].address, chainId);
+    return yt.yieldContract();
   }
 
   public static methods(
@@ -240,8 +220,6 @@ export class PendleMarket extends Market {
     const transactionFetcher: TransactionFetcher = new TransactionFetcher(chainId === undefined ? 1 : chainId);
     const underlyingAsset: string = networkInfo.contractAddresses.YTs.find((ytInfo: YTINFO) => isSameAddress(ytInfo.address, this.tokens[0].address))!.underlyingAssetAddress;
     const yieldContract: YieldContract = this.yieldContract(chainId);
-    const forgeAddress = networkInfo.contractAddresses.forges[yieldContract.forgeIdInBytes];
-    const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(yieldContract.forgeIdInBytes).abi, signer.provider);
 
     const getMarketFactoryId = async (): Promise<string> => {
       if (this.marketFactoryId === "") {
@@ -917,32 +895,62 @@ export type OtherMarketDetails = {
   otherDetails: {
     rates: TokenAmount[],
     liquidity: CurrencyAmount,
-    totalSupplyLP: string
+    totalSupplyLP: string,
+    otPrice?: string,
+    impliedDiscount?: string
   }
 }
 
 export class UniForkMarket extends Market {
-  public constructor(address: string, pair: Token[]) {
-    super(address, pair, MarketProtocols.Sushiswap);
+  public constructor(address: string, pair: Token[], protocol: MarketProtocols) {
+    super(address, pair, protocol);
+  }
+
+  public static find(address: string, chainId?: number): UniForkMarket {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    const marketInfo: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(address, m.address));
+    if (marketInfo !== undefined && (marketInfo.platform == MarketProtocols.Sushiswap || marketInfo.platform == MarketProtocols.TraderJoe)) {
+      return new UniForkMarket(
+        address,
+        marketInfo.pair.map((ad: string) => new Token(
+          ad,
+          networkInfo.decimalsRecord[ad]
+        )),
+        marketInfo.platform
+      )
+    } else {
+      throw Error(`Cannot find Uni fork Market at ${address} on chain ${chainId}`);
+    }
+  }
+
+  private getRouterAddress(chainId: number | undefined, protocol: MarketProtocols): string {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    if (protocol == MarketProtocols.Sushiswap) {
+      return networkInfo.contractAddresses.misc.SushiRouter;
+    } else if (protocol == MarketProtocols.TraderJoe) {
+      return networkInfo.contractAddresses.misc.JoeRouter;
+    } else {
+      throw new Error(`Unsupported market protocol`)
+    }
   }
 
   public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
-    
-    const fetchClaimableRewardsFromOTMarkets = async(markets: UniForkMarket[], userAddress: string): Promise<TokenAmount[]> => {
+
+    const fetchClaimableRewardsFromOTMarkets = async (markets: UniForkMarket[], userAddress: string): Promise<TokenAmount[]> => {
       const rawResult: TokenAmount[][] = await Promise.all(markets.map(async (m: UniForkMarket) => {
         return m.methods(signer, chainId).fetchRewardsFromOtReserves(userAddress);
       }));
       const flattenedResult = rawResult.flat();
       const tokenSet: Set<string> = new Set();
       const res: TokenAmount[] = [];
-      for (var i = 0; i < flattenedResult.length; i ++) {
+      for (var i = 0; i < flattenedResult.length; i++) {
         if (tokenSet.has(flattenedResult[i].token.address)) continue;
         tokenSet.add(flattenedResult[i].token.address);
         res.push(flattenedResult[i]);
       }
       return res;
     }
-    
+
     return {
       fetchClaimableRewardsFromOTMarkets
     }
@@ -950,7 +958,8 @@ export class UniForkMarket extends Market {
   public methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-
+    const uniForkRouterContract: Contract = new Contract(this.getRouterAddress(chainId, this.protocol), contracts.UniswapRouter02.abi, signer.provider);
+    const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, signer.provider);
     const getSwapFeeApr = async (): Promise<string> => {
       return (await fetchSushiForkYield(this.address, chainId)).toString()
     }
@@ -992,7 +1001,7 @@ export class UniForkMarket extends Market {
         currency: singleSidedLiquidity.currency,
         amount: new BigNumber(singleSidedLiquidity.amount).multipliedBy(2).toFixed(DecimalsPrecision)
       }
-      return {
+      const marketDetails: OtherMarketDetails = {
         tokenReserves: [tokenAmount0, tokenAmount1],
         otherDetails: {
           rates: [
@@ -1008,7 +1017,202 @@ export class UniForkMarket extends Market {
           liquidity,
           totalSupplyLP: totalSupplyLP.toString()
         }
+      };
+      try {
+        const {otPrice, impliedDiscount} = await getOtPriceAndImpliedDiscount();
+        marketDetails.otherDetails.otPrice = otPrice.toFixed(DecimalsPrecision);
+        marketDetails.otherDetails.impliedDiscount = impliedDiscount.toFixed(DecimalsPrecision);
+      } catch(err) {}
+      
+      return marketDetails;
+    }
+
+    const getOtPrice = async(): Promise<BigNumber> => {
+      var otAddress: string = this.tokens[0].address;
+      var otherTokenAddress: string = this.tokens[1].address;
+
+      var token0: string, token1: string, marketReserve: any;
+      var promises = [];
+      promises.push(marketContract.token0());
+      promises.push(marketContract.token1());
+      promises.push(marketContract.getReserves());
+      await Promise.all(promises).then((values: any[]) => {
+        token0 = values[0].toLowerCase();
+        token1 = values[1].toLowerCase();
+        marketReserve = values[2];
+      })
+      var otReserve: BN, otherReserve: BN;
+      if (isSameAddress(token0!, this.tokens[0].address)) {
+        otReserve = marketReserve.reserve0;
+        otherReserve = marketReserve.reserve1;
+      } else {
+        otReserve = marketReserve.reserve1;
+        otherReserve = marketReserve.reserve0;
       }
+      const otherPirce: BigNumber = await fetchTokenPrice({address: otherTokenAddress, signer, chainId});
+      return otherPirce.multipliedBy(otherReserve.toString()).div(decimalFactor(networkInfo.decimalsRecord[otherTokenAddress]))
+        .multipliedBy(decimalFactor(networkInfo.decimalsRecord[otAddress])).div(otReserve.toString());
+    }
+
+    const getYieldContract = (): YieldContract => {
+      try {
+        const ot: Ot = Ot.find(this.tokens[0].address, chainId);
+        console.log(ot)
+        return ot.yieldContract(chainId);
+      } catch (err) {
+        console.error(err)
+        throw new Error(`${this.address} is not an OT market on chain ${chainId}`);
+      }
+    }
+
+    const getOtPriceAndImpliedDiscount = async(): Promise<{otPrice: BigNumber, impliedDiscount: BigNumber}> => {
+      const otPrice: BigNumber = await getOtPrice();
+      console.log(otPrice.toFixed(DecimalsPrecision))
+      const yieldContract: YieldContract = getYieldContract();
+      console.log(yieldContract)
+      const principalPerOT: TokenAmount = await yieldContract.methods(signer, chainId).getPrincipalPerYT();
+      console.log(principalPerOT)
+      const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, signer, chainId);
+      const p: BigNumber = (new BigNumber(principalValuation.amount).minus(otPrice)).dividedBy(principalValuation.amount);
+
+      // means yield is infinite
+      if (p.isGreaterThanOrEqualTo(ONE)) {
+        return {
+          otPrice: otPrice,
+          impliedDiscount: new BigNumber(999999999)
+        };
+      }
+      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      const daysLeft: BigNumber = new BigNumber(yieldContract.expiry - currentTime).dividedBy(24 * 3600);
+
+      const y_annum: BigNumber = calcImpliedYield(p, daysLeft);
+      return {
+        otPrice: otPrice,
+        impliedDiscount: y_annum
+      };
+    }
+
+    const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
+      var token0: string, token1: string, totalSupplyLP: BN, marketReserve: any;
+      var promises = [];
+      promises.push(marketContract.token0());
+      promises.push(marketContract.token1());
+      promises.push(marketContract.getReserves());
+      promises.push(marketContract.totalSupply());
+      await Promise.all(promises).then((values: any[]) => {
+        token0 = values[0].toLowerCase();
+        token1 = values[1].toLowerCase();
+        marketReserve = values[2];
+        totalSupplyLP = values[3];
+      })
+      const token0Reserve: BN = marketReserve!.reserve0;
+      const token1Reserve: BN = marketReserve!.reserve1;
+      var inputToken: string, otherToken: string, inputTokenReserve: BN, otherTokenReserve: BN;
+      if (isSameAddress(tokenAmount.token.address, token0!)) {
+        inputToken = token0!;
+        otherToken = token1!;
+        inputTokenReserve = token0Reserve;
+        otherTokenReserve = token1Reserve;
+      } else {
+        inputToken = token0!;
+        otherToken = token1!;
+        inputTokenReserve = token0Reserve;
+        otherTokenReserve = token1Reserve;
+      }
+      return {
+        otherTokenAmount: new TokenAmount(
+          new Token(
+            otherToken,
+            networkInfo.decimalsRecord[otherToken]
+          ),
+          BN.from(tokenAmount.rawAmount()).mul(otherTokenReserve).div(inputTokenReserve).toString()
+        ),
+        shareOfPool: calcShareOfPool(token0Reserve, BN.from(tokenAmount.rawAmount())).toFixed(DecimalsPrecision),
+        lpMinted: totalSupplyLP!.mul(tokenAmount.rawAmount()).div(inputTokenReserve).toString()
+      }
+    }
+
+    const addDual = async (tokenAmounts: TokenAmount[], slippage: number): Promise<providers.TransactionResponse> => {
+      const args: any[] = [
+        tokenAmounts[0].token.address,
+        tokenAmounts[1].token.address,
+        tokenAmounts[0].rawAmount(),
+        tokenAmounts[1].rawAmount(),
+        calcSlippedDownAmount(BN.from(tokenAmounts[0].rawAmount()), slippage),
+        calcSlippedDownAmount(BN.from(tokenAmounts[1].rawAmount()), slippage),
+        await signer.getAddress(),
+        (await getCurrentTimestamp(signer.provider)) + ONE_MINUTE.mul(60).toNumber()
+      ]
+      return submitTransaction(uniForkRouterContract, signer, 'addLiquidity', args);
+    }
+
+    const getLpAmountByFraction = async (percentage: number): Promise<BN> => {
+      if (percentage <= 0 || percentage > 1) {
+        throw Error("Invalid Percentage");
+      }
+      percentage = Math.trunc(percentage * Math.pow(10, PercentageMaxDecimals));
+      const userLpBalance: BN = await marketContract.balanceOf(await signer.getAddress());
+      const redeemAmount: BN = userLpBalance.mul(percentage).div(PONE);
+      return redeemAmount;
+    }
+    const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
+      const redeemAmount: BN = await getLpAmountByFraction(percentage);
+      if (redeemAmount.eq(0)) {
+        return {
+          tokenAmounts: [
+            new TokenAmount(
+              this.tokens[0],
+              "0"
+            ),
+            new TokenAmount(
+              this.tokens[1],
+              "0"
+            )
+          ]
+        }
+      }
+
+      var token0: string, token1: string, totalSupplyLP: BN, marketReserve: any;
+      var promises = [];
+      promises.push(marketContract.token0());
+      promises.push(marketContract.token1());
+      promises.push(marketContract.getReserves());
+      promises.push(marketContract.totalSupply());
+      await Promise.all(promises).then((values: any[]) => {
+        token0 = values[0].toLowerCase();
+        token1 = values[1].toLowerCase();
+        marketReserve = values[2];
+        totalSupplyLP = values[3];
+      })
+      const token0RedeemAmout: BN = marketReserve.reserve0.mul(redeemAmount).div(totalSupplyLP!);
+      const token1RedeemAmout: BN = marketReserve.reserve1.mul(redeemAmount).div(totalSupplyLP!);
+      return {
+        tokenAmounts: [
+          new TokenAmount(
+            this.tokens[0],
+            token0RedeemAmout.toString()
+          ),
+          new TokenAmount(
+            this.tokens[1],
+            token1RedeemAmout.toString()
+          )
+        ]
+      }
+    }
+
+    const removeDual = async (percentage: number, slippage: number): Promise<providers.TransactionResponse> => {
+      const redeemAmount: BN = await getLpAmountByFraction(percentage);
+      const removeDetails: RemoveDualLiquidityDetails = await removeDualDetails(percentage, slippage);
+      const args = [
+        removeDetails.tokenAmounts[0].token.address,
+        removeDetails.tokenAmounts[1].token.address,
+        redeemAmount,
+        calcSlippedDownAmount(BN.from(removeDetails.tokenAmounts[0].rawAmount()), slippage),
+        calcSlippedDownAmount(BN.from(removeDetails.tokenAmounts[1].rawAmount()), slippage),
+        await signer.getAddress(),
+        (await getCurrentTimestamp(signer.provider)) + ONE_MINUTE.mul(60).toNumber()
+      ];
+      return submitTransaction(uniForkRouterContract, signer, 'removeLiquidity', args);
     }
 
     const fetchRewardsFromOtReserves = async (userAddress: string): Promise<TokenAmount[]> => {
@@ -1026,7 +1230,12 @@ export class UniForkMarket extends Market {
     return {
       getSwapFeeApr,
       readMarketDetails,
-      fetchRewardsFromOtReserves
+      fetchRewardsFromOtReserves,
+      addDualDetails,
+      addDual,
+      removeDualDetails,
+      removeDual,
+      getOtPrice
     }
   }
 }

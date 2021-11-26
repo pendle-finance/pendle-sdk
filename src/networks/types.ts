@@ -53,6 +53,8 @@ export type OTINFO = {
     yieldTokenAddress: string,
     forgeIdInBytes: string,
     rewardTokenAddresses?: string[],
+    expiry: BN,
+    underlyingAssetAddress: string,
 }
     
 export enum StakingPoolType {

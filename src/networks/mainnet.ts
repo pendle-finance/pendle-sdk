@@ -264,48 +264,60 @@ export const mainnetContracts: NetworkContractAddresses = {
         {
             address: "0x010a0288af52ed61e32674d82bbc7ddbfa9a1324",
             yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c",
+            underlyingAssetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             rewardTokenAddresses: [
                 '0x4da27a545c0c5b758a6ba100e3a049001de870f5'
             ],
-            forgeIdInBytes: forgeIdsInBytes.AAVE
+            forgeIdInBytes: forgeIdsInBytes.AAVE,
+            expiry: EXP_2021
         },
         {
             address: "0x8fcb1783bf4b71a51f702af0c266729c4592204a",
             yieldTokenAddress: "0xbcca60bb61934080951369a648fb03df4f96263c",
+            underlyingAssetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             rewardTokenAddresses: [
                 '0x4da27a545c0c5b758a6ba100e3a049001de870f5'
             ],
-            forgeIdInBytes: forgeIdsInBytes.AAVE
+            forgeIdInBytes: forgeIdsInBytes.AAVE,
+            expiry: EXP_2022
         },
         {
             address: "0xe55e3b62005a2035d48ac0c41a5a9c799f04892c",
             yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+            underlyingAssetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
             rewardTokenAddresses: [
                 '0xc00e94cb662c3520282e6f5717214004a7f26888'
             ],
-            forgeIdInBytes: forgeIdsInBytes.COMPOUND
+            forgeIdInBytes: forgeIdsInBytes.COMPOUND,
+            expiry: EXP_2021
         },
         {
             address: "0x3d4e7f52efafb9e0c70179b688fc3965a75bcfea",
             yieldTokenAddress: "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+            underlyingAssetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
             rewardTokenAddresses: [
                 '0xc00e94cb662c3520282e6f5717214004a7f26888'
             ],
-            forgeIdInBytes: forgeIdsInBytes.COMPOUND
+            forgeIdInBytes: forgeIdsInBytes.COMPOUND,
+            expiry: EXP_2022
         },
         {
             address: "0x322d6c69048330247165231eb7848a5c80a48878",
             yieldTokenAddress: "0x397ff1542f962076d0bfe58ea045ffa2d347aca0",
+            underlyingAssetAddress: "0x397ff1542f962076d0bfe58ea045ffa2d347aca0",
             rewardTokenAddresses: [
                 '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
             ],
-            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_COMPLEX
+            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_COMPLEX,
+            expiry: EXP_2022
         },
         {
             address: '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
             yieldTokenAddress: '0x37922c69b08babcceae735a31235c81f1d1e8e43',
+            underlyingAssetAddress: "0x37922c69b08babcceae735a31235c81f1d1e8e43",
             rewardTokenAddresses: [],
-            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_SIMPLE
+            forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_SIMPLE,
+            expiry: EXP_2022
         }
     ],
     pendleMarkets: [
@@ -451,7 +463,8 @@ export const mainnetContracts: NetworkContractAddresses = {
         MultiCallV2: '0x5ba1e12693dc8f9c48aad8770482f4739beed696',
         MasterChef: '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd',
         PendleWrapper: '0x82c9d29739333258f08cd3957d2a7ac7f4d53fab', //Dummy
-        Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888'
+        Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888',
+        SushiRouter: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f'
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',

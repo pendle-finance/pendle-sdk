@@ -2,6 +2,7 @@ const IPendleMarket = require('@pendle/core/build/artifacts/contracts/interfaces
 const IPendleRouter = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleRouter.sol/IPendleRouter.json');
 const IPendleData = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleData.sol/IPendleData.json');
 const IPendleForge = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleForge.sol/IPendleForge.json');
+const PendleBaseToken = require('@pendle/core/build/artifacts/contracts/tokens/PendleBaseToken.sol/PendleBaseToken.json');
 const PendleSushiswapComplexForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSushiswapComplexForge.sol/PendleSushiswapComplexForge.json')
 const PendleAaveV2Forge = require('@pendle/core/build/artifacts/contracts/core/aave/v2/PendleAaveV2Forge.sol/PendleAaveV2Forge.json');
 const PendleCompoundForge = require('@pendle/core/build/artifacts/contracts/core/compound/PendleCompoundForge.sol/PendleCompoundForge.json');
@@ -21,6 +22,7 @@ const PendleSingleStakingManager = require('@pendle/single-staking/build/artifac
 const PendleWrapper = require('@pendle/core/build/artifacts/contracts/proxies/PendleWrapper.sol/PendleWrapper.json');
 const PendleTraderJoeYieldTokenHolder = require("@pendle/core/build/artifacts/contracts/core/TraderJoe/PendleTraderJoeYieldTokenHolder.sol/PendleTraderJoeYieldTokenHolder.json");
 const SushiMasterChef = require('../abis/SushiMasterChefABI.json');
+const UniswapRouter02 = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json');
 const JoeMasterChef = require('../abis/JoeMasterChefABI.json');
 const MultiCallV2 = require('../abis/MulticallV2.json');
 const UniswapV2Pair = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Pair.sol/IUniswapV2Pair.json');
@@ -36,6 +38,7 @@ export const contracts = {
   IPendleData,
   IPendleForge,
   IERC20,
+  PendleBaseToken,
   PendleLiquidityMiningBase,
   PendleLiquidityMiningV2Base,
   PendleSLPLiquidityMining,
@@ -52,6 +55,7 @@ export const contracts = {
   PendleCompoundV2Forge,
   PendleTraderJoeYieldTokenHolder,
   SushiMasterChef,
+  UniswapRouter02,
   JoeMasterChef,
   PendleSingleStakingManager,
   PendleWrapper,

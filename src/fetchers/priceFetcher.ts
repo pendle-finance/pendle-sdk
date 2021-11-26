@@ -5,7 +5,7 @@ import BigNumber from "bignumber.js";
 import { ETHAddress, sushiswapSubgraphApi, traderJoeSubgraphApi } from "../constants";
 import { TokenAmount } from "../entities/tokenAmount";
 import { CurrencyAmount } from "../entities/currencyAmount";
-import { PendleMarket } from "../entities/market";
+import { PendleMarket, UniForkMarket } from "../entities/market";
 import { providers } from "ethers";
 import { Ot } from "../entities/ot";
 import { Yt } from "../entities/yt";
@@ -77,18 +77,8 @@ export async function fetchOtPrice(ot: Ot, signer: providers.JsonRpcSigner, chai
     console.error(`No price feeding market found for this OT ${ot.address}`);
     return new BigNumber(1);
   }
-  const pair: any = await getSushiForkPairInfo(marketAddress, chainId);
-  var otherReserve: BigNumber, otherPirce: BigNumber, thisReserve: BigNumber;
-  if (isSameAddress(pair.token0.id, ot.address)) {
-    otherReserve = pair.reserve1;
-    thisReserve = pair.reserve0;
-    otherPirce = await fetchTokenPrice({ address: pair.token1.id, signer, chainId });
-  } else {
-    otherReserve = pair.reserve0;
-    thisReserve = pair.reserve1;
-    otherPirce = await fetchTokenPrice({ address: pair.token0.id, signer, chainId });
-  }
-  return otherPirce.multipliedBy(otherReserve).dividedBy(thisReserve);
+  const otMarket: UniForkMarket = UniForkMarket.find(marketAddress, chainId);
+  return await otMarket.methods(signer, chainId).getOtPrice();
 }
 
 export async function fetchYtPrice(yt: Yt, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {

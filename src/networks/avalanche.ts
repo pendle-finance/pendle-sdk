@@ -37,38 +37,46 @@ export const avalancheContracts: NetworkContractAddresses = {
         {
             address: '0xfffe5fc3e511ce11df20684aec435a3e2b7d8136',
             yieldTokenAddress: '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f',
+            underlyingAssetAddress: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
             rewardTokenAddresses: [
                 '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
                 '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
             ],
-            forgeIdInBytes: forgeIdsInBytes.BENQI
+            forgeIdInBytes: forgeIdsInBytes.BENQI,
+            expiry: EXP_2023
         },
         {
             address: '0xecc5748b1ff6b23f284ec81e8bf034409961d8dc',
             yieldTokenAddress: '0x5c0401e81bc07ca70fad469b451682c0d747ef1c',
+            underlyingAssetAddress: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
             rewardTokenAddresses: [
                 '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
                 '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
             ],
-            forgeIdInBytes: forgeIdsInBytes.BENQI
+            forgeIdInBytes: forgeIdsInBytes.BENQI,
+            expiry: EXP_2023
         },
         {
             address: '0xabced2a62fd308bd1b98085c13df74b685140c0b',
             yieldTokenAddress: '0x3acd2ff1c3450bc8a9765afd8d0dea8e40822c86',
+            underlyingAssetAddress: '0x3acd2ff1c3450bc8a9765afd8d0dea8e40822c86',
             rewardTokenAddresses: [
                 '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
                 '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
             ],
-            forgeIdInBytes: forgeIdsInBytes.JOE_SIMPLE
+            forgeIdInBytes: forgeIdsInBytes.JOE_SIMPLE,
+            expiry: EXP_2023
         },
         {
             address: '0x7d1e8650abd5f8363d63dc7ab838cec8c726dd38',
             yieldTokenAddress: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33',
+            underlyingAssetAddress: '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
             rewardTokenAddresses: [
                 '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
                 '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
             ],
-            forgeIdInBytes: forgeIdsInBytes.XJOE
+            forgeIdInBytes: forgeIdsInBytes.XJOE,
+            expiry: EXP_2022JUN
         }
     ],
     pendleMarkets: [
@@ -271,7 +279,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         MultiCallV2: '0x11b8399bc71e8b67a0f7cca2663612af1ca38536',
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052',
         PendleWrapper: '0xaad448ab306c31563bc4d30d73f2879bca909a9a',
-        Comptroller: '0x486af39519b4dc9a7fccd318217352830e8ad9b4'
+        Comptroller: '0x486af39519b4dc9a7fccd318217352830e8ad9b4',
+        JoeRouter: '0x60ae616a2155ee3d9a68541ba4544862310933d4'
     },
     tokens: {
         USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',

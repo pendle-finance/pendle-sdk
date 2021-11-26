@@ -1,4 +1,4 @@
-import { providers } from "ethers";
+import { providers, utils, Contract } from "ethers";
 import { TokenAmount } from "./tokenAmount";
 import { distributeConstantsByNetwork, indexRange, isSameAddress } from "../helpers";
 import { MARKETINFO, NetworkInfo, OTINFO } from "../networks";
@@ -6,6 +6,7 @@ import { Token } from "./token";
 import { forgeIdsInBytes } from "../constants";
 import { TrioTokenUints } from "./multiTokens";
 import { RedeemProxy } from "./redeemProxy";
+import { YieldContract } from "./yieldContract";
 
 export type OtReward = {
     reward: TokenAmount[]
@@ -20,12 +21,15 @@ export class Ot extends Token {
     public readonly forgeIdInBytes: string;
     public readonly rewardTokenAddresses: string[];
 
-    public constructor(address: string, decimals: number, yieldBearingAddress: string, forgeIdInBytes: string, expiry: number, rewardTokens: string[], priceFeedMarketAddress?: string) {
+    public readonly underlyingAssetAddress: string;
+
+    public constructor(address: string, decimals: number, yieldBearingAddress: string, underlyingAssetAddress: string, forgeIdInBytes: string, expiry: number, rewardTokens: string[], priceFeedMarketAddress?: string) {
         super(address, decimals, expiry);
         this.yieldBearingAddress = yieldBearingAddress;
         this.priceFeedMarketAddress = priceFeedMarketAddress;
         this.forgeIdInBytes = forgeIdInBytes;
         this.rewardTokenAddresses = rewardTokens;
+        this.underlyingAssetAddress = underlyingAssetAddress;
     }
 
     public static find(address: string, chainId?: number): Ot {
@@ -48,8 +52,9 @@ export class Ot extends Token {
             address.toLowerCase(),
             networkInfo.decimalsRecord[address.toLowerCase()],
             otInfo.yieldTokenAddress,
+            otInfo.underlyingAssetAddress,
             otInfo.forgeIdInBytes,
-            0, // expiry not used
+            otInfo.expiry.toNumber(), // expiry not used
             otInfo.rewardTokenAddresses === undefined ? [] : otInfo.rewardTokenAddresses,
             priceFeedMarketAddress
         )
@@ -84,5 +89,18 @@ export class Ot extends Token {
 
     public hasRewards(): boolean {
         return Ot.hasRewardsByForgeId(this.forgeIdInBytes)
+    }
+
+    public yieldContract(chainId?: number): YieldContract {
+        const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+        return new YieldContract(
+            utils.parseBytes32String(this.forgeIdInBytes),
+            new Token(
+                this.underlyingAssetAddress,
+                networkInfo.decimalsRecord[this.underlyingAssetAddress]
+            ),
+            this.expiry!,
+            chainId
+        )
     }
 }
