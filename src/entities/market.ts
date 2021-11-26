@@ -896,7 +896,7 @@ export type OtherMarketDetails = {
     rates: TokenAmount[],
     liquidity: CurrencyAmount,
     totalSupplyLP: string,
-    otPrice?: string,
+    otPrice?: CurrencyAmount,
     impliedDiscount?: string
   }
 }
@@ -1020,7 +1020,10 @@ export class UniForkMarket extends Market {
       };
       try {
         const {otPrice, impliedDiscount} = await getOtPriceAndImpliedDiscount();
-        marketDetails.otherDetails.otPrice = otPrice.toFixed(DecimalsPrecision);
+        marketDetails.otherDetails.otPrice = {
+          currency: 'USD',
+          amount: otPrice.toFixed(DecimalsPrecision)
+        };
         marketDetails.otherDetails.impliedDiscount = impliedDiscount.toFixed(DecimalsPrecision);
       } catch(err) {}
       
