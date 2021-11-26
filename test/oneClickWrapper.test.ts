@@ -113,11 +113,11 @@ describe("One click wrapper", () => {
   })
 
   it.only('send', async() => {
-    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
+    const sim_res: SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOTYT, new TokenAmount(
       ETHToken,
-      BN.from(10).pow(18).toString()
+      BN.from(10).pow(16).toString()
     ), 0.01)
-    const res = await wrapper.methods(signer, chainId).send(Action.stakeOT, sim_res.transactions, 0.01);
+    const res = await wrapper.methods(signer, chainId).send(Action.stakeOTYT, sim_res.transactions, 0.01);
     console.log(JSON.stringify(res, null, '  '));
   })
 })
