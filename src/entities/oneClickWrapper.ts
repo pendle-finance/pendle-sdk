@@ -647,7 +647,7 @@ export class OneClickWrapper {
                         dataTknz,
                         dataAddLiqOT
                     ];
-                    console.log(JSON.stringify(args, null, '  '));
+                    // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOT', args, maxEthPaid);
 
                 case Action.stakeYT:
@@ -656,7 +656,7 @@ export class OneClickWrapper {
                         dataTknz,
                         dataAddLiqYT
                     ];
-                    console.log(JSON.stringify(args, null, '  '));
+                    // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForYT', args, maxEthPaid);
 
                 case Action.stakeOTYT:
@@ -666,7 +666,7 @@ export class OneClickWrapper {
                         dataAddLiqOT,
                         dataAddLiqYT
                     ];
-                    console.log(JSON.stringify(args, null, '  '));
+                    // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer, 'insAddDualLiqForOTandYT', args, maxEthPaid);
             }
         }
