@@ -165,7 +165,7 @@ export class PendleMarket extends Market {
 
   public yieldContract(chainId?: number): YieldContract {
     const yt: Yt = Yt.find(this.tokens[0].address, chainId);
-    return yt.yieldContract();
+    return yt.yieldContract(chainId);
   }
 
   public static methods(
