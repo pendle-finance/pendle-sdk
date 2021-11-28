@@ -106,7 +106,6 @@ export class YieldContract {
         }
         const redeemDetails = async (amountToRedeem: TokenAmount, userAddress: string): Promise<RedeemDetails> => {
             const interestRedeemed: BN = await pendleForgeContract.callStatic.redeemDueInterests(userAddress, this.underlyingAsset.address, this.expiry, { from: networkInfo.contractAddresses.misc.PendleRouter });
-            console.log(interestRedeemed.toString());
             const yTokenAddress: string = networkInfo.contractAddresses.OTs.find((OtInfo: OTINFO) => OtInfo.address == amountToRedeem.token.address)!.yieldTokenAddress;
             const yToken: Token = new Token(
                 yTokenAddress,
