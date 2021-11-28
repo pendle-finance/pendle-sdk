@@ -25,7 +25,7 @@ describe('Sdk', () => {
   });
 
   it.skip('claim yields', async () => {
-    const sdk = new Sdk(signer, chainId);
+    const sdk = new Sdk({signer, provider, chainId});
     console.log("estimate")
     const res = await sdk.claimYields({
       yts: [],
@@ -86,7 +86,7 @@ describe('Sdk', () => {
   });
 
   it.skip('Sdk.fetchValuations', async () => {
-    const sdk = new Sdk(signer, 1);
+    const sdk = new Sdk({signer, provider, chainId});
     const valuations = await sdk.fetchValuations([
     new TokenAmount(
       ETHToken,
