@@ -13,7 +13,7 @@ export type OtReward = {
     address: string
 }
 
-export const OT_NOT_EXIST: string = "No OT is found at the given address";
+export const OT_NOT_EXIST: string = "No OT is found at the given address ";
 
 export class Ot extends Token {
     public readonly yieldBearingAddress: string;
@@ -38,7 +38,7 @@ export class Ot extends Token {
             return isSameAddress(address, o.address);
         })
         if (otInfo === undefined) {
-            throw OT_NOT_EXIST;
+            throw new Error(OT_NOT_EXIST + address);
         }
         const otherMarkets: MARKETINFO[] | undefined = networkInfo.contractAddresses.otherMarkets;
         var priceFeedMarketAddress = undefined;

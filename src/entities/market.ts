@@ -1060,21 +1060,16 @@ export class UniForkMarket extends Market {
     const getYieldContract = (): YieldContract => {
       try {
         const ot: Ot = Ot.find(this.tokens[0].address, chainId);
-        console.log(ot)
         return ot.yieldContract(chainId);
       } catch (err) {
-        console.error(err)
         throw new Error(`${this.address} is not an OT market on chain ${chainId}`);
       }
     }
 
     const getOtPriceAndImpliedDiscount = async(): Promise<{otPrice: BigNumber, impliedDiscount: BigNumber}> => {
       const otPrice: BigNumber = await getOtPrice();
-      console.log(otPrice.toFixed(DecimalsPrecision))
       const yieldContract: YieldContract = getYieldContract();
-      console.log(yieldContract)
       const principalPerOT: TokenAmount = await yieldContract.methods(signer, chainId).getPrincipalPerYT();
-      console.log(principalPerOT)
       const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, signer, chainId);
       const p: BigNumber = (new BigNumber(principalValuation.amount).minus(otPrice)).dividedBy(principalValuation.amount);
 
