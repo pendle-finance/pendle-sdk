@@ -54,15 +54,15 @@ async function getSushiForkPairInfo(pairAddress: string, chainId: number | undef
   }
 }
 
-export async function fetchSLPPrice({ address, signer, chainId }: { address: string, signer: providers.JsonRpcSigner, chainId: number | undefined }): Promise<BigNumber> {
+export async function fetchSLPPrice({ address, provider, chainId }: { address: string, provider: providers.JsonRpcProvider, chainId: number}): Promise<BigNumber> {
   var pair = await getSushiForkPairInfo(address, chainId);
   try {
-    const token0Price: BigNumber = await fetchTokenPrice({ address: pair.token0.id, signer, chainId });
+    const token0Price: BigNumber = await fetchTokenPrice({ address: pair.token0.id, provider, chainId });
     const reserveUSD: BigNumber = token0Price.multipliedBy(pair.reserve0).multipliedBy(2);
     return reserveUSD.dividedBy(new BigNumber(pair.totalSupply));
   } catch {
     try {
-      const token1Price: BigNumber = await fetchTokenPrice({ address: pair.token1.id, signer, chainId });
+      const token1Price: BigNumber = await fetchTokenPrice({ address: pair.token1.id, provider, chainId });
       const reserveUSD: BigNumber = token1Price.multipliedBy(pair.reserve1).multipliedBy(2);
       return reserveUSD.dividedBy(new BigNumber(pair.totalSupply));
     } catch {
@@ -71,24 +71,24 @@ export async function fetchSLPPrice({ address, signer, chainId }: { address: str
   }
 }
 
-export async function fetchOtPrice(ot: Ot, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
+export async function fetchOtPrice(ot: Ot, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const marketAddress: string | undefined = ot.priceFeedMarketAddress;
   if (marketAddress === undefined) {
     console.error(`No price feeding market found for this OT ${ot.address}`);
     return new BigNumber(1);
   }
   const otMarket: UniForkMarket = UniForkMarket.find(marketAddress, chainId);
-  return await otMarket.methods(signer, chainId).getOtPrice();
+  return await otMarket.methods({provider, chainId}).getOtPrice();
 }
 
-export async function fetchYtPrice(yt: Yt, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
+export async function fetchYtPrice(yt: Yt, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const market: PendleMarket = PendleMarket.find(yt.priceFeedMarketAddress, chainId);
-  return await market.methods(signer, chainId).getYTPrice();
+  return await market.methods({provider, chainId}).getYTPrice();
 }
 
-export async function fetchCTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number|undefined): Promise<BigNumber> {
+export async function fetchCTokenPrice(address: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-  const cTokenContract: Contract = new Contract(address, contracts.ICToken.abi, signer.provider);
+  const cTokenContract: Contract = new Contract(address, contracts.ICToken.abi, provider);
   var underlyingAsset: string;
   if (isSameAddress(address, networkInfo.contractAddresses.tokens.qiAVAX)) {
     underlyingAsset = ETHAddress;
@@ -97,22 +97,22 @@ export async function fetchCTokenPrice(address: string, signer: providers.JsonRp
   }
   const exchangeRate: BN = await cTokenContract.callStatic.exchangeRateCurrent();
   const adjustedExchangeRate: BigNumber = new BigNumber(exchangeRate.toString()).div(decimalFactor(10 + networkInfo.decimalsRecord[underlyingAsset.toLowerCase()]));
-  return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, signer, chainId}));
+  return adjustedExchangeRate.multipliedBy(await fetchTokenPrice({address: underlyingAsset, provider, chainId}));
 }
 
-export async function getxJOEExchangeRate(xJOEAddress: string, JOEAddress: string, signer: providers.JsonRpcSigner, blockTag?: number): Promise<BigNumber> {
-  const JOEContract: Contract = new Contract(JOEAddress, contracts.IERC20.abi, signer.provider);
+export async function getxJOEExchangeRate(xJOEAddress: string, JOEAddress: string, provider: providers.JsonRpcProvider, blockTag?: number): Promise<BigNumber> {
+  const JOEContract: Contract = new Contract(JOEAddress, contracts.IERC20.abi, provider);
   const joeLocked: BN = await JOEContract.balanceOf(xJOEAddress, {blockTag: blockTag === undefined ? "latest": blockTag});
-  const xJOEContract: Contract = new Contract(xJOEAddress, contracts.IERC20.abi, signer.provider);
+  const xJOEContract: Contract = new Contract(xJOEAddress, contracts.IERC20.abi, provider);
   const totalSupply: BN = await xJOEContract.totalSupply({blockTag: blockTag === undefined ? "latest": blockTag});
   return new BigNumber(joeLocked.toString()).div(totalSupply.toString())
 }
 
-export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
-  return (await fetchTokenPrice({address: JOEAddress, signer, chainId})).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, signer))
+export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
+  return (await fetchTokenPrice({address: JOEAddress, provider, chainId})).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, provider))
 }
 
-export async function fetchBasicTokenPrice(address: string, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<BigNumber> {
+export async function fetchBasicTokenPrice(address: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
     switch (address.toLowerCase()) {
@@ -147,7 +147,7 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
 
       case networkInfo.contractAddresses.tokens.qiUSDC:
       case networkInfo.contractAddresses.tokens.qiAVAX:
-        return await fetchCTokenPrice(address, signer, chainId);
+        return await fetchCTokenPrice(address, provider, chainId);
 
       case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLocaleLowerCase():
@@ -163,37 +163,37 @@ export async function fetchBasicTokenPrice(address: string, signer: providers.Js
         return await fetchPriceFromCoingecko('benqi');
 
       case networkInfo.contractAddresses.tokens.xJOE:
-        return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, signer, chainId);
+        return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, provider, chainId);
     }
   }
   throw Error(`Token ${address} is not supported in basic tokens`);
 }
 
-export async function fetchTokenPrice({ address, signer, chainId }: { address: string, signer: providers.JsonRpcSigner, chainId: number | undefined }): Promise<BigNumber> {
+export async function fetchTokenPrice({ address, provider, chainId }: { address: string, provider: providers.JsonRpcProvider, chainId: number }): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1 || chainId == 43114) {
     try {
-      return await fetchBasicTokenPrice(address, signer, chainId);
+      return await fetchBasicTokenPrice(address, provider, chainId);
     } catch (err) { }
 
     try {
       const ot: Ot = Ot.find(address, chainId);
-      return await fetchOtPrice(ot, signer, chainId);
+      return await fetchOtPrice(ot, provider, chainId);
     } catch (err) { }
 
     try {
       const yt: Yt = Yt.find(address, chainId);
-      return await fetchYtPrice(yt, signer, chainId);
+      return await fetchYtPrice(yt, provider, chainId);
     } catch (err) { }
 
     try {
       const pendleMarket: PendleMarket = PendleMarket.find(address, chainId);
-      return await pendleMarket.methods(signer, chainId).getLPPriceBigNumber()
+      return await pendleMarket.methods({provider, chainId}).getLPPriceBigNumber()
     } catch (err) { }
 
     const otherMarket: MARKETINFO | undefined = networkInfo.contractAddresses.otherMarkets?.find((m: MARKETINFO) => isSameAddress(m.address, address));
     if (otherMarket !== undefined && (otherMarket.platform == MarketProtocols.Sushiswap || otherMarket.platform == MarketProtocols.TraderJoe)) {
-      return await fetchSLPPrice({ address, signer, chainId });
+      return await fetchSLPPrice({ address, provider, chainId });
     }
     throw Error(`Unsupported token ${address} with chainId ${chainId} in fetch toke price`);
   } else if (chainId == 42) {
@@ -203,10 +203,10 @@ export async function fetchTokenPrice({ address, signer, chainId }: { address: s
   }
 }
 
-export async function fetchValuation(amount: TokenAmount, signer: providers.JsonRpcSigner, chainId: number | undefined): Promise<CurrencyAmount> {
+export async function fetchValuation(amount: TokenAmount, provider: providers.JsonRpcProvider, chainId: number): Promise<CurrencyAmount> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
 
-  const price: BigNumber = await fetchTokenPrice({ address: amount.token.address, signer, chainId });
+  const price: BigNumber = await fetchTokenPrice({ address: amount.token.address, provider, chainId });
   return {
     currency: 'USD',
     amount: price.multipliedBy(new BigNumber(amount.rawAmount())).dividedBy(new BigNumber(10).pow(networkInfo.decimalsRecord[amount.token.address])).toFixed(DecimalsPrecision)

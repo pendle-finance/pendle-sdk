@@ -1,14 +1,14 @@
-import { Transaction } from '../src';
+import { TransactionFetcher } from '../src/entities/transactionFetcher';
 
 // import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 describe('Transaction Entity', () => {
-  let transaction: Transaction;
+  let transaction: TransactionFetcher;
   const network = 1;
   beforeAll(() => {
-    transaction = new Transaction(network);
+    transaction = new TransactionFetcher(network);
   });
 
   it('Transaction.getMintTransactions', async () => {

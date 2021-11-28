@@ -10,6 +10,7 @@ import { Ot } from "./ot";
 import { GasInfo, getGasPrice } from "../fetchers/gasPriceFetcher";
 import { TokenAmount } from "./tokenAmount";
 import { PairTokenUints, TrioTokenUints } from "./multiTokens";
+import { ChainSpecifics } from "./types";
 
 enum ProxyVersion {
     OldSingle = 0,
@@ -46,17 +47,17 @@ type LmRedeemResult = {
 }
 
 export class RedeemProxy {
-    public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    public static methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
         var proxyVersion: ProxyVersion;
         var redeemProxyContract: Contract;
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
         
         if (chainId === undefined || chainId == 1 || chainId == 42) {
             proxyVersion = ProxyVersion.OldSingle;
-            redeemProxyContract = new Contract(networkInfo.contractAddresses.misc.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, signer.provider);
+            redeemProxyContract = new Contract(networkInfo.contractAddresses.misc.PendleRedeemProxy, contracts.PendleRedeemProxy.abi, provider);
         } else {
             proxyVersion = ProxyVersion.Multi;
-            redeemProxyContract = new Contract(networkInfo.contractAddresses.misc.PendleRedeemProxy, contracts.PendleRedeemProxyMulti.abi, signer.provider);
+            redeemProxyContract = new Contract(networkInfo.contractAddresses.misc.PendleRedeemProxy, contracts.PendleRedeemProxyMulti.abi, provider);
         }
 
         const constructArgsForClaimYieldsOld = (
@@ -210,9 +211,9 @@ export class RedeemProxy {
             rewardStakingPools: StakingPool[],
             tokensToDistribute: Token[]
         }): Promise<providers.TransactionResponse> => {
-            const userAddress: string = await signer.getAddress();
+            const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            return submitTransaction(redeemProxyContract, signer, 'redeem', args);
+            return submitTransaction(redeemProxyContract, signer!, 'redeem', args);
         }
 
         const estimateGasForClaimYields = async ({
@@ -230,7 +231,7 @@ export class RedeemProxy {
             rewardStakingPools?: StakingPool[],
             tokensToDistribute: Token[]
         }): Promise<GasInfo> => {
-            const userAddress: string = await signer.getAddress();
+            const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
             const gasLimit: BN = await estimateGas(redeemProxyContract, userAddress, 'redeem', args)
             const gasPrice: BN = await getGasPrice(chainId);
@@ -354,7 +355,7 @@ export class RedeemProxy {
 
                     case ProxyVersion.Multi: {
                         const userExpiriesOnAllLmV1s: BN[][] = await Promise.all(indexRange(0, lmAddresses.length).map(async (i: number): Promise<BN[]> => {
-                            const LMContract: Contract = new Contract(lmAddresses[i], contracts.PendleGenericLiquidityMiningMulti.abi, signer.provider);
+                            const LMContract: Contract = new Contract(lmAddresses[i], contracts.PendleGenericLiquidityMiningMulti.abi, provider);
                             return await LMContract.readUserExpiries(userAddress);
                         }))
                         const userInterests: PairTokenUints[] = new Array(lmAddresses.length).fill(PairTokenUints.EMPTY);
@@ -398,7 +399,7 @@ export class RedeemProxy {
 
                     case ProxyVersion.Multi: {
                         const userExpiriesOnAllLmV1s: BN[][] = await Promise.all(indexRange(0, lmAddresses.length).map(async (i: number): Promise<BN[]> => {
-                            const LMContract: Contract = new Contract(lmAddresses[i], contracts.PendleLiquidityMiningBase.abi, signer.provider);
+                            const LMContract: Contract = new Contract(lmAddresses[i], contracts.PendleLiquidityMiningBase.abi, provider);
                             const userExpiries: BN[] = await LMContract.readUserExpiries(userAddress);
                             return userExpiries;
                         }))
@@ -490,7 +491,7 @@ export class RedeemProxy {
                     }
 
                     case ProxyVersion.Multi: {
-                        const redeemResults: BN[] = await redeemProxyContract.connect(signer).callStatic.redeemTokenDist(tokenAddresses, userAddress);
+                        const redeemResults: BN[] = await redeemProxyContract.callStatic.redeemTokenDist(tokenAddresses, userAddress);
                         return indexRange(0, tokenAddresses.length).map((i: number): TokenAmount => {
                             return new TokenAmount(
                                 new Token(

@@ -2,9 +2,10 @@ import { Token } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import { NetworkInfo, PENDLEMARKETNFO, YTINFO } from "../networks";
 import { distributeConstantsByNetwork, isSameAddress, indexRange } from "../helpers";
-import { providers, utils } from "ethers";
+import { utils } from "ethers";
 import { YieldContract } from "./yieldContract";
 import { RedeemProxy } from "./redeemProxy";
+import { ChainSpecifics } from "./types";
 
 export type YtOrMarketInterest = {
     address: string;
@@ -48,10 +49,7 @@ export class Yt extends Token {
         )
     }
 
-    public static methods(
-        signer: providers.JsonRpcSigner,
-        chainId?: number
-    ): Record<string, any> {
+    public static methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
@@ -61,7 +59,7 @@ export class Yt extends Token {
             userAddress: string,
         ): Promise<YtOrMarketInterest[]> => {
 
-            const userInterests: TokenAmount[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemXyts(
+            const userInterests: TokenAmount[] = await RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemXyts(
                 YTs.map((YTInfo: any) => YTInfo.address),
                 userAddress
             );

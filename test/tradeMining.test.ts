@@ -1,8 +1,6 @@
 import { ethers } from 'ethers';
 import { TradeMining } from '../src/operations/tradeMining';
 import * as dotenv from 'dotenv';
-import { distributeConstantsByNetwork } from '../src/helpers';
-import BigNumber from 'bignumber.js';
 dotenv.config();
 jest.setTimeout(30000);
 

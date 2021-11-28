@@ -5,6 +5,7 @@ import { Call_MultiCall, decimalFactor, distributeConstantsByNetwork, formatOutp
 import { NetworkInfo } from '../networks';
 import { Token, dummyToken } from './token';
 import { HG } from '../constants';
+import { ChainSpecifics } from './types'
 
 export class TokenAmount {
     public readonly token: Token;
@@ -31,14 +32,14 @@ export class TokenAmount {
         return this.rawAmnt;
     }
 
-    public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    public static methods({signer, provider, chainId}: ChainSpecifics): Record < string, any > {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-        const balancesOf = async ({user, tokens}: {user: string, tokens: Token[]}): Promise<TokenAmount[]> => {
-            const multiCallV2Contract: Contract = new Contract(networkInfo.contractAddresses.misc.MultiCallV2, contracts.MultiCallV2.abi, signer.provider);
+        const balancesOf = async ({ user, tokens }: { user: string, tokens: Token[] }): Promise<TokenAmount[]> => {
+            const multiCallV2Contract: Contract = new Contract(networkInfo.contractAddresses.misc.MultiCallV2, contracts.MultiCallV2.abi, provider);
             const calls: Call_MultiCall[] = new Array<Call_MultiCall>(tokens.length);
             await Promise.all(indexRange(0, tokens.length).map(async (i: number): Promise<boolean> => {
                 const t: Token = tokens[i];
-                const tContract: Contract = new Contract(t.address, contracts.IERC20.abi, signer.provider);
+                const tContract: Contract = new Contract(t.address, contracts.IERC20.abi, provider);
                 calls[i] = {
                     callData: (await tContract.populateTransaction.balanceOf(user)).data!,
                     target: t.address
@@ -57,7 +58,7 @@ export class TokenAmount {
             return balances;
         }
         return {
-           balancesOf
+            balancesOf
         }
     }
 }

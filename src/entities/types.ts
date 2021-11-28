@@ -1,6 +1,11 @@
-import { BigNumber as BN } from "ethers";
+import { BigNumber as BN, providers } from "ethers";
 export type Address = string;
 
+export type ChainSpecifics = {
+	signer?: providers.JsonRpcSigner,
+	provider: providers.JsonRpcProvider,
+	chainId: number
+}
 export type AprInfo = {
 	origin: string,
 	apr: string

@@ -20,7 +20,7 @@ describe("Staking pools", () => {
     });
     
     it('get rewards', async() => {
-        const res = await Ot.methods(signer, chainId).fetchRewards('0xECC5748b1fF6b23f284EC81E8bf034409961d8Dc');
+        const res = await Ot.methods({signer, provider, chainId}).fetchRewards('0xECC5748b1fF6b23f284EC81E8bf034409961d8Dc');
         console.log(JSON.stringify(res, null, '  '));
     })
 })

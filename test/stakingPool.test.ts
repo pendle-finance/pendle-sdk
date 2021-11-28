@@ -34,22 +34,22 @@ describe("Staking pools", () => {
         sp = StakingPool.find('0x0f3bccbfef1dc227f33a11d7a51cd02dead208c8', '0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', chainId);
     });
     it('Get totalStaked', async() => {
-        const totalStake = await sp.methods(signer, chainId).getTotalStaked();
+        const totalStake = await sp.methods({signer, provider, chainId}).getTotalStaked();
         console.log(JSON.stringify(totalStake, null, '  '));
     })
 
     it('Get balance', async() => {
-        const balance = await sp.methods(signer).balanceOf(dummyAddress);
+        const balance = await sp.methods({signer, provider, chainId}).balanceOf(dummyAddress);
         console.log(JSON.stringify(balance, null, '  '));
     })
 
     it('Get Reward APRs', async() => {
-        const aprs = await sp.methods(signer, chainId).rewardAprs();
+        const aprs = await sp.methods({signer, provider, chainId}).rewardAprs();
         console.log(JSON.stringify(aprs, null, '  '));
     })
 
-    it.only('stake', async() => {
-        const res = await sp.methods(signer, chainId).stake(new TokenAmount(new Token('0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', 18), '1000'));
+    it.skip('stake', async() => {
+        const res = await sp.methods({signer, provider, chainId}).stake(new TokenAmount(new Token('0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', 18), '1000'));
         console.log(JSON.stringify(res, null, '  '))
     })
 })

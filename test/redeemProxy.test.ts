@@ -22,12 +22,12 @@ describe('Redeem Proxy', () => {
     
     it('redeemLmV2Interests', async() => {
         const lmAddresses: string[] = networkInfo.contractAddresses.stakingPools.filter((s: LMINFO) => StakingPool.isLmV2ByType(s.contractType)).map((s: LMINFO) => s.address);
-        const res = await RedeemProxy.methods(signer, chainId).callStatic.redeemLmV2Interests(lmAddresses, dummyAddress);
+        const res = await RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemLmV2Interests(lmAddresses, dummyAddress);
         console.log(JSON.stringify(res, null, '  '));
     })
 
-    it.only('redeemTokenDist', async() => {
-        const res = await RedeemProxy.methods(signer, chainId).callStatic.redeemTokenDist(['0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7', '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5'], '0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
+    it('redeemTokenDist', async() => {
+        const res = await RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemTokenDist(['0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7', '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5'], '0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
         console.log(JSON.stringify(res, null, '  '));
     })
 })

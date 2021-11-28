@@ -20,6 +20,7 @@ import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
 import BigNumber from 'bignumber.js';
 import { RedeemProxy } from './redeemProxy';
 import { Ot } from './ot';
+import { ChainSpecifics } from './types';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -123,8 +124,7 @@ export class Market {
     throw new Error(MARKET_NOT_EXIST)
   }
 
-  public methods(_: providers.JsonRpcSigner,
-    __?: number): Record<string, any> {
+  public methods(_: ChainSpecifics): Record<string, any> {
     return {}
   }
 }
@@ -168,17 +168,14 @@ export class PendleMarket extends Market {
     return yt.yieldContract(chainId);
   }
 
-  public static methods(
-    signer: providers.JsonRpcSigner,
-    chainId?: number
-  ): Record<string, any> {
+  public static methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const markets: PENDLEMARKETNFO[] = networkInfo.contractAddresses.pendleMarkets;
 
     const fetchInterests = async (
       userAddress: string
     ): Promise<YtOrMarketInterest[]> => {
-      const userInterests: TokenAmount[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemMarkets(
+      const userInterests: TokenAmount[] = await RedeemProxy.methods({signer, provider,chainId}).callStatic.redeemMarkets(
         markets.map((marketInfo: any) => marketInfo.address),
         userAddress
       );
@@ -210,13 +207,12 @@ export class PendleMarket extends Market {
     }
   };
 
-  public methods(signer: providers.JsonRpcSigner,
-    chainId?: number): Record<string, any> {
+  public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const marketContract = new Contract(this.address, contracts.IPendleMarket.abi, signer.provider);
-    const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, signer.provider);
-    const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, signer.provider);
+    const marketContract = new Contract(this.address, contracts.IPendleMarket.abi, provider);
+    const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, provider);
+    const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, provider);
     const transactionFetcher: TransactionFetcher = new TransactionFetcher(chainId === undefined ? 1 : chainId);
     const underlyingAsset: string = networkInfo.contractAddresses.YTs.find((ytInfo: YTINFO) => isSameAddress(ytInfo.address, this.tokens[0].address))!.underlyingAssetAddress;
     const yieldContract: YieldContract = this.yieldContract(chainId);
@@ -254,7 +250,7 @@ export class PendleMarket extends Market {
             break;
 
           case forgeIdsInBytes.XJOE:
-            underlyingYieldRate = await fetchXJOEYield(signer, chainId);
+            underlyingYieldRate = await fetchXJOEYield(provider, chainId);
             break;
 
           // TODO: add Uniswap support here
@@ -286,7 +282,7 @@ export class PendleMarket extends Market {
       var underlyingYieldRate: number = 0;
       promises.push(getUnderlyingYieldRate({ underlyingAsset, yieldBearingAsset }).then((res: number) => underlyingYieldRate = res));
 
-      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      const currentTime: number = await getCurrentTimestamp(provider);
 
       var volumeToday: CurrencyAmount = ZeroCurrencyAmount, volumeYesterday: CurrencyAmount = ZeroCurrencyAmount;
       promises.push(getVolume(currentTime - ONE_DAY.toNumber(), currentTime).then((res: CurrencyAmount) => volumeToday = res));
@@ -435,7 +431,7 @@ export class PendleMarket extends Market {
         await getMarketFactoryId()
       ];
       const ETHAmountToSend: BN = isSameAddress(details.inAmount.token.address, ETHAddress) ? BN.from(details.inAmount.rawAmount()) : ZERO;
-      return submitTransaction(pendleRouterContract, signer, 'swapExactIn', args, ETHAmountToSend);
+      return submitTransaction(pendleRouterContract, signer!, 'swapExactIn', args, ETHAmountToSend);
     }
 
     const swapExactOut = async (outTokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
@@ -448,7 +444,7 @@ export class PendleMarket extends Market {
         await getMarketFactoryId()
       ];
       const ETHAmountToSend: BN = isSameAddress(details.inAmount.token.address, ETHAddress) ? BN.from(details.maxInput!.rawAmount()) : ZERO;
-      return submitTransaction(pendleRouterContract, signer, 'swapExactOut', args, ETHAmountToSend);
+      return submitTransaction(pendleRouterContract, signer!, 'swapExactOut', args, ETHAmountToSend);
     }
 
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
@@ -493,7 +489,7 @@ export class PendleMarket extends Market {
         tokenMinAmount
       ]
       const ETHAmountToSend: BN = isSameAddress(baseTokenAmount.token.address, ETHAddress) ? BN.from(desiredTokenAmount) : ZERO;
-      return submitTransaction(pendleRouterContract, signer, 'addMarketLiquidityDual', args, ETHAmountToSend);
+      return submitTransaction(pendleRouterContract, signer!, 'addMarketLiquidityDual', args, ETHAmountToSend);
     }
 
     const addSingleDetails = async (tokenAmount: TokenAmount): Promise<AddSingleLiquidityDetails> => {
@@ -567,7 +563,7 @@ export class PendleMarket extends Market {
       ];
 
       const ETHAmountToSend: BN = (!isForXyt && isSameAddress(tokenAmount.token.address, ETHAddress)) ? BN.from(tokenAmount.rawAmount()) : ZERO;
-      return submitTransaction(pendleRouterContract, signer, 'addMarketLiquiditySingle', args, ETHAmountToSend);
+      return submitTransaction(pendleRouterContract, signer!, 'addMarketLiquiditySingle', args, ETHAmountToSend);
     }
 
     const getLpAmountByFraction = async (percentage: number): Promise<BN> => {
@@ -575,7 +571,7 @@ export class PendleMarket extends Market {
         throw Error("Invalid Percentage");
       }
       percentage = Math.trunc(percentage * Math.pow(10, PercentageMaxDecimals));
-      const userLpBalance: BN = await marketContract.balanceOf(await signer.getAddress());
+      const userLpBalance: BN = await marketContract.balanceOf(await signer!.getAddress());
       const redeemAmount: BN = userLpBalance.mul(percentage).div(PONE);
       return redeemAmount;
     }
@@ -631,7 +627,7 @@ export class PendleMarket extends Market {
         minXytOut,
         minTokenOut
       ]
-      return submitTransaction(pendleRouterContract, signer, 'removeMarketLiquidityDual', args);
+      return submitTransaction(pendleRouterContract, signer!, 'removeMarketLiquidityDual', args);
     }
 
     const removeSingleDetails = async (percentage: number, outToken: Token, _: number): Promise<RemoveSingleLiquidityDetails> => {
@@ -710,7 +706,7 @@ export class PendleMarket extends Market {
         getLpAmountByFraction(percentage),
         minOutAmount
       ];
-      return submitTransaction(pendleRouterContract, signer, 'removeMarketLiquiditySingle', args);
+      return submitTransaction(pendleRouterContract, signer!, 'removeMarketLiquiditySingle', args);
     }
 
     const getVolume = async (leftBound: number, rightBound: number): Promise<CurrencyAmount> => {
@@ -742,7 +738,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValueBigNumber = async (marketReserve: MarketReservesRaw): Promise<BigNumber> => {
-      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, signer, chainId });
+      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, provider, chainId });
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
       return totalLiquidityUSD;
     }
@@ -758,7 +754,7 @@ export class PendleMarket extends Market {
     const getPastLiquidityValue = async (): Promise<CurrencyAmount> => {
       if (chainId == 42) return ZeroCurrencyAmount  // If Kovan, then return 0 since we do not have access to achived state
 
-      const pastBlockNumber: number | undefined = await getBlocksomeDurationEarlier(ONE_DAY.toNumber(), chainId, signer.provider);
+      const pastBlockNumber: number | undefined = await getBlocksomeDurationEarlier(ONE_DAY.toNumber(), chainId, provider);
       if (pastBlockNumber === undefined) {
         console.error("Unable to get block that is 1 day old");
         return ZeroCurrencyAmount
@@ -777,7 +773,7 @@ export class PendleMarket extends Market {
       if (marketReserves === undefined) {
         marketReserves = await marketContract.getReserves();
       }
-      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, signer, chainId });
+      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, provider, chainId });
       const ytDecimal: number = networkInfo.decimalsRecord[this.tokens[0].address];
       const rate: BN = calcRate(marketReserves!.xytBalance, marketReserves!.xytWeight, marketReserves!.tokenBalance, marketReserves!.tokenWeight, ytDecimal);
       const ytPrice: BigNumber = calcTokenPriceByMarket(baseTokenPrice, rate, networkInfo.decimalsRecord[this.tokens[1].address]);
@@ -786,8 +782,8 @@ export class PendleMarket extends Market {
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, impliedYield: BigNumber }> => {
       const ytPrice: BigNumber = await getYTPrice(marketReserves);
-      const principalPerYT: TokenAmount = await yieldContract.methods(signer, chainId).getPrincipalPerYT();
-      const p: BigNumber = ytPrice.dividedBy((await fetchValuation(principalPerYT, signer, chainId)).amount);
+      const principalPerYT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
+      const p: BigNumber = ytPrice.dividedBy((await fetchValuation(principalPerYT, provider, chainId)).amount);
 
       // means yield is infinite
       if (p.isGreaterThanOrEqualTo(ONE)) {
@@ -796,7 +792,7 @@ export class PendleMarket extends Market {
           impliedYield: new BigNumber(999999999)
         };
       }
-      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      const currentTime: number = await getCurrentTimestamp(provider);
       const daysLeft: BigNumber = new BigNumber(yieldContract.expiry - currentTime).dividedBy(24 * 3600);
 
       const y_annum: BigNumber = calcImpliedYield(p, daysLeft);
@@ -853,7 +849,7 @@ export class PendleMarket extends Market {
     const getSwapFeeAprBigNumber = async (): Promise<BigNumber> => {
       const marketReserves: MarketReservesRaw = await marketContract.getReserves();
 
-      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      const currentTime: number = await getCurrentTimestamp(provider);
 
       const volumeToday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.toNumber(), currentTime);
 
@@ -934,11 +930,11 @@ export class UniForkMarket extends Market {
     }
   }
 
-  public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+  public static methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
     const fetchClaimableRewardsFromOTMarkets = async (markets: UniForkMarket[], userAddress: string): Promise<TokenAmount[]> => {
       const rawResult: TokenAmount[][] = await Promise.all(markets.map(async (m: UniForkMarket) => {
-        return m.methods(signer, chainId).fetchRewardsFromOtReserves(userAddress);
+        return m.methods({signer, provider, chainId}).fetchRewardsFromOtReserves(userAddress);
       }));
       const flattenedResult = rawResult.flat();
       const tokenSet: Set<string> = new Set();
@@ -955,17 +951,17 @@ export class UniForkMarket extends Market {
       fetchClaimableRewardsFromOTMarkets
     }
   }
-  public methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+  public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const uniForkRouterContract: Contract = new Contract(this.getRouterAddress(chainId, this.protocol), contracts.UniswapRouter02.abi, signer.provider);
-    const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, signer.provider);
+    const uniForkRouterContract: Contract = new Contract(this.getRouterAddress(chainId, this.protocol), contracts.UniswapRouter02.abi, provider);
+    const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, provider);
     const getSwapFeeApr = async (): Promise<string> => {
       return (await fetchSushiForkYield(this.address, chainId)).toString()
     }
 
     const readMarketDetails = async (): Promise<OtherMarketDetails> => {
-      const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, signer.provider);
+      const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, provider);
       var token0Address: string = '', token0Reserve: BN = ZERO, token1Reserve: BN = ZERO, totalSupplyLP: BN = ZERO;
       const promises = [];
       promises.push(marketContract.token0().then((r: string) => {
@@ -996,7 +992,7 @@ export class UniForkMarket extends Market {
       );
       const rateOfToken0: BN = calcUnweightedRate(token0Reserve, token1Reserve, networkInfo.decimalsRecord[this.tokens[0].address]);
       const rateOfToken1: BN = calcUnweightedRate(token1Reserve, token0Reserve, networkInfo.decimalsRecord[this.tokens[1].address]);
-      const singleSidedLiquidity: CurrencyAmount = await fetchValuation(tokenAmount0, signer, chainId);
+      const singleSidedLiquidity: CurrencyAmount = await fetchValuation(tokenAmount0, provider, chainId);
       const liquidity: CurrencyAmount = {
         currency: singleSidedLiquidity.currency,
         amount: new BigNumber(singleSidedLiquidity.amount).multipliedBy(2).toFixed(DecimalsPrecision)
@@ -1052,7 +1048,7 @@ export class UniForkMarket extends Market {
         otReserve = marketReserve.reserve1;
         otherReserve = marketReserve.reserve0;
       }
-      const otherPirce: BigNumber = await fetchTokenPrice({address: otherTokenAddress, signer, chainId});
+      const otherPirce: BigNumber = await fetchTokenPrice({address: otherTokenAddress, provider, chainId});
       return otherPirce.multipliedBy(otherReserve.toString()).div(decimalFactor(networkInfo.decimalsRecord[otherTokenAddress]))
         .multipliedBy(decimalFactor(networkInfo.decimalsRecord[otAddress])).div(otReserve.toString());
     }
@@ -1069,8 +1065,8 @@ export class UniForkMarket extends Market {
     const getOtPriceAndImpliedDiscount = async(): Promise<{otPrice: BigNumber, impliedDiscount: BigNumber}> => {
       const otPrice: BigNumber = await getOtPrice();
       const yieldContract: YieldContract = getYieldContract();
-      const principalPerOT: TokenAmount = await yieldContract.methods(signer, chainId).getPrincipalPerYT();
-      const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, signer, chainId);
+      const principalPerOT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
+      const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, provider, chainId);
       const p: BigNumber = (new BigNumber(principalValuation.amount).minus(otPrice)).dividedBy(principalValuation.amount);
 
       // means yield is infinite
@@ -1080,7 +1076,7 @@ export class UniForkMarket extends Market {
           impliedDiscount: new BigNumber(999999999)
         };
       }
-      const currentTime: number = await getCurrentTimestamp(signer.provider);
+      const currentTime: number = await getCurrentTimestamp(provider);
       const daysLeft: BigNumber = new BigNumber(yieldContract.expiry - currentTime).dividedBy(24 * 3600);
 
       const y_annum: BigNumber = calcImpliedYield(p, daysLeft);
@@ -1138,10 +1134,10 @@ export class UniForkMarket extends Market {
         tokenAmounts[1].rawAmount(),
         calcSlippedDownAmount(BN.from(tokenAmounts[0].rawAmount()), slippage),
         calcSlippedDownAmount(BN.from(tokenAmounts[1].rawAmount()), slippage),
-        await signer.getAddress(),
-        (await getCurrentTimestamp(signer.provider)) + ONE_MINUTE.mul(60).toNumber()
+        await signer!.getAddress(),
+        (await getCurrentTimestamp(provider)) + ONE_MINUTE.mul(60).toNumber()
       ]
-      return submitTransaction(uniForkRouterContract, signer, 'addLiquidity', args);
+      return submitTransaction(uniForkRouterContract, signer!, 'addLiquidity', args);
     }
 
     const getLpAmountByFraction = async (percentage: number): Promise<BN> => {
@@ -1149,7 +1145,7 @@ export class UniForkMarket extends Market {
         throw Error("Invalid Percentage");
       }
       percentage = Math.trunc(percentage * Math.pow(10, PercentageMaxDecimals));
-      const userLpBalance: BN = await marketContract.balanceOf(await signer.getAddress());
+      const userLpBalance: BN = await marketContract.balanceOf(await signer!.getAddress());
       const redeemAmount: BN = userLpBalance.mul(percentage).div(PONE);
       return redeemAmount;
     }
@@ -1207,10 +1203,10 @@ export class UniForkMarket extends Market {
         redeemAmount,
         calcSlippedDownAmount(BN.from(removeDetails.tokenAmounts[0].rawAmount()), slippage),
         calcSlippedDownAmount(BN.from(removeDetails.tokenAmounts[1].rawAmount()), slippage),
-        await signer.getAddress(),
-        (await getCurrentTimestamp(signer.provider)) + ONE_MINUTE.mul(60).toNumber()
+        await signer!.getAddress(),
+        (await getCurrentTimestamp(provider)) + ONE_MINUTE.mul(60).toNumber()
       ];
-      return submitTransaction(uniForkRouterContract, signer, 'removeLiquidity', args);
+      return submitTransaction(uniForkRouterContract, signer!, 'removeLiquidity', args);
     }
 
     const fetchRewardsFromOtReserves = async (userAddress: string): Promise<TokenAmount[]> => {
@@ -1218,7 +1214,7 @@ export class UniForkMarket extends Market {
       for (const t of this.tokens) {
         try {
           const ot: Ot = Ot.find(t.address, chainId);
-          const redeemResults: TokenAmount[] = await RedeemProxy.methods(signer, chainId).callStatic.redeemTokenDist(ot.rewardTokenAddresses, userAddress);
+          const redeemResults: TokenAmount[] = await RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemTokenDist(ot.rewardTokenAddresses, userAddress);
           res = res.concat(redeemResults.filter((tokenAmount: TokenAmount) => BN.from(tokenAmount.rawAmount()).gt(0)));
         } catch (err) { }
       }

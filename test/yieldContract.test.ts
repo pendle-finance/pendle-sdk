@@ -1,4 +1,4 @@
-import { dummyTokenAmount, EXP_2022, EXP_2021, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts } from '../src';
+import { dummyTokenAmount, EXP_2022, EXP_2023, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts, dummyAddress } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, BigNumber as BN, Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -62,7 +62,9 @@ const bUSDCToken = new Token(
   '0x76145e99d3f4165a313e8219141ae0d26900b710',
   6
 )
-const Tokens = {USDCToken, bUSDCToken}
+
+const OTqiUSDCToken = new Token('0xfffe5fc3e511ce11df20684aec435a3e2b7d8136', 6)
+const Tokens = {USDCToken, bUSDCToken, OTqiUSDCToken}
 
 describe("Yiled Contract", () => {
   let provider: ethers.providers.JsonRpcProvider;
@@ -80,13 +82,13 @@ describe("Yiled Contract", () => {
     yContract = new YieldContract(
       utils.parseBytes32String(forgeIdsInBytes.BENQI),
       Tokens.USDCToken,
-      EXP_2022.toNumber(),
+      EXP_2023.toNumber(),
       chainId
     );
   });
 
   it('yieldContract.mintDetails', async () => {
-    const response = await yContract.methods(signer, chainId).mintDetails(new TokenAmount(
+    const response = await yContract.methods({signer, provider, chainId}).mintDetails(new TokenAmount(
       Tokens.bUSDCToken,
       BN.from(10).pow(9).toString()
     ));
@@ -103,13 +105,13 @@ describe("Yiled Contract", () => {
   //   console.log(response);
   // })
 
-  // it.only('yieldContract.redeemDetails', async () => {
-  //   const response = await yContract.methods(signer).redeemDetails(new TokenAmount(
-  //     Tokens.OTcDAIToken,
-  //     BN.from(10).pow(12).toString()
-  //   ), dummyUser);
-  //   console.log(response);
-  // })
+  it('yieldContract.redeemDetails', async () => {
+    const response = await yContract.methods({signer, provider, chainId}).redeemDetails(new TokenAmount(
+      Tokens.OTqiUSDCToken,
+      BN.from(10).pow(8).toString()
+    ), dummyAddress);
+    console.log(response);
+  })
 
   // it.skip('yieldContract.redeem', async () => {
   //   const response = await yContract.methods(signer).redeem(dummyTokenAmount);

@@ -7,6 +7,7 @@ import { forgeIdsInBytes } from "../constants";
 import { TrioTokenUints } from "./multiTokens";
 import { RedeemProxy } from "./redeemProxy";
 import { YieldContract } from "./yieldContract";
+import { ChainSpecifics } from "./types";
 
 export type OtReward = {
     reward: TokenAmount[]
@@ -60,12 +61,12 @@ export class Ot extends Token {
         )
     }
 
-    public static methods(signer: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    public static methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
         const fetchRewards = async (userAddress: string): Promise<OtReward[]> => {
             const OTs: OTINFO[] = networkInfo.contractAddresses.OTs.filter((OTInfo: OTINFO) => Ot.hasRewardsByForgeId(OTInfo.forgeIdInBytes));
-            const userRewards: TrioTokenUints[] = await(RedeemProxy.methods(signer, chainId).callStatic.redeemOts(
+            const userRewards: TrioTokenUints[] = await(RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemOts(
                 OTs.map((OTInfo: OTINFO) => OTInfo.address),
                 userAddress
             ));

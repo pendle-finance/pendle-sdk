@@ -22,11 +22,11 @@ describe("price fetcher", () => {
       });
 
     it('price', async() => {
-        const res = await fetchTokenPrice({signer: signer, address: "0x41e8e841f3c9fe666921eda128ca8e2b143eb136", chainId: chainId});
+        const res = await fetchTokenPrice({provider, address: "0x41e8e841f3c9fe666921eda128ca8e2b143eb136", chainId: chainId});
         console.log(res.toString());
     })
 
-    it.only('external rate', async() => {
+    it.skip('external rate', async() => {
         // for (const om of avalancheContracts.otherMarkets!) {
         //     const res = await fetchSushiForkYield(om.address, 43114)
         //     console.log('market:', om.address);
