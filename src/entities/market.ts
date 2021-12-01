@@ -137,10 +137,8 @@ export class PendleMarket extends Market {
   }
 
   public static find(address: string, chainId?: number): PendleMarket {
-    console.log(chainId);
     address = address.toLowerCase();
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    console.log(networkInfo.contractAddresses.pendleMarkets)
     const marketInfo: PENDLEMARKETNFO | undefined = networkInfo.contractAddresses.pendleMarkets.find((m: PENDLEMARKETNFO) => {
       return isSameAddress(m.address, address);
     })

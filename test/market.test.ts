@@ -41,7 +41,7 @@ const tokens = getMainnetTokens();
 describe("Market", () => {
     let provider: ethers.providers.JsonRpcProvider;
     let signer: any;
-    let market: PendleMarket;
+    let market: Market;
 
     beforeAll(async () => {
         const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
@@ -49,114 +49,114 @@ describe("Market", () => {
                 : `https://api.avax.network/ext/bc/C/rpc`;
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        signer = provider.getSigner('0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
-        // market = PendleMarket.find('0x82922e6fbe83547c5e2e0229815942a2108e4624', chainId)
+        signer = provider.getSigner('0xB5E4846Db18d2B859c32951C843a5b7A2bf19126');
+        market = Market.find('0x5f973e06a59d0bafe464faf36d5b3b06e075c543', chainId)
         console.log(market)
         // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 
-    // it.only("PendleMarket.readMarketDetails", async () => {
-    //     const marketDetails = await market.methods({signer, provider, chainId}).readMarketDetails();
+    it("PendleMarket.readMarketDetails", async () => {
+        const marketDetails = await market.methods({signer, provider, chainId}).readMarketDetails();
 
-    //     console.log(JSON.stringify(marketDetails, null, '  '));
-    // })
+        console.log(JSON.stringify(marketDetails, null, '  '));
+    })
 
     // it('PendleMarket.yieldContract', async () => {
     //     const yieldContract: YieldContract = market.yieldContract(chainId);
     //     console.log(JSON.stringify(yieldContract, null, '  '));
     // })
 
-    // it('PendleMarket.swapExactInDetails', async () => {
-    //     const swapExactInDetails = await market.methods({signer, provider, chainId}).swapExactInDetails(new TokenAmount(
-    //         market.tokens[1],
-    //         BN.from(10).pow(18).toString()
-    //     ),
-    //         0.001);
-    //     console.log(swapExactInDetails);
-    // })
-
-    // it('PendleMarket.swapExactOutDetails', async () => {
-    //     const swapExactOutDetails = await market.methods({signer, provider, chainId}).swapExactOutDetails(new TokenAmount(
-    //         market.tokens[0],
-    //         BN.from(10).pow(18).toString()
-    //     ),
-    //         0.001);
-    //     console.log(swapExactOutDetails);
-    // })
-
-    // it.skip('PendleMarket.swapExactIn', async () => {
-    //     const response = await market.methods(signer).swapExactIn(0.01, dummyTokenAmount);
-    //     console.log(response);
-    // })
-
-    // it.skip('PendleMarket.swapExactOut', async () => {
-    //     const response = await market.methods(signer).swapExactOut(0.01, dummyTokenAmount);
-    //     console.log(response);
-    // });
-
-    // it('PendleMarket.addDualDetails', async () => {
-    //     const response = await market.methods({signer, provider, chainId}).addDualDetails(new TokenAmount(
-    //         tokens.PENDLEToken,
-    //         BN.from(10).pow(18).toString()
-    //     ));
-    //     console.log(response);
-    // })
-
-    // it.skip('PendleMarket.addDual', async () => {
-    //     const response = await market.methods(signer).addDual([dummyTokenAmount, dummyTokenAmount], 0.001);
-    //     console.log(response);
-    // })
-
-    // it('PendleMarket.addSingleDetails', async () => {
-    //     const response = await market.methods({signer, provider, chainId}).addSingleDetails(new TokenAmount(
-    //         tokens.PENDLEToken,
-    //         BN.from(10).pow(19).toString()
-    //     ));
-    //     console.log(response);
-    // })
-
-    // it.skip('PendleMarket.addSingle', async () => {
-    //     const response = await market.methods(signer).addSingle(dummyTokenAmount, 0.001);
-    //     console.log(response);
-    // })
-
-    // it('PendleMarket.removeDualDetails', async () => {
-    //     const response = await market.methods(signer).removeDualDetails(0.5);
-    //     console.log(response);
-    // })
-
-    // it.skip('PendleMarket.removeDual', async () => {
-    //     const response = await market.methods(signer).removeDual(0.5, 0.001);
-    //     console.log(response);
-    // })
-
-    // it('PendleMarket.removeSingleDetails', async () => {
-    //     const response = await market.methods(signer).removeSingleDetails(0.05, tokens.USDCToken, 0.001);
-    //     console.log(JSON.stringify(response, null, '  '));
-    // })
-
-    // it.skip('PendleMarket.removeSingle', async () => {
-    //     const response = await market.methods(signer).removeSingle(0.5, dummyToken, 0.001);
-    //     console.log(response);
-    // })
-
-    // it('UniForkMarket.readMarketDetails', async() => {
-    //     const sushiMarket = UniForkMarket.find('0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6', chainId);
-    //     const response = await sushiMarket.methods({signer, provider, chainId}).readMarketDetails();
-    //     console.log(JSON.stringify(response, null, '  '));
-    // })
-
-    // it('redeem OT market LP rewards', async() => {
-    //     const networkInfo = distributeConstantsByNetwork(chainId);
-    //     const res = await UniForkMarket.methods({signer, provider, chainId}).fetchClaimableRewardsFromOTMarkets(indexRange(1,4).map((i: number) => {
-    //         return Market.find(networkInfo.contractAddresses.otherMarkets![i].address, chainId);
-    //     }), '0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
-    //     console.log(JSON.stringify(res, null, '  '));
-    // })
-
-
-    it('PendleMarket.find', async()=> {
-        market = PendleMarket.find('0x82922e6fbe83547c5e2e0229815942a2108e4624', chainId)
-        console.log(market)
+    it('PendleMarket.swapExactInDetails', async () => {
+        const swapExactInDetails = await market.methods({signer, provider, chainId}).swapExactInDetails(new TokenAmount(
+            market.tokens[1],
+            BN.from(10).pow(18).toString()
+        ),
+            0.001);
+        console.log(swapExactInDetails);
     })
+
+    it('PendleMarket.swapExactOutDetails', async () => {
+        const swapExactOutDetails = await market.methods({signer, provider, chainId}).swapExactOutDetails(new TokenAmount(
+            market.tokens[0],
+            BN.from(10).pow(18).toString()
+        ),
+            0.001);
+        console.log(swapExactOutDetails);
+    })
+
+    it.skip('PendleMarket.swapExactIn', async () => {
+        const response = await market.methods(signer).swapExactIn(0.01, dummyTokenAmount);
+        console.log(response);
+    })
+
+    it.skip('PendleMarket.swapExactOut', async () => {
+        const response = await market.methods(signer).swapExactOut(0.01, dummyTokenAmount);
+        console.log(response);
+    });
+
+    it('PendleMarket.addDualDetails', async () => {
+        const response = await market.methods({signer, provider, chainId}).addDualDetails(new TokenAmount(
+            tokens.PENDLEToken,
+            BN.from(10).pow(18).toString()
+        ));
+        console.log(response);
+    })
+
+    it.skip('PendleMarket.addDual', async () => {
+        const response = await market.methods(signer).addDual([dummyTokenAmount, dummyTokenAmount], 0.001);
+        console.log(response);
+    })
+
+    it('PendleMarket.addSingleDetails', async () => {
+        const response = await market.methods({signer, provider, chainId}).addSingleDetails(new TokenAmount(
+            tokens.PENDLEToken,
+            BN.from(10).pow(19).toString()
+        ));
+        console.log(response);
+    })
+
+    it.skip('PendleMarket.addSingle', async () => {
+        const response = await market.methods(signer).addSingle(dummyTokenAmount, 0.001);
+        console.log(response);
+    })
+
+    it('PendleMarket.removeDualDetails', async () => {
+        const response = await market.methods(signer).removeDualDetails(0.5);
+        console.log(response);
+    })
+
+    it.skip('PendleMarket.removeDual', async () => {
+        const response = await market.methods(signer).removeDual(0.5, 0.001);
+        console.log(response);
+    })
+
+    it('PendleMarket.removeSingleDetails', async () => {
+        const response = await market.methods(signer).removeSingleDetails(0.05, tokens.USDCToken, 0.001);
+        console.log(JSON.stringify(response, null, '  '));
+    })
+
+    it.skip('PendleMarket.removeSingle', async () => {
+        const response = await market.methods(signer).removeSingle(0.5, dummyToken, 0.001);
+        console.log(response);
+    })
+
+    it('UniForkMarket.readMarketDetails', async() => {
+        const sushiMarket = UniForkMarket.find('0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6', chainId);
+        const response = await sushiMarket.methods({signer, provider, chainId}).readMarketDetails();
+        console.log(JSON.stringify(response, null, '  '));
+    })
+
+    it('redeem OT market LP rewards', async() => {
+        const networkInfo = distributeConstantsByNetwork(chainId);
+        const res = await UniForkMarket.methods({signer, provider, chainId}).fetchClaimableRewardsFromOTMarkets(indexRange(1,4).map((i: number) => {
+            return Market.find(networkInfo.contractAddresses.otherMarkets![i].address, chainId);
+        }), '0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
+        console.log(JSON.stringify(res, null, '  '));
+    })
+
+    it.only('UniForkMarket.removeDual', async() => {
+        const res = await market.methods({signer, provider, chainId}).removeDual(0.5, 0.01);
+        console.log(res);
+    })
+
 })
