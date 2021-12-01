@@ -38,13 +38,8 @@ type GetUserRankResponse = {
 };
 
 export class TradeMining {
-  public methods(
-    _: providers.JsonRpcSigner,
-    chainId?: number
-  ): Record<string, any> {
-    const networkInfo: NetworkInfo = distributeConstantsByNetwork(
-      chainId || 43114
-    );
+  public methods(_: providers.JsonRpcSigner, chainId?: number): Record<string, any> {
+    const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId || 43114);
     const pendleSubgraphSdk = new PendleTradeMiningQuerySet(chainId || 43114);
 
     const getTopTraders = async ({
@@ -52,11 +47,7 @@ export class TradeMining {
       house,
       numberOfTraders = 10,
     }: TradeMiningQuery): Promise<TradeMiningUser[]> => {
-      const topTraders = await pendleSubgraphSdk.getTopTraders(
-        phase,
-        house,
-        numberOfTraders
-      );
+      const topTraders = await pendleSubgraphSdk.getTopTraders(phase, house, numberOfTraders);
 
       return topTraders.tradeMiningUsers.map((res: any) => {
         return {
@@ -69,19 +60,13 @@ export class TradeMining {
       });
     };
 
-    const getUserRank = async (
-      query: GetUserRankQuery
-    ): Promise<GetUserRankResponse> => {
+    const getUserRank = async (query: GetUserRankQuery): Promise<GetUserRankResponse> => {
       const topTraders = await getTopTraders({
         house: query.house,
         phase: query.phase,
         numberOfTraders: 1000,
       });
-      let user = await pendleSubgraphSdk.getUserRank(
-        query.phase,
-        query.house,
-        query.walletAddress.toLowerCase()
-      );
+      let user = await pendleSubgraphSdk.getUserRank(query.phase, query.house, query.walletAddress.toLowerCase());
 
       if (user.tradeMiningUsers.length === 0)
         return {
@@ -115,13 +100,8 @@ export class TradeMining {
       };
     };
 
-    const getTotalTradedVolume = async (
-      query: DefaultTradeMiningQUery
-    ): Promise<Valuation> => {
-      const res = await pendleSubgraphSdk.getTotalTradedVolume(
-        query.phase,
-        query.house
-      );
+    const getTotalTradedVolume = async (query: DefaultTradeMiningQUery): Promise<Valuation> => {
+      const res = await pendleSubgraphSdk.getTotalTradedVolume(query.phase, query.house);
 
       if (res.tradeMiningHouses.length === 0) {
         return { currency: 'USD', amount: '0' };
@@ -140,10 +120,7 @@ export class TradeMining {
         networkInfo.contractAddresses.tokens.PENDLE,
         networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.PENDLE]
       );
-      const phaseRewards = new TokenAmount(
-        pendleToken,
-        '75000000000000000000000'
-      );
+      const phaseRewards = new TokenAmount(pendleToken, '75000000000000000000000');
 
       return phaseRewards;
     };

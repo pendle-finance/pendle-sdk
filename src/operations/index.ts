@@ -1,1 +1,1 @@
-export * from './tradeMining'
+export * from './tradeMining';

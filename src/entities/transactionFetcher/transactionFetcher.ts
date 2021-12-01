@@ -1,5 +1,5 @@
-import { request, gql } from 'graphql-request';
-import { PendleSubgraphUrlMapping } from "../../constants"
+import { gql, request } from 'graphql-request';
+import { PendleSubgraphUrlMapping } from '../../constants';
 import { TokenAmount } from '../tokenAmount';
 import { Token } from '../token';
 import { Address } from '../types';
@@ -25,13 +25,13 @@ const networkMapping: Record<string | number, number> = {
   42: 42,
   kovan: 42,
   43114: 43114,
-  avalanche: 43114
+  avalanche: 43114,
 };
 
 const chainIdToNetworkMapping: Record<number, string> = {
   1: 'mainnet',
   42: 'kovan',
-  43114: 'avalanche'
+  43114: 'avalanche',
 };
 
 export class TransactionFetcher {
@@ -53,9 +53,7 @@ export class TransactionFetcher {
     this.network = _network;
   }
 
-  public async getMintTransactions(
-    queryObj: ForgeQuery
-  ): Promise<TRANSACTION[]> {
+  public async getMintTransactions(queryObj: ForgeQuery): Promise<TRANSACTION[]> {
     const query = gql`
     {
         mintYieldTokens
@@ -94,10 +92,7 @@ export class TransactionFetcher {
       }
     }`;
 
-    const response = await request(
-      PendleSubgraphUrlMapping[this.network],
-      query
-    );
+    const response = await request(PendleSubgraphUrlMapping[this.network], query);
 
     return response.mintYieldTokens.map((mintObj: any) => ({
       action: 'Mint',
@@ -105,22 +100,13 @@ export class TransactionFetcher {
       amount: { currency: 'USD', amount: parseFloat(mintObj.mintedValueUSD) },
       paid: [
         new TokenAmount(
-          new Token(
-            mintObj.yieldBearingAsset.id,
-            mintObj.yieldBearingAsset.decimals
-          ),
+          new Token(mintObj.yieldBearingAsset.id, mintObj.yieldBearingAsset.decimals),
           mintObj.amountToTokenize
         ),
       ],
       received: [
-        new TokenAmount(
-          new Token(mintObj.xytAsset.id, mintObj.xytAsset.decimals),
-          mintObj.amountMinted
-        ),
-        new TokenAmount(
-          new Token(mintObj.otAsset.id, mintObj.otAsset.decimals),
-          mintObj.amountMinted
-        ),
+        new TokenAmount(new Token(mintObj.xytAsset.id, mintObj.xytAsset.decimals), mintObj.amountMinted),
+        new TokenAmount(new Token(mintObj.otAsset.id, mintObj.otAsset.decimals), mintObj.amountMinted),
       ],
       network: chainIdToNetworkMapping[this.network],
       chainId: this.network,
@@ -166,31 +152,19 @@ export class TransactionFetcher {
       }
     }`;
 
-    const response = await request(
-      PendleSubgraphUrlMapping[this.network],
-      query
-    );
+    const response = await request(PendleSubgraphUrlMapping[this.network], query);
 
     return response.redeemYieldTokens.map((redeemObj: any) => ({
       action: 'Redeem',
       hash: redeemObj.id,
       amount: { currency: 'USD', amount: parseFloat(redeemObj.redeemedValueUSD) },
       paid: [
-        new TokenAmount(
-          new Token(redeemObj.xytAsset.id, redeemObj.xytAsset.decimals),
-          redeemObj.amountRedeemed
-        ),
-        new TokenAmount(
-          new Token(redeemObj.otAsset.id, redeemObj.otAsset.decimals),
-          redeemObj.amountRedeemed
-        ),
+        new TokenAmount(new Token(redeemObj.xytAsset.id, redeemObj.xytAsset.decimals), redeemObj.amountRedeemed),
+        new TokenAmount(new Token(redeemObj.otAsset.id, redeemObj.otAsset.decimals), redeemObj.amountRedeemed),
       ],
       received: [
         new TokenAmount(
-          new Token(
-            redeemObj.yieldBearingAsset.id,
-            redeemObj.yieldBearingAsset.decimals
-          ),
+          new Token(redeemObj.yieldBearingAsset.id, redeemObj.yieldBearingAsset.decimals),
           redeemObj.amountToRedeem
         ),
       ],
@@ -232,36 +206,21 @@ export class TransactionFetcher {
       }
     }`;
 
-    const response = await request(
-      PendleSubgraphUrlMapping[this.network],
-      query
-    );
+    const response = await request(PendleSubgraphUrlMapping[this.network], query);
 
     return response.swaps.map((swapObj: any) => ({
       action: 'Swap',
       hash: swapObj.id,
       amount: { currency: 'USD', amount: parseFloat(swapObj.amountUSD) },
-      paid: [
-        new TokenAmount(
-          new Token(swapObj.inToken.id, swapObj.inToken.decimals),
-          swapObj.inAmount
-        ),
-      ],
-      received: [
-        new TokenAmount(
-          new Token(swapObj.outToken.id, swapObj.outToken.decimals),
-          swapObj.outAmount
-        ),
-      ],
+      paid: [new TokenAmount(new Token(swapObj.inToken.id, swapObj.inToken.decimals), swapObj.inAmount)],
+      received: [new TokenAmount(new Token(swapObj.outToken.id, swapObj.outToken.decimals), swapObj.outAmount)],
       timestamp: swapObj.timestamp,
       network: chainIdToNetworkMapping[this.network],
       chainId: this.network,
     }));
   }
 
-  public async getLiquidityTransactions(
-    queryObj: PendleAmmQuery
-  ): Promise<TRANSACTION[]> {
+  public async getLiquidityTransactions(queryObj: PendleAmmQuery): Promise<TRANSACTION[]> {
     const query = gql`
     {
       liquidityPools
@@ -294,24 +253,15 @@ export class TransactionFetcher {
         
     }`;
 
-    const response = await request(
-      PendleSubgraphUrlMapping[this.network],
-      query
-    );
+    const response = await request(PendleSubgraphUrlMapping[this.network], query);
 
     return response.liquidityPools.map((liquidityObj: any) => ({
       action: liquidityObj.type,
       hash: liquidityObj.id,
       amount: { currency: 'USD', amount: parseFloat(liquidityObj.amountUSD) },
       paid: [
-        new TokenAmount(
-          new Token(liquidityObj.inToken0.id, liquidityObj.inToken0.decimals),
-          liquidityObj.inAmount0
-        ),
-        new TokenAmount(
-          new Token(liquidityObj.inToken1.id, liquidityObj.inToken1.decimals),
-          liquidityObj.inAmount1
-        ),
+        new TokenAmount(new Token(liquidityObj.inToken0.id, liquidityObj.inToken0.decimals), liquidityObj.inAmount0),
+        new TokenAmount(new Token(liquidityObj.inToken1.id, liquidityObj.inToken1.decimals), liquidityObj.inAmount1),
       ],
       received: [
         // new TokenAmount(

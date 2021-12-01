@@ -18,22 +18,12 @@
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "format": "yarn prettier --write \"{src,scripts,test}/**/*.{js,ts}\"",
+    "prepare": "husky install",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
   "peerDependencies": {},
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
-  },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
   "module": "dist/pendle-sdk.esm.js",
   "size-limit": [
     {
@@ -47,8 +37,15 @@
   ],
   "devDependencies": {
     "@size-limit/preset-small-lib": "^5.0.5",
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-jest": "^25.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react-app": "^6.2.2",
     "husky": "^7.0.1",
+    "jest": "^27.4.2",
     "size-limit": "^5.0.5",
+    "ts-jest": "^27.0.7",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
     "typescript": "^4.4.3"

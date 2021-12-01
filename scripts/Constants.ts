@@ -1,9 +1,12 @@
 import { BigNumber as BN, utils } from 'ethers';
+
 const ONE_E_18 = BN.from(10).pow(18);
 const ONE_DAY = BN.from(86400);
 const RONE = BN.from(2).pow(40);
 const LIQ_MINING_ALLOCATION_DENOMINATOR = 1000000000;
-const INF = BN.from(2).pow(256).sub(1);
+const INF = BN.from(2)
+  .pow(256)
+  .sub(1);
 
 export const common = {
   ONE_E_18,
@@ -19,7 +22,9 @@ export const common = {
   CODE_HASH_SUSHISWAP: '0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303',
   CODE_HASH_UNISWAP: '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f',
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  MAX_ALLOWANCE: BN.from(2).pow(BN.from(256)).sub(BN.from(1)),
+  MAX_ALLOWANCE: BN.from(2)
+    .pow(BN.from(256))
+    .sub(BN.from(1)),
   ONE_DAY,
   // TEST_EXPIRY: 1624147200,
   LIQ_MINING_ALLOCATION_DENOMINATOR,
@@ -36,7 +41,10 @@ export const common = {
   // Protocol params;
   LOCK_NUMERATOR: BN.from(1),
   LOCK_DENOMINATOR: BN.from(20),
-  INTEREST_UPDATE_RATE_DELTA_FOR_MARKET: BN.from(2).pow(40).mul(334184).div(1e10), // 0.00334184 %
+  INTEREST_UPDATE_RATE_DELTA_FOR_MARKET: BN.from(2)
+    .pow(40)
+    .mul(334184)
+    .div(1e10), // 0.00334184 %
   EXPIRY_DIVISOR: ONE_DAY.mul(7),
   B_DELTA: BN.from(6595),
   // Fee
@@ -76,7 +84,7 @@ export const mainnetConstants = {
 
     SUSHISWAP_PAIR_FACTORY: '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac',
     SUSHISWAP_ROUTER: '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F',
-    UNISWAP_ROUTER: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+    UNISWAP_ROUTER: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
   },
   tokens: {
     USDT_AAVE: {
@@ -110,7 +118,7 @@ export const mainnetConstants = {
         '0xf977814e90da44bfa03b6295a0616a897441acec',
         '0xa191e578a6736167326d05c119ce0c90849e84b7',
         '0x7e0188b0312a26ffe64b7e43a7a91d430fb20673',
-      ]
+      ],
     },
     USDT: {
       address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
@@ -124,7 +132,7 @@ export const mainnetConstants = {
         '0x3567cafb8bf2a83bbea4e79f3591142fb4ebe86d',
         '0x5754284f345afc66a98fbb0a0afe71e0f007b949',
         '0xF5565F298D47C95DE222d0e242A69D2711fE3E89',
-      ]
+      ],
     },
     DAI: {
       address: '0x6b175474e89094c44da98b954eedeac495271d0f',
@@ -136,9 +144,9 @@ export const mainnetConstants = {
         '0xb527a981e1d415af696936b3174f2d7ac8d11369',
         '0x2feb1512183545f48f6b9c5b4ebfcaf49cfca6f3',
         '0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf',
-      ]
+      ],
     },
-    "ETHUSDC-SLP": {
+    'ETHUSDC-SLP': {
       address: '0x397ff1542f962076d0bfe58ea045ffa2d347aca0',
       decimal: 18,
       whales: [
@@ -148,17 +156,17 @@ export const mainnetConstants = {
         '0xe4169a135c437b9c7d5606f5b0ea1b3f612e961e',
         '0xee7cb13cab0fb7bdbb454eaf0aae2e459f3a0e50',
         '0x3cc432b703c68b089601f0e3f407632df6d8701a',
-        '0x43771f30f50a556faee372a24ce9c9d73492a121'
-      ]
+        '0x43771f30f50a556faee372a24ce9c9d73492a121',
+      ],
     },
-    "PENDLEETH-SLP": {
+    'PENDLEETH-SLP': {
       address: '0x37922c69b08babcceae735a31235c81f1d1e8e43',
       decimals: 18,
       whales: [
         '0xc33f3c7b350e42d9cda46a8170faf7bdea178d4b',
         '0xbfd6b497dca3e5d1fa4bbd52996d400980c29eb7',
         '0xc8549e0d675737e7d42775b416a4285d0198b2d2',
-      ]
+      ],
     },
     PENDLE: {
       address: '0x808507121B80c02388fAd14726482e061B8da827',
@@ -169,10 +177,10 @@ export const mainnetConstants = {
         '0xc21a74c7150fed22c7ca0bf9a15bbe0ddb4977cc',
         '0x6262998ced04146fa42253a5c0af90ca02dfd2a3',
         '0x6a23da6b0a1b07e82b12d620a0de66682e1d99f7',
-        '0x760484042a7856e62b627318796ebb609c8131a1'
-      ] 
+        '0x760484042a7856e62b627318796ebb609c8131a1',
+      ],
     },
-    "OT-PE/P-SLP": {
+    'OT-PE/P-SLP': {
       address: '0xb124c4e18a282143d362a066736fd60d22393ef4',
       decimals: 18,
       whales: [
@@ -181,9 +189,9 @@ export const mainnetConstants = {
         '0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc',
         '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd',
         '0x29bbf26fc9628d076094c20f0cea51142bbc4aa5',
-      ]
+      ],
     },
-    "cDAI": {
+    cDAI: {
       address: '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643',
       decimals: 8,
       whales: [
@@ -193,17 +201,17 @@ export const mainnetConstants = {
         '0xab4ce310054a11328685ece1043211b68ba5d082',
         '0x52185a2bbcfd67c1d07963e3575175ee9f95a551',
         '0x7d6149ad9a573a6e2ca6ebf7d4897c1b766841b4',
-      ]
+      ],
     },
-    "aUSDC": {
+    aUSDC: {
       address: '0xbcca60bb61934080951369a648fb03df4f96263c',
       decimals: 6,
-      whales:[
+      whales: [
         '0x3ddfa8ec3052539b6c9549f12cea2c295cff5296',
         '0x763bf487d386afbf9c476e047d37b74636b9e831',
-        '0x602d9abd5671d24026e2ca473903ff2a9a957407'
-      ]
-    }
+        '0x602d9abd5671d24026e2ca473903ff2a9a957407',
+      ],
+    },
     // AUSDT: {
     //   address: '0x71fc860F7D3A592A4a98740e39dB31d25db65ae8',
     //   decimal: 6,

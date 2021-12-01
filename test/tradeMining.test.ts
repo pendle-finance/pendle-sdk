@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { TradeMining } from '../src/operations/tradeMining';
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 jest.setTimeout(30000);
 
@@ -22,13 +23,11 @@ describe('Trade Mining', () => {
     var data = await tradeMining
       .methods(signer, 43114)
       .getTopTraders({ phase: 1, house: 'Pendle', numberOfTraders: 50 });
-    console.log(data.length)
+    console.log(data.length);
 
-    data = await tradeMining
-      .methods(signer, 43114)
-      .getTopTraders({ phase: 1, house: 'BenQi', numberOfTraders: 50 });
+    data = await tradeMining.methods(signer, 43114).getTopTraders({ phase: 1, house: 'BenQi', numberOfTraders: 50 });
 
-    console.log(data.length)
+    console.log(data.length);
     data = await tradeMining
       .methods(signer, 43114)
       .getTopTraders({ phase: 1, house: 'TraderJoe', numberOfTraders: 50 });
