@@ -1,9 +1,8 @@
-import { dummyTokenAmount, EXP_2022, EXP_2023, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts, dummyAddress } from '../src';
+import { dummyAddress, EXP_2023, forgeIdsInBytes, Token, TokenAmount, YieldContract } from '../src';
 // import { Market } from '../src/entities/market';
-import { ethers, BigNumber as BN, Contract, utils } from 'ethers';
+import { BigNumber as BN, ethers, utils } from 'ethers';
 import * as dotenv from 'dotenv';
-import { NetworkInfo } from '../src/networks';
-import { distributeConstantsByNetwork } from '../src/helpers';
+
 dotenv.config();
 jest.setTimeout(30000);
 
@@ -54,27 +53,24 @@ const chainId: number = 43114;
 // )
 // const Tokens = { DAIToken, USDCToken, PENDLEETHSLPToken, ETHUSDCSLPToken, OTPEToken, OTaUSDCToken, OTcDAIToken, cDAIToken, aUSDCToken }
 
-const USDCToken = new Token (
-  '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
-  6
-)
-const bUSDCToken = new Token(
-  '0x76145e99d3f4165a313e8219141ae0d26900b710',
-  6
-)
+const USDCToken = new Token('0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', 6);
+const bUSDCToken = new Token('0x76145e99d3f4165a313e8219141ae0d26900b710', 6);
 
-const OTqiUSDCToken = new Token('0xfffe5fc3e511ce11df20684aec435a3e2b7d8136', 6)
-const Tokens = {USDCToken, bUSDCToken, OTqiUSDCToken}
+const OTqiUSDCToken = new Token('0xfffe5fc3e511ce11df20684aec435a3e2b7d8136', 6);
+const Tokens = { USDCToken, bUSDCToken, OTqiUSDCToken };
 
-describe("Yiled Contract", () => {
+describe('Yiled Contract', () => {
   let provider: ethers.providers.JsonRpcProvider;
   let signer: any;
   let yContract: YieldContract;
 
   beforeAll(async () => {
-    const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}` 
-                      : chainId == 42 ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
-                      : `https://api.avax.network/ext/bc/C/rpc`;
+    const providerUrl =
+      chainId == 1
+        ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
+        : chainId == 42
+        ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
+        : `https://api.avax.network/ext/bc/C/rpc`;
 
     // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
@@ -88,12 +84,16 @@ describe("Yiled Contract", () => {
   });
 
   it('yieldContract.mintDetails', async () => {
-    const response = await yContract.methods({signer, provider, chainId}).mintDetails(new TokenAmount(
-      Tokens.bUSDCToken,
-      BN.from(10).pow(9).toString()
-    ));
+    const response = await yContract.methods({ signer, provider, chainId }).mintDetails(
+      new TokenAmount(
+        Tokens.bUSDCToken,
+        BN.from(10)
+          .pow(9)
+          .toString()
+      )
+    );
     console.log(response);
-  })
+  });
 
   // it('yieldContract.mint', async () => {
   //   const cDAIContract = new Contract(Tokens.cDAIToken.address, contracts.IERC20.abi, provider);
@@ -106,15 +106,20 @@ describe("Yiled Contract", () => {
   // })
 
   it('yieldContract.redeemDetails', async () => {
-    const response = await yContract.methods({signer, provider, chainId}).redeemDetails(new TokenAmount(
-      Tokens.OTqiUSDCToken,
-      BN.from(10).pow(8).toString()
-    ), dummyAddress);
+    const response = await yContract.methods({ signer, provider, chainId }).redeemDetails(
+      new TokenAmount(
+        Tokens.OTqiUSDCToken,
+        BN.from(10)
+          .pow(8)
+          .toString()
+      ),
+      dummyAddress
+    );
     console.log(response);
-  })
+  });
 
   // it.skip('yieldContract.redeem', async () => {
   //   const response = await yContract.methods(signer).redeem(dummyTokenAmount);
   //   console.log(response);
   // })
-})
+});

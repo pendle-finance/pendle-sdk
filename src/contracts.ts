@@ -3,7 +3,7 @@ const IPendleRouter = require('@pendle/core/build/artifacts/contracts/interfaces
 const IPendleData = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleData.sol/IPendleData.json');
 const IPendleForge = require('@pendle/core/build/artifacts/contracts/interfaces/IPendleForge.sol/IPendleForge.json');
 const PendleBaseToken = require('@pendle/core/build/artifacts/contracts/tokens/PendleBaseToken.sol/PendleBaseToken.json');
-const PendleSushiswapComplexForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSushiswapComplexForge.sol/PendleSushiswapComplexForge.json')
+const PendleSushiswapComplexForge = require('@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSushiswapComplexForge.sol/PendleSushiswapComplexForge.json');
 const PendleAaveV2Forge = require('@pendle/core/build/artifacts/contracts/core/aave/v2/PendleAaveV2Forge.sol/PendleAaveV2Forge.json');
 const PendleCompoundForge = require('@pendle/core/build/artifacts/contracts/core/compound/PendleCompoundForge.sol/PendleCompoundForge.json');
 const PendleCompoundV2Forge = require('@pendle/core/build/artifacts/contracts/core/compoundV2/PendleCompoundV2Forge.sol/PendleCompoundV2Forge.json');
@@ -20,7 +20,7 @@ const PendleLiquidityRewardsReaderMulti = require('@pendle/core/build/artifacts/
 const PendleSingleSidedStaking = require('@pendle/single-staking/build/artifacts/contracts/SingleStaking.sol/SingleStaking.json');
 const PendleSingleStakingManager = require('@pendle/single-staking/build/artifacts/contracts/SingleStakingManager.sol/SingleStakingManager.json');
 const PendleWrapper = require('@pendle/core/build/artifacts/contracts/proxies/PendleWrapper.sol/PendleWrapper.json');
-const PendleTraderJoeYieldTokenHolder = require("@pendle/core/build/artifacts/contracts/core/TraderJoe/PendleTraderJoeYieldTokenHolder.sol/PendleTraderJoeYieldTokenHolder.json");
+const PendleTraderJoeYieldTokenHolder = require('@pendle/core/build/artifacts/contracts/core/TraderJoe/PendleTraderJoeYieldTokenHolder.sol/PendleTraderJoeYieldTokenHolder.json');
 const SushiMasterChef = require('../abis/SushiMasterChefABI.json');
 const UniswapRouter02 = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json');
 const JoeMasterChef = require('../abis/JoeMasterChefABI.json');
@@ -63,5 +63,5 @@ export const contracts = {
   UniswapV2Pair,
   ICToken,
   IQiToken,
-  BenqiComptroller
+  BenqiComptroller,
 };

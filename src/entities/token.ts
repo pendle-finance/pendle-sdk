@@ -1,6 +1,6 @@
-import { dummyAddress, ETHAddress } from "../constants";
-import { distributeConstantsByNetwork } from "../helpers";
-import { NetworkInfo } from "../networks";
+import { dummyAddress, ETHAddress } from '../constants';
+import { distributeConstantsByNetwork } from '../helpers';
+import { NetworkInfo } from '../networks';
 
 export class Token {
   public readonly address: string;
@@ -20,16 +20,10 @@ export class Token {
     if (decimals === undefined) {
       throw new Error(`Unable to get decimals of token ${address}`);
     }
-    return new Token(address, decimals, expiry)
+    return new Token(address, decimals, expiry);
   }
 }
 
-export const ETHToken: Token = new Token(
-  ETHAddress,
-  18
-)
+export const ETHToken: Token = new Token(ETHAddress, 18);
 
-export const dummyToken: Token = new Token(
-  dummyAddress,
-  18
-);
+export const dummyToken: Token = new Token(dummyAddress, 18);

@@ -10,11 +10,7 @@ export async function fetchTokenBalances(
   //TODO: Use multicall
   return Promise.all(
     tokens.map(async token => {
-      const tokenContract = new Contract(
-        token.address,
-        contracts.IERC20.abi,
-        provider
-      );
+      const tokenContract = new Contract(token.address, contracts.IERC20.abi, provider);
       const tokenAmountRaw = await tokenContract.balanceOf(userAddress);
       return new TokenAmount(token, tokenAmountRaw.toString());
     })
