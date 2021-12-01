@@ -21,8 +21,8 @@ describe("price fetcher", () => {
         signer = provider.getSigner();
       });
 
-    it('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0x41e8e841f3c9fe666921eda128ca8e2b143eb136", chainId: chainId});
+    it.only('price', async() => {
+        const res = await fetchTokenPrice({provider, address: "0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f", chainId: chainId});
         console.log(res.toString());
     })
 

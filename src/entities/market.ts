@@ -137,8 +137,10 @@ export class PendleMarket extends Market {
   }
 
   public static find(address: string, chainId?: number): PendleMarket {
+    console.log(chainId);
     address = address.toLowerCase();
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+    console.log(networkInfo.contractAddresses.pendleMarkets)
     const marketInfo: PENDLEMARKETNFO | undefined = networkInfo.contractAddresses.pendleMarkets.find((m: PENDLEMARKETNFO) => {
       return isSameAddress(m.address, address);
     })
@@ -1149,6 +1151,7 @@ export class UniForkMarket extends Market {
       const redeemAmount: BN = userLpBalance.mul(percentage).div(PONE);
       return redeemAmount;
     }
+    
     const removeDualDetails = async (percentage: number, _: number): Promise<RemoveDualLiquidityDetails> => {
       const redeemAmount: BN = await getLpAmountByFraction(percentage);
       if (redeemAmount.eq(0)) {
@@ -1178,8 +1181,8 @@ export class UniForkMarket extends Market {
         marketReserve = values[2];
         totalSupplyLP = values[3];
       })
-      const token0RedeemAmout: BN = marketReserve.reserve0.mul(redeemAmount).div(totalSupplyLP!);
-      const token1RedeemAmout: BN = marketReserve.reserve1.mul(redeemAmount).div(totalSupplyLP!);
+      const token0RedeemAmout: BN = isSameAddress(token0!, this.tokens[0].address) ? marketReserve.reserve0.mul(redeemAmount).div(totalSupplyLP!) : marketReserve.reserve1.mul(redeemAmount).div(totalSupplyLP!);
+      const token1RedeemAmout: BN = isSameAddress(token1!, this.tokens[1].address) ? marketReserve.reserve1.mul(redeemAmount).div(totalSupplyLP!) : marketReserve.reserve0.mul(redeemAmount).div(totalSupplyLP!);
       return {
         tokenAmounts: [
           new TokenAmount(
