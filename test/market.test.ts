@@ -44,14 +44,14 @@ describe("Market", () => {
     let market: Market;
 
     beforeAll(async () => {
-        const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
-            : chainId == 42 ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
-                : `https://api.avax.network/ext/bc/C/rpc`;
-        // const providerUrl = `http://127.0.0.1:8545`;
+        // const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
+        //     : chainId == 42 ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
+        //         : `https://api.avax.network/ext/bc/C/rpc`;
+        const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        signer = provider.getSigner('0xB5E4846Db18d2B859c32951C843a5b7A2bf19126');
-        market = Market.find('0x5f973e06a59d0bafe464faf36d5b3b06e075c543', chainId)
-        console.log(market)
+        signer = provider.getSigner();
+        market = Market.find('0xd5736ba0be93c99a10e2264e8e4ebd54633306f8', chainId)
+        console.log(await signer.getAddress())
         // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 
@@ -85,12 +85,12 @@ describe("Market", () => {
     })
 
     it.skip('PendleMarket.swapExactIn', async () => {
-        const response = await market.methods(signer).swapExactIn(0.01, dummyTokenAmount);
+        const response = await market.methods({signer, provider, chainId}).swapExactIn(0.01, dummyTokenAmount);
         console.log(response);
     })
 
     it.skip('PendleMarket.swapExactOut', async () => {
-        const response = await market.methods(signer).swapExactOut(0.01, dummyTokenAmount);
+        const response = await market.methods({signer, provider, chainId}).swapExactOut(0.01, dummyTokenAmount);
         console.log(response);
     });
 
@@ -103,7 +103,7 @@ describe("Market", () => {
     })
 
     it.skip('PendleMarket.addDual', async () => {
-        const response = await market.methods(signer).addDual([dummyTokenAmount, dummyTokenAmount], 0.001);
+        const response = await market.methods({signer, provider, chainId}).addDual([dummyTokenAmount, dummyTokenAmount], 0.001);
         console.log(response);
     })
 
@@ -116,27 +116,27 @@ describe("Market", () => {
     })
 
     it.skip('PendleMarket.addSingle', async () => {
-        const response = await market.methods(signer).addSingle(dummyTokenAmount, 0.001);
+        const response = await market.methods({signer, provider, chainId}).addSingle(dummyTokenAmount, 0.001);
         console.log(response);
     })
 
     it('PendleMarket.removeDualDetails', async () => {
-        const response = await market.methods(signer).removeDualDetails(0.5);
+        const response = await market.methods({signer, provider, chainId}).removeDualDetails(0.5);
         console.log(response);
     })
 
-    it.skip('PendleMarket.removeDual', async () => {
-        const response = await market.methods(signer).removeDual(0.5, 0.001);
+    it.only('PendleMarket.removeDual', async () => {
+        const response = await market.methods({signer, provider, chainId}).removeDual(0.5, 0.001);
         console.log(response);
     })
 
     it('PendleMarket.removeSingleDetails', async () => {
-        const response = await market.methods(signer).removeSingleDetails(0.05, tokens.USDCToken, 0.001);
+        const response = await market.methods({signer, provider, chainId}).removeSingleDetails(0.05, tokens.USDCToken, 0.001);
         console.log(JSON.stringify(response, null, '  '));
     })
 
     it.skip('PendleMarket.removeSingle', async () => {
-        const response = await market.methods(signer).removeSingle(0.5, dummyToken, 0.001);
+        const response = await market.methods({signer, provider, chainId}).removeSingle(0.5, dummyToken, 0.001);
         console.log(response);
     })
 
@@ -154,7 +154,7 @@ describe("Market", () => {
         console.log(JSON.stringify(res, null, '  '));
     })
 
-    it.only('UniForkMarket.removeDual', async() => {
+    it('UniForkMarket.removeDual', async() => {
         const res = await market.methods({signer, provider, chainId}).removeDual(0.5, 0.01);
         console.log(res);
     })

@@ -94,12 +94,12 @@ describe("One click wrapper", () => {
     ), 0.001)
     console.log(JSON.stringify(res, null, '  '));
 
-    // const res1:SimulationDetails = await wrapper.methods(signer, chainId).simulate(Action.stakeOT, new TokenAmount(
+    // const res1:SimulationDetails = await wrapper.methods({signer, provider, chainId}).simulate(Action.stakeOT, new TokenAmount(
     //   ETHToken,
     //   BN.from(10).pow(20).toString()
     // ), 0.01)
     // console.log(JSON.stringify(res1.transactions[0], null, '  '));
-    // const res2 = await wrapper.methods(signer, chainId).simulate(Action.stakeYT, new TokenAmount(
+    // const res2 = await wrapper.methods({signer, provider, chainId}).simulate(Action.stakeYT, new TokenAmount(
     //   ETHToken,
     //   BN.from(10).pow(20).toString()
     // ), 0.01)

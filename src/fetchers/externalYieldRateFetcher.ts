@@ -7,8 +7,8 @@ import { BigNumber as BN, providers, Contract } from "ethers"
 import { getxJOEExchangeRate } from './priceFetcher';
 import BigNumber from 'bignumber.js';
 import { contracts } from '../contracts';
-import { fetchValuation } from '.';
-import { Token, TokenAmount } from '..';
+import { fetchValuation } from './priceFetcher';
+import { Token, TokenAmount } from '../entities';
 const axios = require('axios');
 
 export const fetchAaveYield = async (underlyingAddress: string) => {

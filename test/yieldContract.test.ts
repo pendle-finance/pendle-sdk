@@ -98,7 +98,7 @@ describe("Yiled Contract", () => {
   // it('yieldContract.mint', async () => {
   //   const cDAIContract = new Contract(Tokens.cDAIToken.address, contracts.IERC20.abi, provider);
   //   await cDAIContract.connect(signer).approve(networkInfo.contractAddresses.misc.PendleRouter, BN.from(10).pow(40));
-  //   const response = await yContract.methods(signer).mint(new TokenAmount(
+  //   const response = await yContract.methods({signer, provider, chainId}).mint(new TokenAmount(
   //     Tokens.cDAIToken,
   //     BN.from(10).pow(12).toString()
   //   ));
@@ -114,7 +114,7 @@ describe("Yiled Contract", () => {
   })
 
   // it.skip('yieldContract.redeem', async () => {
-  //   const response = await yContract.methods(signer).redeem(dummyTokenAmount);
+  //   const response = await yContract.methods({signer, provider, chainId}).redeem(dummyTokenAmount);
   //   console.log(response);
   // })
 })

@@ -18,7 +18,7 @@ describe('Trade Mining', () => {
     signer = provider.getSigner();
     tradeMining = new TradeMining();
   });
-  it.only('getTopTraders', async () => {
+  it('getTopTraders', async () => {
     var data = await tradeMining
       .methods(signer, 43114)
       .getTopTraders({ phase: 1, house: 'Pendle', numberOfTraders: 50 });
@@ -35,7 +35,7 @@ describe('Trade Mining', () => {
     console.log(data.length);
   });
 
-  it('getUserRank', async () => {
+  it.only('getUserRank', async () => {
     const data = await tradeMining.methods(signer, 43114).getUserRank({
       phase: 1,
       house: 'BenQi',
