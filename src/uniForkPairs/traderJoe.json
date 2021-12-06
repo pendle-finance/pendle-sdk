@@ -1,0 +1,13 @@
+[{
+    "address": "0x",
+    "token0": {
+        "address": "0x",
+        "decimals": 18,
+        "reserve": "12345"
+    },
+    "token1": {
+        "address": "0x",
+        "decimals": 18,
+        "reserve": "12345"
+    }
+}]
