@@ -1108,10 +1108,10 @@ export class UniForkMarket extends Market {
         inputTokenReserve = token0Reserve;
         otherTokenReserve = token1Reserve;
       } else {
-        inputToken = token0!;
-        otherToken = token1!;
-        inputTokenReserve = token0Reserve;
-        otherTokenReserve = token1Reserve;
+        inputToken = token1!;
+        otherToken = token0!;
+        inputTokenReserve = token1Reserve;
+        otherTokenReserve = token0Reserve;
       }
       return {
         otherTokenAmount: new TokenAmount(
