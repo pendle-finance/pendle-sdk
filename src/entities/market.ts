@@ -956,6 +956,7 @@ export class UniForkMarket extends Market {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const uniForkRouterContract: Contract = new Contract(this.getRouterAddress(chainId, this.protocol), contracts.UniswapRouter02.abi, provider);
     const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, provider);
+    
     const getSwapFeeApr = async (): Promise<string> => {
       return (await fetchSushiForkYield(this.address, chainId)).toString()
     }

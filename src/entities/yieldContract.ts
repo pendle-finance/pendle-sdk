@@ -41,7 +41,9 @@ export class YieldContract {
     }
 
     public useCompoundMath (): boolean {
-        return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || this.forgeIdInBytes == forgeIdsInBytes.BENQI;
+        return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || 
+               this.forgeIdInBytes == forgeIdsInBytes.BENQI ||
+               this.forgeIdInBytes == forgeIdsInBytes.WONDERLAND;
     }
 
     public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {

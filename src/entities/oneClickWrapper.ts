@@ -334,6 +334,7 @@ export class OneClickWrapper {
 
                 case forgeIdsInBytes.BENQI:
                 case forgeIdsInBytes.XJOE:
+                case forgeIdsInBytes.WONDERLAND:
                     const underlyingAddress: string = this.yieldContract.underlyingAsset.address;
                     const exchangeRate: BN = await pendleForgeContract.connect(provider).callStatic.getExchangeRate(underlyingAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                     outYieldTokenAmount = new TokenAmount(

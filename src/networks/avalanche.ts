@@ -1,5 +1,5 @@
 import { NetworkContractAddresses, StakingPoolType } from "./types";
-import { EXP_2023, forgeIdsInBytes, marketFactoryIds, EXP_2022JUN } from "../constants";
+import { EXP_2023, EXP_WONDERLAND, forgeIdsInBytes, marketFactoryIds, EXP_2022JUN } from "../constants";
 import { MarketProtocols } from "./types";
 
 export const avalancheContracts: NetworkContractAddresses = {
@@ -31,6 +31,13 @@ export const avalancheContracts: NetworkContractAddresses = {
             rewardTokenAddresses: ['0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'],
             forgeIdInBytes: forgeIdsInBytes.XJOE,
             expiry: EXP_2022JUN
+        },
+        {
+            address: "0x3cb265da2e7838b3ae2d9184d4223900761b1123",
+            underlyingAssetAddress: "0x136acd46c134e8269052c62a67042d6bdedde3c9",
+            rewardTokenAddresses: ["0x0da67235dd5787d67955420c84ca1cecd4e5bb3b"],
+            forgeIdInBytes: forgeIdsInBytes.WONDERLAND,
+            expiry: EXP_WONDERLAND
         }
     ],
     OTs: [
@@ -77,6 +84,14 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             forgeIdInBytes: forgeIdsInBytes.XJOE,
             expiry: EXP_2022JUN
+        },
+        {
+            address: "0xa13d1086e15f9848fb4bf7e8008ac5983382a4eb",
+            yieldTokenAddress: '0x0da67235dd5787d67955420c84ca1cecd4e5bb3b',
+            underlyingAssetAddress: '0x136acd46c134e8269052c62a67042d6bdedde3c9',
+            rewardTokenAddresses: [],
+            forgeIdInBytes: forgeIdsInBytes.WONDERLAND,
+            expiry: EXP_WONDERLAND
         }
     ],
     pendleMarkets: [
@@ -121,6 +136,15 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             rewardTokenAddresses: ['0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'],
             marketFactoryId: marketFactoryIds.GENERIC
+        },
+        {
+            address: '0x3424ce4aa5159fa19a11e22d442e0451e8148558',
+            pair: [
+                '0x3cb265da2e7838b3ae2d9184d4223900761b1123',
+                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+            ],
+            rewardTokenAddresses: ['0x0da67235dd5787d67955420c84ca1cecd4e5bb3b'],
+            marketFactoryId: marketFactoryIds.GENERIC
         }
     ],
     otherMarkets: [
@@ -160,6 +184,14 @@ export const avalancheContracts: NetworkContractAddresses = {
             address: '0xd1f377b881010cb97ab0890a5ef908c45bcf13f9',
             pair: [
                 '0x7d1e8650abd5f8363d63dc7ab838cec8c726dd38',
+                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+            ],
+            platform: MarketProtocols.TraderJoe
+        },
+        {
+            address: '0xfedaffb209d463fc247a4ebb0f694e4537e2a5a0',
+            pair: [
+                '0xa13d1086e15f9848fb4bf7e8008ac5983382a4eb',
                 '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
             ],
             platform: MarketProtocols.TraderJoe
@@ -269,6 +301,32 @@ export const avalancheContracts: NetworkContractAddresses = {
             interestTokensAddresses: [],
             expiry: EXP_2022JUN,
             active: true
+        },
+        {
+            address: '0x9528d45d6756639f7166776cf2f2e0760717e027',
+            inputTokenAddress: '0x3424ce4aa5159fa19a11e22d442e0451e8148558',
+            contractType: StakingPoolType.LmV1Multi,
+            rewardTokenAddresses: [
+                '0xfb98b335551a418cd0737375a2ea0ded62ea213b',
+                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ],
+            interestTokensAddresses: [
+                '0x0da67235dd5787d67955420c84ca1cecd4e5bb3b'
+            ],
+            expiry: EXP_WONDERLAND,
+            active: true
+        },
+        {
+            address: '0x11c8afbaf6f5cfa7f51f691803e3c52de0cc56bc',
+            inputTokenAddress: '0xfedaffb209d463fc247a4ebb0f694e4537e2a5a0',
+            contractType: StakingPoolType.LmV2Multi,
+            rewardTokenAddresses: [
+                '0xfb98b335551a418cd0737375a2ea0ded62ea213b',
+                '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7'
+            ],
+            interestTokensAddresses: [],
+            expiry: EXP_WONDERLAND,
+            active: true
         }
     ],
     misc: {
@@ -295,6 +353,7 @@ export const avalancheContracts: NetworkContractAddresses = {
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0x5802cd94b51b3cd5a8446a6d3fa26c25d97618c2",
         [forgeIdsInBytes.BENQI]: "0x23b868bebdfd2d6faedaa92e44aef6c8704612bc",
-        [forgeIdsInBytes.XJOE]: "0x09131d750f3f7e646fbdce6dd9699775fa0daaca"
+        [forgeIdsInBytes.XJOE]: "0x09131d750f3f7e646fbdce6dd9699775fa0daaca",
+        [forgeIdsInBytes.WONDERLAND]: "0xdd0f8542f1171d462d2aa74fa107a790ce93b06f"
     }
 }
