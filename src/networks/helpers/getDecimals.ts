@@ -57,11 +57,3 @@ export async function getDecimals(contractAddresses: NetworkContractAddresses = 
     }
     console.log(JSON.stringify(decimals, null, '  '));
 }
-
-getDecimals(avalancheContracts).then((value: any) => {
-    console.log("complete");
-    process.exit(0)
-}).catch((err: any) => {
-    console.error(err);
-    process.exit(1);
-})

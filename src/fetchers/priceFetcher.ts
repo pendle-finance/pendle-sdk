@@ -162,6 +162,9 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
       case networkInfo.contractAddresses.tokens.QI:
         return await fetchPriceFromCoingecko('benqi');
 
+      case networkInfo.contractAddresses.tokens.MEMO:
+        return await fetchPriceFromCoingecko('wonderland');
+
       case networkInfo.contractAddresses.tokens.xJOE:
         return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, provider, chainId);
     }

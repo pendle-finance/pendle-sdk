@@ -1,4 +1,4 @@
-import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHToken, Token, contracts } from '../src';
+import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHToken, Token, contracts, avalancheContracts } from '../src';
 // import { Market } from '../src/entities/market';
 import { Contract, ethers, providers } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -131,6 +131,10 @@ describe('Sdk', () => {
       ]
     });
     console.log(JSON.stringify(balances, null, '  '));
+  })
+
+  it.only('getDecimals', async() => {
+    await getDecimals(avalancheContracts)
   })
 
 });

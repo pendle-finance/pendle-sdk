@@ -207,7 +207,7 @@ export class PendleMarket extends Market {
     }
   };
 
-  public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
+  public override methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
     const marketContract = new Contract(this.address, contracts.IPendleMarket.abi, provider);

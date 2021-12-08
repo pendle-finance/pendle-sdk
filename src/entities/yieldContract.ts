@@ -161,9 +161,8 @@ export class YieldContract {
                     );
 
                 case forgeIdsInBytes.XJOE:
-                    return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
-
                 case forgeIdsInBytes.BENQI:
+                case forgeIdsInBytes.WONDERLAND:
                     return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
 
                 default:

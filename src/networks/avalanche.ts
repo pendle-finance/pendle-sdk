@@ -348,7 +348,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         qiUSDC: '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f',
         qiAVAX: '0x5c0401e81bc07ca70fad469b451682c0d747ef1c',
         xJOE: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33',
-        QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5'
+        QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
+        MEMO: '0x136acd46c134e8269052c62a67042d6bdedde3c9'
     },
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0x5802cd94b51b3cd5a8446a6d3fa26c25d97618c2",

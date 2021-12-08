@@ -44,18 +44,17 @@ describe("Market", () => {
     let market: Market;
 
     beforeAll(async () => {
-        // const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
-        //     : chainId == 42 ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
-        //         : `https://api.avax.network/ext/bc/C/rpc`;
-        const providerUrl = `http://127.0.0.1:8545`;
+        const providerUrl = chainId == 1 ? `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
+            : chainId == 42 ? `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
+                : `https://api.avax.network/ext/bc/C/rpc`;
+        // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        market = Market.find('0xd5736ba0be93c99a10e2264e8e4ebd54633306f8', chainId)
-        console.log(await signer.getAddress())
+        market = Market.find('0x3424ce4aa5159fa19a11e22d442e0451e8148558', chainId)
         // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 
-    it("PendleMarket.readMarketDetails", async () => {
+    it.only("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods({signer, provider, chainId}).readMarketDetails();
 
         console.log(JSON.stringify(marketDetails, null, '  '));
@@ -125,7 +124,7 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it.only('PendleMarket.removeDual', async () => {
+    it('PendleMarket.removeDual', async () => {
         const response = await market.methods({signer, provider, chainId}).removeDual(0.5, 0.001);
         console.log(response);
     })
