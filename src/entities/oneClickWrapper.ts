@@ -93,15 +93,11 @@ const dummySimulation = {
 }
 
 const forgeIdToMode: Record<string, number> = {
-    [forgeIdsInBytes.AAVE]: 0,
-    [forgeIdsInBytes.COMPOUND]: 1,
-    [forgeIdsInBytes.COMPOUND_UPGRADED]: 1,
-    [forgeIdsInBytes.SUSHISWAP_SIMPLE]: 3,
-    [forgeIdsInBytes.SUSHISWAP_COMPLEX]: 3,
-    [forgeIdsInBytes.JOE_COMPLEX]: 3,
-    [forgeIdsInBytes.JOE_SIMPLE]: 3,
-    [forgeIdsInBytes.BENQI]: 1,
-    [forgeIdsInBytes.XJOE]: 5
+    [forgeIdsInBytes.BENQI]: 0,
+    [forgeIdsInBytes.JOE_COMPLEX]: 1,
+    [forgeIdsInBytes.JOE_SIMPLE]: 1,
+    [forgeIdsInBytes.XJOE]: 2,
+    [forgeIdsInBytes.WONDERLAND]: 3
 }
 
 export type DataTknzSingle = {
@@ -159,6 +155,23 @@ export type DataAddLiqYT = {
     amountTokenMin: string; // theoritical - slippagef
     marketFactoryId: string;
     liqMiningAddr: string;
+}
+
+export type DataSwap = {
+    amountInMax: string;
+    amountOut: string;
+    path: string[];
+}
+
+export type PairTokenAmount = {
+    token: string;
+    amount: string;
+}
+
+export type DataPull = {
+    swaps: DataSwap[];
+    pulls: PairTokenAmount[];
+    deadline: number;
 }
 
 export class OneClickWrapper {
@@ -289,6 +302,25 @@ export class OneClickWrapper {
             const inAmount: BN = BN.from(fixedInputAmount.rawAmount());
 
             var outYieldTokenAmount: TokenAmount;
+
+            if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.WONDERLAND && isSameAddress(fixedInputAmount.token.address, networkInfo.contractAddresses.tokens.TIME)) {
+                const MEMOAmount: TokenAmount = new TokenAmount(
+                    new Token(
+                        networkInfo.contractAddresses.tokens.MEMO,
+                        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.MEMO]
+                    ),
+                    fixedInputAmount.rawAmount()
+                )
+                transactions.push({
+                    action: TransactionAction.stake,
+                    paid: [fixedInputAmount],
+                    maxPaid: [fixedInputAmount],
+                    received: [MEMOAmount],
+                    user: walletAddress,
+                    protocol: "external"
+                });
+                fixedInputAmount = MEMOAmount;
+            }
 
             switch (this.yieldContract.forgeIdInBytes) {
                 case forgeIdsInBytes.JOE_COMPLEX:
@@ -539,7 +571,7 @@ export class OneClickWrapper {
             }
         }
 
-        const getTestInputTokenAmount = (): TokenAmount => {
+        const getTestInputTokenAmount = (userInputTokenAmount: TokenAmount): TokenAmount => {
             const testAmount: BN =  BN.from(10).pow(18);
             if (isUnderlyingLP()) {
                 const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
@@ -551,7 +583,7 @@ export class OneClickWrapper {
                 return testTokenAmount;
             } else {
                 return new TokenAmount(
-                    this.yieldContract.underlyingAsset,
+                    userInputTokenAmount.token,
                     testAmount.toString()
                 )
             }
@@ -561,16 +593,36 @@ export class OneClickWrapper {
             const pendleFixture: PendleFixture = await getPendleFixture();
             inputTokenAmount = wrapEth(inputTokenAmount);
 
-            const testTokenAmount = getTestInputTokenAmount();
+            const testTokenAmount = getTestInputTokenAmount(inputTokenAmount);
 
             const testSimulationResult: SimulationDetails = await simulateWithFixedInput(action, pendleFixture, testTokenAmount, slippage, walletAddress);
             const testInputTokenAmount: TokenAmount = testSimulationResult.tokenAmounts.find((t: TokenAmount) => isSameAddress(t.token.address, inputTokenAmount.token.address))!;
-            const scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
+            var scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
+                        
             return unwrapEthInSimulation(scaledSimulation);
         }
 
-        const send = async (action: Action, sTxns: Transaction[], slippage: number): Promise<providers.TransactionResponse> => {
+        const getDataPullWithNoSwap = (sDetails: SimulationDetails, deadline: BN): DataPull => {
+            return {
+                swaps: [],
+                pulls: sDetails.tokenAmounts.map((t: TokenAmount): PairTokenAmount=> {
+                    return {
+                        token: t.token.address,
+                        amount: t.rawAmount()
+                    }
+                }),
+                deadline: deadline.toNumber()
+            }
+        }
+
+        const send = async (action: Action, sDetails: SimulationDetails, slippage: number): Promise<providers.TransactionResponse> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
+            const sTxns: Transaction[] = sDetails.transactions;
+            const currentTime: BN = BN.from(await getCurrentTimestamp(provider));
+            const deadline: BN = currentTime.add(ONE_MINUTE.mul(60).mul(3));
+
+            const dataPull: DataPull = getDataPullWithNoSwap(sDetails, deadline);
+
             const maxEthPaid: BN = sTxns.reduce((p: BN, txn: Transaction): BN => {
                 const ethInThisTxn: BN = txn.maxPaid.reduce((pp: BN, t: TokenAmount): BN => {
                     if (isSameAddress(t.token.address, ETHAddress)) {
@@ -586,8 +638,6 @@ export class OneClickWrapper {
                 forge: forgeAddress,
                 expiryYT: this.yieldContract.expiry
             } as DataTknz;
-            const currentTime: BN = BN.from(await getCurrentTimestamp(provider));
-            const deadline: BN = currentTime.add(ONE_MINUTE.mul(60).mul(3));
 
             if (isUnderlyingLP()) {
                 dataTknz.single = dummyDataTknzSingle;
@@ -613,7 +663,6 @@ export class OneClickWrapper {
                     amount: preMintTxn.maxPaid[0].rawAmount()
                 }
                 dataTknz.single = dataTknzSingle;
-                
             }
 
             var dataAddLiqOT: DataAddLiqOT = {} as DataAddLiqOT, dataAddLiqYT: DataAddLiqYT = {} as DataAddLiqYT;
@@ -644,6 +693,7 @@ export class OneClickWrapper {
                 case Action.stakeOT:
                     var args: any[] = [
                         mode,
+                        dataPull,
                         dataTknz,
                         dataAddLiqOT
                     ];
@@ -653,6 +703,7 @@ export class OneClickWrapper {
                 case Action.stakeYT:
                     args = [
                         mode,
+                        dataPull,
                         dataTknz,
                         dataAddLiqYT
                     ];
@@ -662,6 +713,7 @@ export class OneClickWrapper {
                 case Action.stakeOTYT:
                     args = [
                         mode,
+                        dataPull,
                         dataTknz,
                         dataAddLiqOT,
                         dataAddLiqYT

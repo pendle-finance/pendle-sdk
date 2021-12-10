@@ -336,7 +336,7 @@ export const avalancheContracts: NetworkContractAddresses = {
         PendleData: '0x94d7e5c48ca9627001facb04d1820c54dff3032c',
         MultiCallV2: '0x11b8399bc71e8b67a0f7cca2663612af1ca38536',
         JOE_MASTERCHEFV2: '0xd6a4f121ca35509af06a0be99093d08462f53052',
-        PendleWrapper: '0xaad448ab306c31563bc4d30d73f2879bca909a9a',
+        PendleWrapper: '0xa2bd794aa28a46f180fad87ece6b56e910434946',
         Comptroller: '0x486af39519b4dc9a7fccd318217352830e8ad9b4',
         JoeRouter: '0x60ae616a2155ee3d9a68541ba4544862310933d4'
     },
@@ -349,7 +349,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         qiAVAX: '0x5c0401e81bc07ca70fad469b451682c0d747ef1c',
         xJOE: '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33',
         QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
-        MEMO: '0x136acd46c134e8269052c62a67042d6bdedde3c9'
+        MEMO: '0x136acd46c134e8269052c62a67042d6bdedde3c9',
+        TIME: '0xb54f16fb19478766a268f172c9480f8da1a7c9c3'
     },
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0x5802cd94b51b3cd5a8446a6d3fa26c25d97618c2",
