@@ -1,4 +1,4 @@
-import { OneClickWrapper, Token, EXP_2022, EXP_2023, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails, ETHToken, dummyAddress, EXP_2022JUN } from "../src";
+import { OneClickWrapper, Token, EXP_2022, EXP_2023, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails, ETHToken, dummyAddress, EXP_2022JUN, EXP_WONDERLAND } from "../src";
 import { NetworkInfo } from '../src/networks';
 
 import { ethers, BigNumber as BN, utils } from 'ethers';
@@ -73,24 +73,24 @@ describe("One click wrapper", () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner('0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC');
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.JOE_SIMPLE),
+      utils.parseBytes32String(forgeIdsInBytes.WONDERLAND),
       new Token(
-        '0x3acd2ff1c3450bc8a9765afd8d0dea8e40822c86',
+        '0x136acd46c134e8269052c62a67042d6bdedde3c9',
         18
       ),
-      EXP_2023.toNumber(),
+      EXP_WONDERLAND.toNumber(),
       chainId
     );
     wrapper = new OneClickWrapper(yieldContract)
   });
 
-  it('Simulate stake', async () => {
+  it.only('Simulate stake', async () => {
     const res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulate(Action.stakeOTYT, new TokenAmount(
       new Token(
-        networkInfo.contractAddresses.tokens.PENDLE,
-        18
+        networkInfo.contractAddresses.tokens.USDC,
+        6
       ),
-      BN.from(10).pow(20).toString()
+      BN.from(10).pow(9).toString()
     ), 0.001)
     console.log(JSON.stringify(res, null, '  '));
 
@@ -107,7 +107,7 @@ describe("One click wrapper", () => {
 
   })
 
-  it.only('apr', async() => {
+  it('apr', async() => {
     const res2 = await wrapper.methods({signer, provider: signer.provider, chainId}).apr(Action.stakeOTYT);
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })

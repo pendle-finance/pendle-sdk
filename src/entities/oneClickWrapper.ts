@@ -582,8 +582,11 @@ export class OneClickWrapper {
                 )
                 return testTokenAmount;
             } else {
+                const inputToken: Token = this.yieldContract.forgeIdInBytes == forgeIdsInBytes.WONDERLAND && isSameAddress(userInputTokenAmount.token.address, networkInfo.contractAddresses.tokens.TIME)
+                                          ? userInputTokenAmount.token
+                                          : this.yieldContract.underlyingAsset;
                 return new TokenAmount(
-                    userInputTokenAmount.token,
+                    inputToken,
                     testAmount.toString()
                 )
             }

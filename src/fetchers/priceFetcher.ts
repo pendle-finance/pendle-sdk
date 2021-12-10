@@ -143,6 +143,7 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
   } else if (chainId == 43114) {
     switch (address.toLowerCase()) {
       case networkInfo.contractAddresses.tokens.USDC:
+      case networkInfo.contractAddresses.tokens.MIM:
         return new BigNumber(1)
 
       case networkInfo.contractAddresses.tokens.qiUSDC:
