@@ -29,6 +29,7 @@ const UniswapV2Pair = require('@pendle/core/build/artifacts/contracts/interfaces
 const ICToken = require('@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json');
 const IQiToken = require('@pendle/core/build/artifacts/contracts/interfaces/IQiToken.sol/IQiToken.json');
 const BenqiComptroller = require('../abis/BenqiComptroller.json');
+const WrappedMEMO = require('../abis/WrappedMEMO.json')
 
 //TODO: User proper IERC20
 
@@ -63,5 +64,6 @@ export const contracts = {
   UniswapV2Pair,
   ICToken,
   IQiToken,
-  BenqiComptroller
+  BenqiComptroller,
+  WrappedMEMO
 };

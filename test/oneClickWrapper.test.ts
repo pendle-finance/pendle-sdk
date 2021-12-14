@@ -76,7 +76,7 @@ describe("One click wrapper", () => {
       utils.parseBytes32String(forgeIdsInBytes.WONDERLAND),
       new Token(
         '0x136acd46c134e8269052c62a67042d6bdedde3c9',
-        18
+        9
       ),
       EXP_WONDERLAND.toNumber(),
       chainId
@@ -84,7 +84,7 @@ describe("One click wrapper", () => {
     wrapper = new OneClickWrapper(yieldContract)
   });
 
-  it.only('Simulate stake', async () => {
+  it('Simulate stake', async () => {
     const res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulate(Action.stakeOTYT, new TokenAmount(
       new Token(
         networkInfo.contractAddresses.tokens.USDC,
@@ -112,12 +112,15 @@ describe("One click wrapper", () => {
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it.skip('send', async() => {
+  it.only('send', async() => {
     const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulate(Action.stakeOTYT, new TokenAmount(
-      ETHToken,
-      BN.from(10).pow(16).toString()
+      new Token(
+        '0x136acd46c134e8269052c62a67042d6bdedde3c9',
+        9
+      ),
+      BN.from(10).pow(5).toString()
     ), 0.01)
-    const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res.transactions, 0.01);
+    const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.01);
     console.log(JSON.stringify(res, null, '  '));
   })
 })

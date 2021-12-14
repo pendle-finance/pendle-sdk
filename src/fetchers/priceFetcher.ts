@@ -112,6 +112,12 @@ export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, pr
   return (await fetchTokenPrice({address: JOEAddress, provider, chainId})).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, provider))
 }
 
+export async function fetchWrappedMEMOPrice(wMEMOAddress: string, MEMOAddress: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
+  const wMEMOContract: Contract = new Contract(wMEMOAddress, contracts.WrappedMEMO.abi, provider);
+  const MEMOExchangeRate: BigNumber = new BigNumber((await wMEMOContract.wMEMOToMEMO(decimalFactor(18))).toString()).div(decimalFactor(9));
+  return (await fetchTokenPrice({address: MEMOAddress, provider, chainId})).multipliedBy(MEMOExchangeRate);
+}
+
 export async function fetchBasicTokenPrice(address: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
@@ -165,6 +171,9 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
 
       case networkInfo.contractAddresses.tokens.MEMO:
         return await fetchPriceFromCoingecko('wonderland');
+
+      case networkInfo.contractAddresses.tokens.wMEMO:
+        return await fetchWrappedMEMOPrice(address, networkInfo.contractAddresses.tokens.MEMO, provider, chainId);
 
       case networkInfo.contractAddresses.tokens.xJOE:
         return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, provider, chainId);

@@ -33,7 +33,7 @@ export const avalancheContracts: NetworkContractAddresses = {
             expiry: EXP_2022JUN
         },
         {
-            address: "0x3cb265da2e7838b3ae2d9184d4223900761b1123",
+            address: "0xceb4181f8e80837437a0a2dd4d97e5688471c4b3",
             underlyingAssetAddress: "0x136acd46c134e8269052c62a67042d6bdedde3c9",
             rewardTokenAddresses: ["0x0da67235dd5787d67955420c84ca1cecd4e5bb3b"],
             forgeIdInBytes: forgeIdsInBytes.WONDERLAND,
@@ -86,7 +86,7 @@ export const avalancheContracts: NetworkContractAddresses = {
             expiry: EXP_2022JUN
         },
         {
-            address: "0xa13d1086e15f9848fb4bf7e8008ac5983382a4eb",
+            address: "0xb7e446ff1a2eeea8cd07331c7e06b0276d0b06b7",
             yieldTokenAddress: '0x0da67235dd5787d67955420c84ca1cecd4e5bb3b',
             underlyingAssetAddress: '0x136acd46c134e8269052c62a67042d6bdedde3c9',
             rewardTokenAddresses: [],
@@ -138,10 +138,10 @@ export const avalancheContracts: NetworkContractAddresses = {
             marketFactoryId: marketFactoryIds.GENERIC
         },
         {
-            address: '0x3424ce4aa5159fa19a11e22d442e0451e8148558',
+            address: '0x11b9346eefa301e278f246d857c0a6edfbf97fb4',
             pair: [
-                '0x3cb265da2e7838b3ae2d9184d4223900761b1123',
-                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+                '0xceb4181f8e80837437a0a2dd4d97e5688471c4b3',
+                '0x130966628846bfd36ff31a822705796e8cb8c18d'
             ],
             rewardTokenAddresses: ['0x0da67235dd5787d67955420c84ca1cecd4e5bb3b'],
             marketFactoryId: marketFactoryIds.GENERIC
@@ -189,10 +189,10 @@ export const avalancheContracts: NetworkContractAddresses = {
             platform: MarketProtocols.TraderJoe
         },
         {
-            address: '0xfedaffb209d463fc247a4ebb0f694e4537e2a5a0',
+            address: '0x588dc0dd7c8be073e9da79307e023f1f756f06c6',
             pair: [
-                '0xa13d1086e15f9848fb4bf7e8008ac5983382a4eb',
-                '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664'
+                '0xb7e446ff1a2eeea8cd07331c7e06b0276d0b06b7',
+                '0x130966628846bfd36ff31a822705796e8cb8c18d'
             ],
             platform: MarketProtocols.TraderJoe
         }
@@ -303,8 +303,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             active: true
         },
         {
-            address: '0x9528d45d6756639f7166776cf2f2e0760717e027',
-            inputTokenAddress: '0x3424ce4aa5159fa19a11e22d442e0451e8148558',
+            address: '0x9ada5ce16cdbd76afdd28b891cd0a1a9f659dad6',
+            inputTokenAddress: '0x11b9346eefa301e278f246d857c0a6edfbf97fb4',
             contractType: StakingPoolType.LmV1Multi,
             rewardTokenAddresses: [
                 '0xfb98b335551a418cd0737375a2ea0ded62ea213b',
@@ -317,8 +317,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             active: true
         },
         {
-            address: '0x11c8afbaf6f5cfa7f51f691803e3c52de0cc56bc',
-            inputTokenAddress: '0xfedaffb209d463fc247a4ebb0f694e4537e2a5a0',
+            address: '0x2aa0bec34deeb6987c118ce353d14eea6def24ce',
+            inputTokenAddress: '0x588dc0dd7c8be073e9da79307e023f1f756f06c6',
             contractType: StakingPoolType.LmV2Multi,
             rewardTokenAddresses: [
                 '0xfb98b335551a418cd0737375a2ea0ded62ea213b',
@@ -351,7 +351,8 @@ export const avalancheContracts: NetworkContractAddresses = {
         QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
         MEMO: '0x136acd46c134e8269052c62a67042d6bdedde3c9',
         TIME: '0xb54f16fb19478766a268f172c9480f8da1a7c9c3',
-        MIM: '0x130966628846bfd36ff31a822705796e8cb8c18d'
+        MIM: '0x130966628846bfd36ff31a822705796e8cb8c18d',
+        wMEMO: '0x0da67235dd5787d67955420c84ca1cecd4e5bb3b'
     },
     forges: {
         [forgeIdsInBytes.JOE_SIMPLE]: "0x5802cd94b51b3cd5a8446a6d3fa26c25d97618c2",

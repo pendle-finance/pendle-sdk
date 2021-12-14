@@ -18,24 +18,24 @@ describe('Trade Mining', () => {
     signer = provider.getSigner();
     tradeMining = new TradeMining();
   });
-  it('getTopTraders', async () => {
+  it.only('getTopTraders', async () => {
+    // var data = await tradeMining
+    //   .methods(signer, 43114)
+    //   .getTopTraders({ phase: 1, house: 'Pendle', numberOfTraders: 100 });
+    // console.log(data)
+
+    // var data = await tradeMining
+    //   .methods(signer, 43114)
+    //   .getTopTraders({ phase: 1, house: 'BenQi', numberOfTraders: 100 });
+
+    // console.log(data)
     var data = await tradeMining
       .methods(signer, 43114)
-      .getTopTraders({ phase: 1, house: 'Pendle', numberOfTraders: 50 });
-    console.log(data.length)
-
-    data = await tradeMining
-      .methods(signer, 43114)
-      .getTopTraders({ phase: 1, house: 'BenQi', numberOfTraders: 50 });
-
-    console.log(data.length)
-    data = await tradeMining
-      .methods(signer, 43114)
-      .getTopTraders({ phase: 1, house: 'TraderJoe', numberOfTraders: 50 });
-    console.log(data.length);
+      .getTopTraders({ phase: 1, house: 'TraderJoe', numberOfTraders: 100 });
+    console.log(data);
   });
 
-  it.only('getUserRank', async () => {
+  it('getUserRank', async () => {
     const data = await tradeMining.methods(signer, 43114).getUserRank({
       phase: 1,
       house: 'BenQi',
