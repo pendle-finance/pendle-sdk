@@ -61,5 +61,5 @@ export const traderJoeSubgraphApi: string = "https://api.thegraph.com/subgraphs/
 export const PendleSubgraphUrlMapping: Record<number, string> = {
   1: 'https://api.thegraph.com/subgraphs/name/ngfam/pendle',
   42: 'https://api.thegraph.com/subgraphs/name/ngfam/pendle-kovan',
-  43114: 'https://api.thegraph.com/subgraphs/name/josephsaw/pendle-avalanche-staging'
+  43114: 'https://api.thegraph.com/subgraphs/name/ngfam/pendle-avalanche'
 }
