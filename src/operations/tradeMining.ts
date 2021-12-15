@@ -4,6 +4,7 @@ import { NetworkInfo } from '../networks';
 import { distributeConstantsByNetwork } from '../helpers';
 import { TokenAmount } from '../entities/tokenAmount';
 import { Token } from '../entities/token';
+import { PendleSubgraphUrlMapping } from '..';
 
 export type Valuation = {
   currency: String; // 'USD'
@@ -45,7 +46,7 @@ export class TradeMining {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(
       chainId || 43114
     );
-    const pendleSubgraphSdk = new PendleTradeMiningQuerySet(chainId || 43114);
+    const pendleSubgraphSdk = new PendleTradeMiningQuerySet(PendleSubgraphUrlMapping[chainId || 43114]);
 
     const getTopTraders = async ({
       phase,

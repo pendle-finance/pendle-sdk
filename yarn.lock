@@ -1918,15 +1918,14 @@
     hardhat-gas-reporter "^1.0.4"
     solidity-coverage "^0.7.16"
 
-"@pendle/subgraph-sdk@1.0.41":
-  version "1.0.41"
-  resolved "https://registry.yarnpkg.com/@pendle/subgraph-sdk/-/subgraph-sdk-1.0.41.tgz#e15c767fef8208d2535e0cae4112cdf9fb6a7099"
-  integrity sha512-q8mLxVkUxXpDbMnEfXpBKa1X6wTYzmITQGN9EOnIGrx8cwWMc4+fBY8bLT9qWoTMMT61jQCE73uqy0VTDVwgkg==
+"@pendle/subgraph-sdk@1.0.34":
+  version "1.0.34"
+  resolved "https://registry.yarnpkg.com/@pendle/subgraph-sdk/-/subgraph-sdk-1.0.34.tgz#8e75e63761d9847dc9d638ddd8b1ab38801b1d0b"
+  integrity sha512-kSxSfbJse7DCtxYUkPlFPbDj4doCYBSfddoLBcZAzLdoCFxdNhgaxen8hIi8ifLb5sEXA7XbLSrORC1c+oRrjQ==
   dependencies:
     bignumber.js "^9.0.1"
     graphql "^15.6.1"
     graphql-request "^3.5.0"
-    tsdx "^0.14.1"
     web3-eth "^1.5.2"
 
 "@polka/url@^1.0.0-next.20":
