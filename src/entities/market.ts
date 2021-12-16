@@ -13,7 +13,7 @@ import {
 } from './transactionFetcher';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
 import { forgeIdsInBytes, ONE_DAY, ONE_MINUTE, ETHAddress, ZERO } from '../constants';
-import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield } from '../fetchers/externalYieldRateFetcher';
+import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield, fetchWonderlandYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactionFetcher/types';
 import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
 
@@ -251,6 +251,10 @@ export class PendleMarket extends Market {
 
           case forgeIdsInBytes.XJOE:
             underlyingYieldRate = await fetchXJOEYield(provider, chainId);
+            break;
+
+          case forgeIdsInBytes.WONDERLAND:
+            underlyingYieldRate = await fetchWonderlandYield(provider, chainId);
             break;
 
           // TODO: add Uniswap support here

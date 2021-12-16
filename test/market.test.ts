@@ -50,7 +50,7 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        market = Market.find('0x3424ce4aa5159fa19a11e22d442e0451e8148558', chainId)
+        market = Market.find('0x11b9346eefa301e278f246d857c0a6edfbf97fb4', chainId)
         // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 

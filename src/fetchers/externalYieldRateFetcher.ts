@@ -143,3 +143,20 @@ export async function fetchXJOEYield(provider: providers.JsonRpcProvider, chainI
   ), provider, chainId);
   return sevenDayTradingVolume.multipliedBy(365).div(7).multipliedBy(0.0005).div(joeValuelocked.amount).toNumber()
 }
+export async function fetchWonderlandYield(provider: providers.JsonRpcProvider, chainId?: number): Promise<number> {
+  if (chainId != 43114) {
+    throw new Error(`Unsupported chainId ${chainId} in fetchWonderlandYield`);
+  }
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+  const TIMEStakingAddress: string = networkInfo.contractAddresses.misc.TIMEStaking;
+  const TIMEStakingContract: Contract = new Contract(TIMEStakingAddress, contracts.TIMEStaking.abi, provider);
+  const epoch = await TIMEStakingContract.epoch();
+  const stakingReward = epoch.distribute;
+
+  const memoContract: Contract = new Contract(networkInfo.contractAddresses.tokens.MEMO, contracts.MEMOToken.abi, provider);
+
+  const circ = await memoContract.circulatingSupply();
+  const stakingRebase = stakingReward / circ;
+  const stakingAPY = Math.pow(1 + stakingRebase, 365 * 3) - 1;
+  return stakingAPY;
+}
