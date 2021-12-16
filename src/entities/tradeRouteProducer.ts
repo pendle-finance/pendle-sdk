@@ -37,15 +37,15 @@ function unwrapJoeTokenToToken(joeToken: JoeToken): Token {
 function unwrapJoeTokenAmountToTokenAmount(joeTokenAmount: JoeTokenAmount): TokenAmount {
     return new TokenAmount(unwrapJoeTokenToToken(joeTokenAmount.token), joeTokenAmount.toExact());
 }
-export function computeTradeRoute(inTokenAmount: TokenAmount, outToken : Token): Trade {
+export function computeTradeRoute(inToken: Token, outTokenAmount: TokenAmount): Trade {
     if (traderJoePairs.length === 0) {
         populateJoePairs();
     }
-    const inTokenAmountJoe: JoeTokenAmount = wrapTokenAmountToJoeTokenAmount(inTokenAmount);
-    const bestTrade: JoeTrade = JoeTrade.bestTradeExactIn(traderJoePairs, inTokenAmountJoe, wrapTokenToJoeToken(outToken))[0];
+    const outTokenAmountJoe: JoeTokenAmount = wrapTokenAmountToJoeTokenAmount(outTokenAmount);
+    const bestTrade: JoeTrade = JoeTrade.bestTradeExactOut(traderJoePairs, wrapTokenToJoeToken(inToken), outTokenAmountJoe)[0];
     return {
         path: bestTrade.route.path.map((t: JoeToken) => t.address),
-        input: inTokenAmount,
-        outPut: unwrapJoeTokenAmountToTokenAmount(bestTrade.outputAmount as JoeTokenAmount)
+        input: unwrapJoeTokenAmountToTokenAmount(bestTrade.inputAmount as JoeTokenAmount),
+        outPut: outTokenAmount
     }
 }
