@@ -7,7 +7,7 @@ import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config()
 jest.setTimeout(300000);
 
-var chainId = 43114;
+var chainId = 1;
 
 const PendleSingle: StakingPool = StakingPool.find('0x07282f2ceebd7a65451fcd268b364300d9e6d7f5', '0x808507121b80c02388fad14726482e061b8da827',1);
 const OTPE2022Pool: StakingPool = StakingPool.find('0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc', '0xb124c4e18a282143d362a066736fd60d22393ef4', 1);
@@ -31,9 +31,9 @@ describe("Staking pools", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl, chainId);
         signer = provider.getSigner('0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb');
-        sp = StakingPool.find('0x11c8afbaf6f5cfa7f51f691803e3c52de0cc56bc', '0xfedaffb209d463fc247a4ebb0f694e4537e2a5a0', chainId);
+        sp = StakingPool.find('0x07282f2ceebd7a65451fcd268b364300d9e6d7f5', '0x808507121b80c02388fad14726482e061b8da827', chainId);
     });
-    it('Get totalStaked', async() => {
+    it.only('Get totalStaked', async() => {
         const totalStake = await sp.methods({signer, provider, chainId}).getTotalStaked();
         console.log(JSON.stringify(totalStake, null, '  '));
     })

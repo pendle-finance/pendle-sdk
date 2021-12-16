@@ -46,7 +46,7 @@ export class TradeMining {
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(
       chainId || 43114
     );
-    const pendleSubgraphSdk = new PendleTradeMiningQuerySet(PendleSubgraphUrlMapping[chainId || 43114]);
+    const pendleSubgraphSdk = new PendleTradeMiningQuerySet(chainId || 43114);
 
     const getTopTraders = async ({
       phase,

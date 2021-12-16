@@ -195,7 +195,7 @@ export class StakingPool {
     const decimalsRecord: Record<string, number> = networkInfo.decimalsRecord;
 
     const Lm1s: LMINFO[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
-      return StakingPool.isLmV1ByType(stakingPoolInfo.contractType);
+      return StakingPool.isLmV1ByType(stakingPoolInfo.contractType) ;
     })
     const Lm2s: LMINFO[] = stakingPools.filter((stakingPoolInfo: LMINFO) => {
       return StakingPool.isLmV2ByType(stakingPoolInfo.contractType);
@@ -205,22 +205,29 @@ export class StakingPool {
       userAddress: string
     ): Promise<PoolYields[]> => {
       const promises: Promise<PairTokenUints[]>[] = [];
+      const currentTime: number = await getCurrentTimestamp(provider);
+      const startedLm1s: LMINFO[] = Lm1s.filter((stakingPoolInfo: LMINFO) => {
+        return currentTime >= parseInt(stakingPoolInfo.startTime);
+      })
+      const startedLm2s: LMINFO[] = Lm2s.filter((stakingPoolInfo: LMINFO) => {
+        return currentTime >= parseInt(stakingPoolInfo.startTime);
+      })
       promises.push(RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemLmInterests(
-        Lm1s.map((LmInfo: LMINFO) => LmInfo.address),
-        Lm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
+        startedLm1s.map((LmInfo: LMINFO) => LmInfo.address),
+        startedLm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
         userAddress
       ));
       promises.push(RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemLmRewards(
-        Lm1s.map((LmInfo: LMINFO) => LmInfo.address),
-        Lm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
+        startedLm1s.map((LmInfo: LMINFO) => LmInfo.address),
+        startedLm1s.map((LmInfo: LMINFO) => LmInfo.expiry),
         userAddress
       ));
       promises.push(RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemLmV2Interests(
-        Lm2s.map((LmInfo: LMINFO) => LmInfo.address),
+        startedLm2s.map((LmInfo: LMINFO) => LmInfo.address),
         userAddress
       ));
       promises.push(RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemLmV2Rewards(
-        Lm2s.map((LmInfo: LMINFO) => LmInfo.address),
+        startedLm2s.map((LmInfo: LMINFO) => LmInfo.address),
         userAddress
       ));
       const values: PairTokenUints[][] = (await Promise.all(promises));
@@ -230,11 +237,11 @@ export class StakingPool {
       const userLm2Interests: PairTokenUints[] = values[2];
       const userLm2Rewards: PairTokenUints[] = values[3];
 
-      const Lm1InterestsAndRewards = indexRange(0, Lm1s.length).map((i: number) => {
+      const Lm1InterestsAndRewards = indexRange(0, startedLm1s.length).map((i: number) => {
         return populatePoolYields(Lm1s[i], userLm1Interests[i].toTokenAmounts(chainId), userLm1Rewards[i].toTokenAmounts(chainId), decimalsRecord);
       });
 
-      const Lm2InterestsAndRewards = indexRange(0, Lm2s.length).map((i: number) => {
+      const Lm2InterestsAndRewards = indexRange(0, startedLm2s.length).map((i: number) => {
         return populatePoolYields(Lm2s[i], userLm2Interests[i].toTokenAmounts(chainId), userLm2Rewards[i].toTokenAmounts(chainId), decimalsRecord);
       });
 

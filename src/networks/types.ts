@@ -29,6 +29,7 @@ export type LMINFO = {
     interestTokensAddresses: string[],
     expiry?: BN,
     active: boolean
+    startTime: string
 };
 export type YTINFO = {
     address: string,

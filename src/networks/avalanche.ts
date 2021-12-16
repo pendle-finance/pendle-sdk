@@ -210,7 +210,8 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0xbeb5d47a3f720ec0a390d04b4d41ed7d9688bc7f'
             ],
             expiry: EXP_2023,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0x224d395e9e123bc9c37bff8bcd845562d5232713',
@@ -222,7 +223,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             expiry: EXP_2023,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0x47a3e9d5c87651d4074ef67a160afdb3f42cb242',
@@ -236,7 +238,8 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0x5c0401e81bc07ca70fad469b451682c0d747ef1c'
             ],
             expiry: EXP_2023,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0xfe60eec35e3c4aad1e69f10957ad0a7d3cfc6cea',
@@ -248,7 +251,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             expiry: EXP_2023,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0x204e698a71bb1973823517c74be041a985eaa46e',
@@ -262,7 +266,8 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0x3acd2ff1c3450bc8a9765afd8d0dea8e40822c86'
             ],
             expiry: EXP_2023,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0xb3c6772f341ad234fa41f8c4f981cf4489dfa6e9',
@@ -274,7 +279,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             expiry: EXP_2023,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0xa3e0ca7e35f47f6547c0c2d8f005312c2188e70f',
@@ -288,7 +294,8 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0x57319d41f71e81f3c65f2a47ca4e001ebafd4f33'
             ],
             expiry: EXP_2022JUN,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0xd0788af7a613b81f437a51b96594a6387c7329b1',
@@ -300,7 +307,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             expiry: EXP_2022JUN,
-            active: true
+            active: true,
+            startTime: "1636632000"
         },
         {
             address: '0x9ada5ce16cdbd76afdd28b891cd0a1a9f659dad6',
@@ -314,7 +322,8 @@ export const avalancheContracts: NetworkContractAddresses = {
                 '0x0da67235dd5787d67955420c84ca1cecd4e5bb3b'
             ],
             expiry: EXP_WONDERLAND,
-            active: true
+            active: true,
+            startTime: "1639656000"
         },
         {
             address: '0x2aa0bec34deeb6987c118ce353d14eea6def24ce',
@@ -326,7 +335,8 @@ export const avalancheContracts: NetworkContractAddresses = {
             ],
             interestTokensAddresses: [],
             expiry: EXP_WONDERLAND,
-            active: true
+            active: true,
+            startTime: "1639656000"
         }
     ],
     misc: {

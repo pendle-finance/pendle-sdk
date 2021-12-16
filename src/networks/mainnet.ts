@@ -14,7 +14,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x37922c69b08babcceae735a31235c81f1d1e8e43"
             ],
             expiry: EXP_2022,
-            active: true
+            active: true,
+            startTime: "1629331200"
         },
         {
             address: "0xa78029ab5235b9a83ec45ed036042db26c6e4300",
@@ -27,7 +28,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
             ],
             expiry: EXP_2022,
-            active: true
+            active: true,
+            startTime: "1629331200"
         },
         {
             address: "0x6f40a68e99645c60f14b497e75ae024777d61726",
@@ -40,7 +42,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
             ],
             expiry: EXP_2021,
-            active: true
+            active: true,
+            startTime: "1623888000"
         },
         {
             address: "0x6f40a68e99645c60f14b497e75ae024777d61726",
@@ -53,7 +56,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
             ],
             expiry: EXP_2022,
-            active: false
+            active: false,
+            startTime: "1623888000"
         },
         {
             address: "0x5b1c59eb6872f88a92469751a034b9b5ada9a73f",
@@ -66,7 +70,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
             ],
             expiry: EXP_2021,
-            active: true
+            active: true,
+            startTime: "1623888000"
         },
         {
             address: "0x5b1c59eb6872f88a92469751a034b9b5ada9a73f",
@@ -79,7 +84,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
             ],
             expiry: EXP_2022,
-            active: false
+            active: false,
+            startTime: "1623888000"
         },
         {
             address: "0x309d8cf8f7c3340b50ff0ef457075a3c5792203f",
@@ -89,7 +95,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: false
+            active: false,
+            startTime: "1629331200"
         },
         {
             address: "0x529c513dde7968e19e79e38ff94d36e4c3c21eb7",
@@ -99,7 +106,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true
+            active: true,
+            startTime: "1629331200"
         },
         {
             address: "0xa26da78fe6c8d4ba2f1779fd36aed994a8a50bee",
@@ -109,7 +117,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: false
+            active: false,
+            startTime: "1628726400"
         },
         {
             address: "0x94a7432b811e29128964fba993f159928744e7c7",
@@ -119,7 +128,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: false
+            active: false,
+            startTime: "1628726400"
         },
         {
             address: "0x31fc01529419ee9623afc5b65d7d72102d116e90",
@@ -129,7 +139,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: false
+            active: false,
+            startTime: "1628726400"
         },
         {
             address: "0xfc3468da89cb5bdf893242ece0324b51ea6482c6",
@@ -139,7 +150,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: false
+            active: false,
+            startTime: "1628726400"
         },
         {
             address: "0x07c87cfe096c417212eab4152d365f0f7dc6fce4",
@@ -149,7 +161,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true
+            active: true,
+            startTime: "1629936000"
         },
         {
             address: "0xfb0e378b3ed6d7f8b73230644d945e28fd7f7b03",
@@ -159,7 +172,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true
+            active: true,
+            startTime: "1629936000"
         },
         {
             address: "0x071dc669be57c1b3053f746db20cb3bf54383aea",
@@ -169,7 +183,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true
+            active: true,
+            startTime: "1629936000"
         },
         {
             address: "0xa660c9aaa46b696df01768e1d2d88ce2d5293778",
@@ -179,7 +194,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true
+            active: true,
+            startTime: "1629936000"
         },
         {
             address: "0x2c09fd74e80ce12bebbc8f56fab8633ea41c2bcc",
@@ -191,7 +207,8 @@ export const mainnetContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"
             ],
-            active: true
+            active: true,
+            startTime: "1631145600"
         },
         {
             address: '0x07282f2ceebd7a65451fcd268b364300d9e6d7f5',
@@ -201,7 +218,8 @@ export const mainnetContracts: NetworkContractAddresses = {
                 '0x808507121b80c02388fad14726482e061b8da827'
             ],
             interestTokensAddresses: [],
-            active: true
+            active: true,
+            startTime: "1623888000"
         }
     ],
     YTs: [

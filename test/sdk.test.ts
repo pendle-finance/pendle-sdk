@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 import { getDecimals } from '../src/networks/helpers/getDecimals';
 
-var chainId = 1;
+var chainId = 43114;
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -63,7 +63,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods({signer, provider, chainId}).fetchClaimableYields(
       dummyAddress
     );
@@ -131,10 +131,6 @@ describe('Sdk', () => {
       ]
     });
     console.log(JSON.stringify(balances, null, '  '));
-  })
-
-  it.only('getDecimals', async() => {
-    await getDecimals(avalancheContracts)
   })
 
 });

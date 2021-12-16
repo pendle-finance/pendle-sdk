@@ -22,7 +22,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0x3cb265da2e7838b3ae2d9184d4223900761b1123", chainId: chainId});
+        const res = await fetchTokenPrice({provider, address: "0x82922e6fbe83547c5e2e0229815942a2108e4624", chainId: chainId});
         console.log(res.toString());
     })
 

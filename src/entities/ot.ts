@@ -85,7 +85,7 @@ export class Ot extends Token {
     }
 
     private static hasRewardsByForgeId(forgeId: string) {
-        return !(forgeId == forgeIdsInBytes.SUSHISWAP_SIMPLE || forgeId == forgeIdsInBytes.JOE_SIMPLE)
+        return !(forgeId == forgeIdsInBytes.SUSHISWAP_SIMPLE || forgeId == forgeIdsInBytes.JOE_SIMPLE || forgeId == forgeIdsInBytes.WONDERLAND)
     }
 
     public hasRewards(): boolean {
