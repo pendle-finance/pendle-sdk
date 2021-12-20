@@ -9,7 +9,7 @@ import { Token } from "./token";
 import { Contract } from "ethers";
 import { StakingPool } from "./stakingPool";
 import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
-import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, isSameAddress, submitTransaction } from "../helpers";
+import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, isSameAddress, submitTransaction, decimalFactor } from "../helpers";
 import { contracts } from "../contracts";
 import { PendleMarket, Market, OtherMarketDetails, AddDualLiquidityDetails } from "./market";
 import { calcOtherTokenAmount, calcShareOfPool, calcSlippedDownAmount, calcSlippedUpAmount, DecimalsPrecision } from "../math/marketMath";
@@ -19,6 +19,7 @@ import { CurrencyAmount, ZeroCurrencyAmount } from "./currencyAmount";
 import { MasterChef } from "./masterChef";
 import { cdiv, rdiv } from "../math/mathLib"
 import { Comptroller } from "./comptroller";
+import { Trade, computeTradeRoute } from "./tradeRouteProducer";
 
 export enum Action {
     stakeOT,
@@ -189,6 +190,7 @@ export class OneClickWrapper {
         const forgeAddress = networkInfo.contractAddresses.forges[this.yieldContract.forgeIdInBytes];
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.yieldContract.forgeIdInBytes).abi, provider);
         const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, provider);
+        const zapEstimator = {} as Contract;
 
         const isUnderlyingLP = (): boolean => {
             return this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_SIMPLE || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_COMPLEX
@@ -592,7 +594,7 @@ export class OneClickWrapper {
             }
         }
 
-        const simulate = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, walletAddress?: string): Promise<SimulationDetails> => {
+        const simulateDual = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, walletAddress?: string): Promise<SimulationDetails> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
             inputTokenAmount = wrapEth(inputTokenAmount);
 
@@ -603,6 +605,81 @@ export class OneClickWrapper {
             var scaledSimulation: SimulationDetails = await scaleSimulationResult(pendleFixture, testSimulationResult, inputTokenAmount, testInputTokenAmount);
                         
             return unwrapEthInSimulation(scaledSimulation);
+        }
+
+        const getInitialTokens = (pendleFixture: PendleFixture): Token[] => {
+            var tokens: Token[] = [];
+            if (isUnderlyingLP()) {
+                const underlyingLP: Token = pendleFixture.yieldContract.underlyingAsset;
+                const underlyingLPInfo: MARKETINFO = networkInfo.contractAddresses.otherMarkets!.find((m: MARKETINFO) => isSameAddress(m.address, underlyingLP.address))!;
+                tokens = tokens.concat(underlyingLPInfo.pair.map((t: string) => {
+                    return new Token(
+                        t,
+                        networkInfo.decimalsRecord[t]
+                    )
+                }));
+            } else {
+                if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.WONDERLAND) {
+                    tokens.push(new Token(
+                        networkInfo.contractAddresses.tokens.TIME,
+                        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.TIME]
+                    ))
+                } else {
+                    tokens.push(this.yieldContract.underlyingAsset)
+                }
+            }
+
+            const baseToken = pendleFixture.otMarket.tokens.find((t: Token) => !isSameAddress(pendleFixture.ot.address, t.address))!;
+            tokens.push(baseToken);
+            return tokens;
+        }
+
+        const getDataPullWithSwaps = (action: Action, inputTokenAmount: TokenAmount, slippage: number, pendleFixture: PendleFixture): DataPull => {
+            // const initialTokens: Token[] = getInitialTokens(pendleFixture);
+            // const testOutPutAmount: string = decimalFactor(3);
+            // const testTrades: Trade[] = initialTokens.map((t: Token) => {
+            //     if (isSameAddress(t.address, inputTokenAmount.token.address)) {
+            //         return {
+            //             path: [t.address],
+            //             input: inputTokenAmount, // The amount doesn't matter here
+            //             output: inputTokenAmount // The amount doesn't matter here
+            //         }
+            //     }
+            //     return computeTradeRoute(inputTokenAmount.token, new TokenAmount(
+            //         t,
+            //         testOutPutAmount
+            //     ))
+            // });
+
+            // type ForgeData = {
+            //     mode: Action,
+            //     forgeId: string,
+            //     underlyingAsset: string,
+            //     expiry: number
+            // }
+            // type OneTokenZapData = {
+            //     forge: ForgeData;
+            //     underlyingPath: string[];
+            //     underlyingPath2: string[];
+            //     baseTokenPath: string[];
+            //     inAmount: string;
+            // }
+
+            // const forgeData: ForgeData = {
+            //     mode: action,
+            //     forgeId: this.yieldContract.forgeIdInBytes,
+            //     underlyingAsset: this.yieldContract.underlyingAsset.address,
+            //     expiry: this.yieldContract.expiry
+            // }
+
+            if (isUnderlyingLP()) { 
+
+            }
+        }
+
+        const simulateSingle = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, walletAddress?: string): Promise<SimulationDetails> => {
+            const pendleFixture: PendleFixture = await getPendleFixture();
+            const dataPull: DataPull = getDataPullWithSwaps(action, inputTokenAmount, slippage, pendleFixture);
         }
 
         const getDataPullWithNoSwap = (sDetails: SimulationDetails, deadline: BN): DataPull => {
@@ -847,7 +924,7 @@ export class OneClickWrapper {
                 );
             }
             var totalPrincipalValuation = new BigNumber(0);
-            const testSimulation: SimulationDetails = await simulate(action, inputTokenAmount, 0);
+            const testSimulation: SimulationDetails = await simulateDual(action, inputTokenAmount, 0);
             // console.log(JSON.stringify(testSimulation, null, '  '))
             for (const t of testSimulation.tokenAmounts) {
                 totalPrincipalValuation = totalPrincipalValuation.plus((await fetchValuation(t, provider, chainId)).amount);
@@ -884,7 +961,8 @@ export class OneClickWrapper {
         }
 
         return {
-            simulate,
+            simulateDual,
+            simulateSingle,
             send,
             apr
         }
