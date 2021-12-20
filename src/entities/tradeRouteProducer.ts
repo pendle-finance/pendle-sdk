@@ -1,7 +1,9 @@
-import {Pair, Token as JoeToken, TokenAmount as JoeTokenAmount,Trade as JoeTrade} from "@traderjoe-xyz/sdk"
-import { Token } from "./token";
+import {Pair, Token as JoeToken, TokenAmount as JoeTokenAmount,Trade as JoeTrade, CAVAX, Currency as JoeCurrency, CurrencyAmount as JoeCurrencyAmount} from "@traderjoe-xyz/sdk"
+import { Token, ETHToken } from "./token";
 import { TokenAmount } from "./tokenAmount";
 import pairsInfo from "../uniForkPairs/traderJoe.json";
+import { isSameAddress } from "../helpers";
+import { ETHAddress } from "../constants"
 export type Trade = {
     path: string[],
     input: TokenAmount,
@@ -22,30 +24,46 @@ function populateJoePairs() {
     }
 }
 
-function wrapTokenToJoeToken(token: Token): JoeToken {
+function wrapTokenToJoeCurrency(token: Token): JoeCurrency {
+    if (isSameAddress(token.address, ETHAddress)) {
+        return CAVAX;
+    }
     return new JoeToken(AvaxChainID, token.address, token.decimals);
 }
 
-function wrapTokenAmountToJoeTokenAmount(tokenAmount: TokenAmount): JoeTokenAmount {
-    return new JoeTokenAmount(wrapTokenToJoeToken(tokenAmount.token), tokenAmount.rawAmount());
+function wrapTokenAmountToJoeCurrencyAmount(tokenAmount: TokenAmount): JoeCurrencyAmount {
+    if (isSameAddress(tokenAmount.token.address, ETHAddress)) {
+        return JoeCurrencyAmount.ether(tokenAmount.rawAmount());
+    }
+    return new JoeTokenAmount(wrapTokenToJoeCurrency(tokenAmount.token) as JoeToken, tokenAmount.rawAmount());
 }
 
-function unwrapJoeTokenToToken(joeToken: JoeToken): Token {
-    return new Token(joeToken.address, joeToken.decimals);
+function unwrapJoeCurrencyToToken(joeToken: JoeCurrency): Token {
+    if (joeToken === CAVAX) {
+        return ETHToken
+    }
+    return new Token((joeToken as JoeToken).address, joeToken.decimals);
 }
 
-function unwrapJoeTokenAmountToTokenAmount(joeTokenAmount: JoeTokenAmount): TokenAmount {
-    return new TokenAmount(unwrapJoeTokenToToken(joeTokenAmount.token), joeTokenAmount.toExact());
+function unwrapJoeCurrencyAmountToTokenAmount(joeTokenAmount: JoeTokenAmount): TokenAmount {
+    return new TokenAmount(unwrapJoeCurrencyToToken(joeTokenAmount.token), joeTokenAmount.toExact());
 }
 export function computeTradeRoute(inToken: Token, outTokenAmount: TokenAmount): Trade {
+    if (isSameAddress(inToken.address, outTokenAmount.token.address)) {
+        return {
+            path: [inToken.address],
+            input: outTokenAmount,
+            outPut: outTokenAmount
+        }
+    }
     if (traderJoePairs.length === 0) {
         populateJoePairs();
     }
-    const outTokenAmountJoe: JoeTokenAmount = wrapTokenAmountToJoeTokenAmount(outTokenAmount);
-    const bestTrade: JoeTrade = JoeTrade.bestTradeExactOut(traderJoePairs, wrapTokenToJoeToken(inToken), outTokenAmountJoe)[0];
+    const outTokenAmountJoe: JoeCurrencyAmount = wrapTokenAmountToJoeCurrencyAmount(outTokenAmount);
+    const bestTrade: JoeTrade = JoeTrade.bestTradeExactOut(traderJoePairs, wrapTokenToJoeCurrency(inToken), outTokenAmountJoe)[0];
     return {
         path: bestTrade.route.path.map((t: JoeToken) => t.address),
-        input: unwrapJoeTokenAmountToTokenAmount(bestTrade.inputAmount as JoeTokenAmount),
+        input: unwrapJoeCurrencyAmountToTokenAmount(bestTrade.inputAmount as JoeTokenAmount),
         outPut: outTokenAmount
     }
 }
