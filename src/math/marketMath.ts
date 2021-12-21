@@ -193,7 +193,7 @@ export function calcPrincipalFloat(principalPerYT: BN, ytDecimal: number, underl
 
 export function calcSlippedDownAmount(amount: BN, slippage: number) {
     slippage = Math.trunc(slippage * Math.pow(10, PercentageMaxDecimals));
-    return amount.mul(PONE.sub(BN.from(slippage))).div(PONE);
+    return amount.mul(PONE).div(PONE.add(BN.from(slippage)));
 }
 
 export function calcSlippedUpAmount(amount: BN, slippage: number) {

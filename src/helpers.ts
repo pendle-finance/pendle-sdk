@@ -232,6 +232,10 @@ export async function estimateGas(contract: Contract, fromAddress: string, funcN
   return BN.from(getGasLimitWithETH(gasEstimate, value).gasLimit);
 }
 
-// export const getGlobalEpochId = (): number => {
-//   return (currentTime - launchTime) / 7 days + 1
-// };
+export function getInTokenAddress(path: string[]): string {
+  return path[0];
+}
+
+export function getOutTokenAddress(path: string[]): string {
+  return path[path.length - 1];
+}
