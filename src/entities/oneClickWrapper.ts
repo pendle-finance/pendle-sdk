@@ -174,7 +174,13 @@ export type EstimatorBaseTokenSplit = {
     ot: string;
     yt: string;
 }
-export type EstimatorResult = {
+
+export type EstimatorPAPReseult = {
+    wavaxInfo: EstimatorSwapInfo,
+    pendleInfo: EstimatorSwapInfo,
+    split: EstimatorBaseTokenSplit
+}
+export type EstimatorSingleResult = {
     underlyingInfo: EstimatorSwapInfo,
     baseTokenInfo: EstimatorSwapInfo,
     split: EstimatorBaseTokenSplit
@@ -213,7 +219,7 @@ export class OneClickWrapper {
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.yieldContract.forgeIdInBytes).abi, provider);
         const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, provider);
         const zapEstimatorSingle = {} as Contract;
-        const zapEstimatorJLP = {} as Contract;
+        const zapEstimatorPAP = {} as Contract;
 
         const isUnderlyingLP = (): boolean => {
             return this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_SIMPLE || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_COMPLEX
@@ -671,12 +677,114 @@ export class OneClickWrapper {
             return tokens;
         }
 
-        const getDataPullWithSwapsForJLP = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, pendleFixture: PendleFixture): DataPull => {
+        const getDataPullWithSwapsForPAP = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, pendleFixture: PendleFixture): Promise<{
+            dataPull: DataPull,
+            estimationResult: EstimatorPAPReseult
+        }> => {
+            type DoubleTokenZapData = {
+                mode: Action;
+                tknzData: EstimatorTokenizeData;
+                inAmount: string;
+                wavaxPath: string[];
+                pendlePath: string[];
+                slippage: string;
+            }
+
+            const deadline = await getDeadline();;
+            const initialTokens = getInitialTokens(pendleFixture);
+
+            const rslippage: string = new BigNumber(slippage).times(decimalFactor(PercentageMaxDecimals)).toFixed(0);
+
+            const tokenZapData = {
+                mode: action,
+                inAmount: inputTokenAmount.rawAmount(),
+                slippage: rslippage
+            } as DoubleTokenZapData;
+            const marketFactoryId: string = await pendleFixture.ytMarket.methods({signer, provider, chainId}).getMarketFactoryId();
+            tokenZapData.tknzData = {
+                marketFactoryId,
+                forgeId: this.yieldContract.forgeIdInBytes,
+                underlyingAsset: this.yieldContract.underlyingAsset.address,
+                expiry: this.yieldContract.expiry
+            }
+
+            const testOutPutAmount: string = decimalFactor(3);
+            var outputAmount: {wavax: string, pendle: string} = {
+                wavax: testOutPutAmount,
+                pendle: testOutPutAmount
+            }
+            const dataPull = {} as DataPull;
+            dataPull.deadline = deadline;
+            var estimationResult: EstimatorPAPReseult = {} as EstimatorPAPReseult;
+
+            for (var i = 0; i < 2; i ++) {
+                const wavaxTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(
+                    isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.WETH)
+                        ? initialTokens.underlyingToken0
+                        : initialTokens.underlyingToken1!,
+                    outputAmount.wavax
+                ))
+                const pendleTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(
+                    isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.PENDLE)
+                        ? initialTokens.underlyingToken0
+                        : initialTokens.underlyingToken1!,
+                    outputAmount.pendle
+                ))
+                tokenZapData.wavaxPath = wavaxTrade.path;
+                tokenZapData.pendlePath = pendleTrade.path;
+
+                estimationResult = await zapEstimatorPAP.calcPapZapSwapInfo(tokenZapData);
+                
+                if (i == 0) {
+                    outputAmount.wavax = estimationResult.wavaxInfo.amountOut;
+                    outputAmount.pendle = estimationResult.pendleInfo.amountOut;
+                } else {
+                    dataPull.swaps = [];
+                    dataPull.pulls = [];
+
+                    if (isSameAddress(inputTokenAmount.token.address, ETHAddress)) {
+                        dataPull.pulls.push({
+                            token: inputTokenAmount.token.address,
+                            amount: estimationResult.wavaxInfo.amountOut
+                        })
+                        dataPull.swaps.push({
+                            amountInMax: estimationResult.pendleInfo.amountIn,
+                            amountOut: estimationResult.pendleInfo.amountOut,
+                            path: pendleTrade.path
+                        })
+                    } else if (isSameAddress(inputTokenAmount.token.address, networkInfo.contractAddresses.tokens.PENDLE)) {
+                        dataPull.pulls.push({
+                            token: inputTokenAmount.token.address,
+                            amount: estimationResult.pendleInfo.amountOut
+                        });
+                        dataPull.swaps.push({
+                            amountInMax: estimationResult.wavaxInfo.amountIn,
+                            amountOut: estimationResult.wavaxInfo.amountOut,
+                            path: wavaxTrade.path
+                        })
+                    } else {
+                        dataPull.swaps.push({
+                            amountInMax: estimationResult.wavaxInfo.amountIn,
+                            amountOut: estimationResult.wavaxInfo.amountOut,
+                            path: wavaxTrade.path
+                        })
+                        dataPull.swaps.push({
+                            amountInMax: estimationResult.pendleInfo.amountIn,
+                            amountOut: estimationResult.pendleInfo.amountOut,
+                            path: pendleTrade.path
+                        })
+                    }
+                }
+            }
+            return {
+                dataPull,
+                estimationResult
+            }
         }
 
         const getDataPullWithSwapsForSingleUnderlying = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, pendleFixture: PendleFixture): Promise<{
             dataPull: DataPull,
-            estimationResult: EstimatorResult
+            estimationResult: EstimatorSingleResult
         }> => {
             type SingleTokenZapData = {
                 mode: Action;
@@ -705,25 +813,25 @@ export class OneClickWrapper {
             }
 
             const testOutPutAmount: string = decimalFactor(3);
-            var outPutAmount: {underlying: string, baseToken: string} = {
+            var outputAmount: {underlying: string, baseToken: string} = {
                 underlying: testOutPutAmount,
                 baseToken: testOutPutAmount
             }
 
             const dataPull = {} as DataPull;
             dataPull.deadline = deadline;
-            var estimationResult: EstimatorResult = {} as EstimatorResult;
+            var estimationResult: EstimatorSingleResult = {} as EstimatorSingleResult;
 
             for (var i = 0; i < 2; i ++) {
-                const underlyingTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.underlyingToken0, outPutAmount.underlying));
-                const baseTokenTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.baseToken, outPutAmount.baseToken));
+                const underlyingTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.underlyingToken0, outputAmount.underlying));
+                const baseTokenTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.baseToken, outputAmount.baseToken));
                 tokenZapData.underlyingSwapPath = underlyingTrade.path;
                 tokenZapData.baseTokenSwapPath = baseTokenTrade.path;
 
                 estimationResult = await zapEstimatorSingle.calcSingleTokenZapSwapInfo(tokenZapData);
                 if (i == 0) {
-                    outPutAmount.underlying = estimationResult.underlyingInfo.amountOut;
-                    outPutAmount.baseToken = estimationResult.baseTokenInfo.amountOut;
+                    outputAmount.underlying = estimationResult.underlyingInfo.amountOut;
+                    outputAmount.baseToken = estimationResult.baseTokenInfo.amountOut;
                 } else {
                     dataPull.swaps = [];
                     dataPull.pulls = [];
@@ -815,7 +923,7 @@ export class OneClickWrapper {
             // }
 
             if (isUnderlyingLP()) { 
-                return getDataPullWithSwapsForJLP(action, inputTokenAmount, slippage, pendleFixture)
+                return getDataPullWithSwapsForPAP(action, inputTokenAmount, slippage, pendleFixture)
             } else {
                 return getDataPullWithSwapsForSingleUnderlying(action, inputTokenAmount, slippage, pendleFixture)
             }
