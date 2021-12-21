@@ -277,6 +277,39 @@ export class OneClickWrapper {
             return currentTime.add(ONE_MINUTE.mul(60).mul(3)).toNumber();
         }
 
+        const getOtYtPoolShares = async({
+            pendleFixture,
+            transactions,
+        }: {
+            pendleFixture: PendleFixture,
+            transactions: Transaction[]
+        }): Promise<{
+            otPoolShare: string,
+            ytPoolShare: string
+        }> => {
+            var otPoolShare: BigNumber, ytPoolShare: BigNumber;
+
+            const otMarketAddLiqTransaction: Transaction | undefined = getAddOtLiqTxn(transactions, pendleFixture);
+            if (otMarketAddLiqTransaction === undefined) {
+                otPoolShare = new BigNumber(0)
+            } else {
+                const otMarketSupply: BN = await new Contract(pendleFixture.otMarket.address, contracts.UniswapV2Pair.abi, provider).totalSupply();
+                otPoolShare = calcShareOfPool(otMarketSupply, BN.from(otMarketAddLiqTransaction.received[0].rawAmount()));
+            }
+
+            const ytMarketAddLiqTransaction: Transaction | undefined = getAddYtLiqTxn(transactions, pendleFixture);
+            if (ytMarketAddLiqTransaction === undefined) {
+                ytPoolShare = new BigNumber(0)
+            } else {
+                const ytMarketSupply: BN = await new Contract(pendleFixture.ytMarket.address, contracts.IPendleMarket.abi, provider).totalSupply();
+                ytPoolShare = calcShareOfPool(ytMarketSupply, BN.from(ytMarketAddLiqTransaction.received[0].rawAmount()));
+            }
+            return {
+                otPoolShare: otPoolShare.toFixed(DecimalsPrecision),
+                ytPoolShare: ytPoolShare.toFixed(DecimalsPrecision)
+            }
+        }
+
         const scaleSimulationResult = async (pendleFixture: PendleFixture, testSimulation: SimulationDetails, desiredTokenAmount: TokenAmount, testTokenAmount: TokenAmount): Promise<SimulationDetails> => {
             const desiredAmount: BN = BN.from(desiredTokenAmount.rawAmount());
             const testAmount: BN = BN.from(testTokenAmount.rawAmount());
@@ -305,99 +338,102 @@ export class OneClickWrapper {
                     protocol: txn.protocol
                 }
             })
-            var otPoolShare: BigNumber, ytPoolShare: BigNumber;
-
-            const otMarketAddLiqTransaction: Transaction | undefined = getAddOtLiqTxn(transactions, pendleFixture);
-            if (otMarketAddLiqTransaction === undefined) {
-                otPoolShare = new BigNumber(0)
-            } else {
-                const otMarketSupply: BN = await new Contract(pendleFixture.otMarket.address, contracts.UniswapV2Pair.abi, provider).totalSupply();
-                otPoolShare = calcShareOfPool(otMarketSupply, BN.from(otMarketAddLiqTransaction.received[0].rawAmount()));
-            }
-
-            const ytMarketAddLiqTransaction: Transaction | undefined = getAddYtLiqTxn(transactions, pendleFixture);
-            if (ytMarketAddLiqTransaction === undefined) {
-                ytPoolShare = new BigNumber(0)
-            } else {
-                const ytMarketSupply: BN = await new Contract(pendleFixture.ytMarket.address, contracts.IPendleMarket.abi, provider).totalSupply();
-                ytPoolShare = calcShareOfPool(ytMarketSupply, BN.from(ytMarketAddLiqTransaction.received[0].rawAmount()));
-            }
 
             return {
                 tokenAmounts: tokenAmounts,
                 transactions: transactions,
-                poolShares: {
-                    otPoolShare: otPoolShare.toFixed(DecimalsPrecision),
-                    ytPoolShare: ytPoolShare.toFixed(DecimalsPrecision)
-                }
+                poolShares: await getOtYtPoolShares({pendleFixture, transactions})
             }
         }
 
-        const simulateWithFixedInput = async (action: Action, pendleFixture: PendleFixture, fixedInputAmount: TokenAmount, slippage: number, walletAddress?: string): Promise<SimulationDetails> => {
-            const transactions: Transaction[] = [];
-            const inAmount: BN = BN.from(fixedInputAmount.rawAmount());
-
-            var outYieldTokenAmount: TokenAmount;
-
-            if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.WONDERLAND && isSameAddress(fixedInputAmount.token.address, networkInfo.contractAddresses.tokens.TIME)) {
-                const MEMOAmount: TokenAmount = new TokenAmount(
-                    new Token(
-                        networkInfo.contractAddresses.tokens.MEMO,
-                        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.MEMO]
-                    ),
-                    fixedInputAmount.rawAmount()
-                )
-                transactions.push({
-                    action: TransactionAction.stake,
-                    paid: [fixedInputAmount],
-                    maxPaid: [fixedInputAmount],
-                    received: [MEMOAmount],
-                    user: walletAddress,
-                    protocol: "external"
-                });
-                fixedInputAmount = MEMOAmount;
-            }
-
+        const populateTransactionsFromPreMint = async({
+            action,
+            pendleFixture,
+            slippage,
+            underlyingAmount0,
+            underlyingAmount1,
+            baseTokenAmountOT,
+            baseTokenAmountYT,
+            walletAddress
+        }: {
+            action: Action,
+            pendleFixture: PendleFixture,
+            slippage: number,
+            underlyingAmount0: TokenAmount,
+            underlyingAmount1?: TokenAmount,
+            baseTokenAmountOT?: TokenAmount,
+            baseTokenAmountYT?: TokenAmount,
+            walletAddress?: string
+        }): Promise<Transaction[]> => {
+            var transactions: Transaction[] = [];
             switch (this.yieldContract.forgeIdInBytes) {
                 case forgeIdsInBytes.JOE_COMPLEX:
                 case forgeIdsInBytes.JOE_SIMPLE:
                     const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
                     const underlyingLPDetails: OtherMarketDetails = await (underlyingLp.methods({signer, provider, chainId}).readMarketDetails());
+                    const testInutTokenIdxInLP: number = isSameAddress(underlyingLPDetails.tokenReserves[0].token.address, underlyingAmount0.token.address) ? 0 : 1;
 
-                    const testInutTokenIdxInLP: number = isSameAddress(underlyingLPDetails.tokenReserves[0].token.address, fixedInputAmount.token.address) ? 0 : 1;
-                    const otherTokenInLP: Token = underlyingLPDetails.tokenReserves[1 ^ testInutTokenIdxInLP].token;
+                    if (underlyingAmount1 === undefined) {
+                        const otherTokenInLP: Token = underlyingLPDetails.tokenReserves[1 ^ testInutTokenIdxInLP].token;
 
-                    const otherTokenInLPAmount: TokenAmount = new TokenAmount(
-                        otherTokenInLP,
-                        calcOtherTokenAmount(
-                            BN.from(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()),
-                            BN.from(underlyingLPDetails.tokenReserves[1 ^ testInutTokenIdxInLP].rawAmount()),
-                            inAmount
-                        ).toString()
-                    );
-                    outYieldTokenAmount = new TokenAmount(
-                        new Token(
-                            underlyingLp.address,
-                            networkInfo.decimalsRecord[underlyingLp.address]
-                        ),
-                        inAmount.mul(BN.from(underlyingLPDetails.otherDetails.totalSupplyLP)).div(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()).toString()
-                    )
-                    transactions.push({
-                        action: TransactionAction.preMint,
-                        user: walletAddress,
-                        protocol: 'external',
-                        paid: [
-                            fixedInputAmount,
-                            otherTokenInLPAmount
-                        ],
-                        maxPaid: [
-                            fixedInputAmount,
-                            otherTokenInLPAmount
-                        ],
-                        received: [
-                            outYieldTokenAmount
-                        ]
-                    });
+                        const otherTokenInLPAmount: TokenAmount = new TokenAmount(
+                            otherTokenInLP,
+                            calcOtherTokenAmount(
+                                BN.from(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()),
+                                BN.from(underlyingLPDetails.tokenReserves[1 ^ testInutTokenIdxInLP].rawAmount()),
+                                BN.from(underlyingAmount0.rawAmount())
+                            ).toString()
+                        );
+                        var outYieldTokenAmount = new TokenAmount(
+                            new Token(
+                                underlyingLp.address,
+                                networkInfo.decimalsRecord[underlyingLp.address]
+                            ),
+                            BN.from(underlyingAmount0.rawAmount()).mul(BN.from(underlyingLPDetails.otherDetails.totalSupplyLP))
+                            .div(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()).toString()
+                        )
+                        transactions.push({
+                            action: TransactionAction.preMint,
+                            user: walletAddress,
+                            protocol: 'external',
+                            paid: [
+                                underlyingAmount0,
+                                otherTokenInLPAmount
+                            ],
+                            maxPaid: [
+                                underlyingAmount0,
+                                otherTokenInLPAmount
+                            ],
+                            received: [
+                                outYieldTokenAmount
+                            ]
+                        });
+                    } else {
+                        var outYieldTokenAmount = new TokenAmount(
+                            new Token(
+                                underlyingLp.address,
+                                networkInfo.decimalsRecord[underlyingLp.address]
+                            ),
+                            BN.from(underlyingAmount0.rawAmount()).mul(BN.from(underlyingLPDetails.otherDetails.totalSupplyLP))
+                            .div(underlyingLPDetails.tokenReserves[testInutTokenIdxInLP].rawAmount()).toString()
+                        )
+                        transactions.push({
+                            action: TransactionAction.preMint,
+                            user: walletAddress,
+                            protocol: 'external',
+                            paid: [
+                                underlyingAmount0,
+                                underlyingAmount1
+                            ],
+                            maxPaid: [
+                                underlyingAmount0,
+                                underlyingAmount1
+                            ],
+                            received: [
+                                outYieldTokenAmount
+                            ]
+                        });
+                    }
                     break;
 
                 case forgeIdsInBytes.BENQI:
@@ -407,14 +443,16 @@ export class OneClickWrapper {
                     const exchangeRate: BN = await pendleForgeContract.connect(provider).callStatic.getExchangeRate(underlyingAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
                     outYieldTokenAmount = new TokenAmount(
                         this.yieldContract.yieldToken,
-                        this.yieldContract.useCompoundMath() ? cdiv(inAmount, exchangeRate).toString() : rdiv(inAmount, exchangeRate).toString()
+                        this.yieldContract.useCompoundMath() 
+                            ? cdiv(BN.from(underlyingAmount0.rawAmount()), exchangeRate).toString() 
+                            : rdiv(BN.from(underlyingAmount0.rawAmount()), exchangeRate).toString()
                     )
                     transactions.push({
                         action: TransactionAction.preMint,
                         user: walletAddress,
                         protocol: "external",
-                        paid: [fixedInputAmount],
-                        maxPaid: [fixedInputAmount],
+                        paid: [underlyingAmount0],
+                        maxPaid: [underlyingAmount0],
                         received: [outYieldTokenAmount]
                     })
                     break;
@@ -438,13 +476,15 @@ export class OneClickWrapper {
                 const otTokenIdxInMarket: number = isSameAddress(pendleFixture.ot.address, otMarketDetail.tokenReserves[0].token.address) ? 0 : 1;
                 const otAmount: TokenAmount = otytAmounts[0];
                 const otReserve: BN = BN.from(otMarketDetail.tokenReserves[otTokenIdxInMarket].rawAmount());
-                const baseTokenReserve: BN = BN.from(otMarketDetail.tokenReserves[1 ^ otTokenIdxInMarket].rawAmount());
-                const baseTokenInOtMarket: Token = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? pendleFixture.otMarket.tokens[1] : pendleFixture.otMarket.tokens[0];
-
-                const baseTokenInOtMarketAmount: TokenAmount = new TokenAmount(
-                    baseTokenInOtMarket,
-                    BN.from(otAmount.rawAmount()).mul(baseTokenReserve).div(otReserve).toString()
-                );
+                
+                if (baseTokenAmountOT === undefined) {
+                    const baseTokenReserve: BN = BN.from(otMarketDetail.tokenReserves[1 ^ otTokenIdxInMarket].rawAmount());
+                    const baseTokenInOtMarket: Token = isSameAddress(pendleFixture.otMarket.tokens[0].address, pendleFixture.ot.address) ? pendleFixture.otMarket.tokens[1] : pendleFixture.otMarket.tokens[0];
+                    baseTokenAmountOT = new TokenAmount(
+                        baseTokenInOtMarket,
+                        BN.from(otAmount.rawAmount()).mul(baseTokenReserve).div(otReserve).toString()
+                    );
+                }
                 const otMarketLpAmount: TokenAmount = new TokenAmount(
                     new Token(
                         pendleFixture.otMarket.address,
@@ -456,12 +496,12 @@ export class OneClickWrapper {
                     action: TransactionAction.addLiquidity,
                     user: walletAddress,
                     protocol: 'external',
-                    paid: [otAmount, baseTokenInOtMarketAmount],
+                    paid: [otAmount, baseTokenAmountOT],
                     maxPaid: [
                         otAmount,
                         new TokenAmount(
-                            baseTokenInOtMarketAmount.token,
-                            calcSlippedUpAmount(BN.from(baseTokenInOtMarketAmount.rawAmount()), slippage).toString()
+                            baseTokenAmountOT.token,
+                            calcSlippedUpAmount(BN.from(baseTokenAmountOT.rawAmount()), slippage).toString()
                         )
                     ],
                     received: [otMarketLpAmount]
@@ -479,7 +519,9 @@ export class OneClickWrapper {
 
             if (action == Action.stakeYT || action == Action.stakeOTYT) {
                 const addDualDetails: AddDualLiquidityDetails = await pendleFixture.ytMarket.methods({signer, provider, chainId}).addDualDetails(otytAmounts[1]);
-                const baseTokenInYtMarketAmount: TokenAmount = addDualDetails.otherTokenAmount;
+                if (baseTokenAmountYT === undefined) {
+                    baseTokenAmountYT = addDualDetails.otherTokenAmount;
+                }
                 const ytMarketLpAmount: TokenAmount = new TokenAmount(
                     new Token(
                         pendleFixture.ytMarket.address,
@@ -491,12 +533,12 @@ export class OneClickWrapper {
                     action: TransactionAction.addLiquidity,
                     user: walletAddress,
                     protocol: 'pendle',
-                    paid: [otytAmounts[1], baseTokenInYtMarketAmount],
+                    paid: [otytAmounts[1], baseTokenAmountYT],
                     maxPaid: [
                         otytAmounts[1],
                         new TokenAmount(
-                            baseTokenInYtMarketAmount.token,
-                            calcSlippedUpAmount(BN.from(baseTokenInYtMarketAmount.rawAmount()), slippage).toString()
+                            baseTokenAmountYT.token,
+                            calcSlippedUpAmount(BN.from(baseTokenAmountYT.rawAmount()), slippage).toString()
                         )
                     ],
                     received: [ytMarketLpAmount]
@@ -511,6 +553,42 @@ export class OneClickWrapper {
                     received: []
                 });
             };
+
+            return transactions;
+        }
+
+        const simulateWithFixedInput = async (action: Action, pendleFixture: PendleFixture, fixedInputAmount: TokenAmount, slippage: number, walletAddress?: string): Promise<SimulationDetails> => {
+            var transactions: Transaction[] = [];
+            const inAmount: BN = BN.from(fixedInputAmount.rawAmount());
+
+            var outYieldTokenAmount: TokenAmount;
+
+            if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.WONDERLAND && isSameAddress(fixedInputAmount.token.address, networkInfo.contractAddresses.tokens.TIME)) {
+                const MEMOAmount: TokenAmount = new TokenAmount(
+                    new Token(
+                        networkInfo.contractAddresses.tokens.MEMO,
+                        networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.MEMO]
+                    ),
+                    fixedInputAmount.rawAmount()
+                )
+                transactions.push({
+                    action: TransactionAction.stake,
+                    paid: [fixedInputAmount],
+                    maxPaid: [fixedInputAmount],
+                    received: [MEMOAmount],
+                    user: walletAddress,
+                    protocol: "external"
+                });
+                fixedInputAmount = MEMOAmount;
+            }
+
+            transactions = transactions.concat(await populateTransactionsFromPreMint({
+                action,
+                pendleFixture,
+                slippage,
+                underlyingAmount0: fixedInputAmount,
+                walletAddress
+            }))
 
             const tokenMap: Map<string, BN> = new Map();
             transactions.forEach((txn: Transaction) => {
@@ -919,142 +997,30 @@ export class OneClickWrapper {
                         action: TransactionAction.swap
                     }
                 })
+
                 const initialTokens = getInitialTokens(pendleFixture);
-                
-                const underlyingAddress: string = this.yieldContract.underlyingAsset.address;
-                const exchangeRate: BN = await pendleForgeContract.connect(provider).callStatic.getExchangeRate(underlyingAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
-                const outYieldTokenAmount = new TokenAmount(
-                    this.yieldContract.yieldToken,
-                    this.yieldContract.useCompoundMath() 
-                        ? cdiv(BN.from(estimationResult.underlyingInfo.amountOut), exchangeRate).toString() 
-                        : rdiv(BN.from(estimationResult.underlyingInfo.amountOut), exchangeRate).toString()
-                )
-                transactions.push({
-                    action: TransactionAction.preMint,
-                    user: walletAddress,
-                    protocol: "external",
-                    paid: [new TokenAmount(
+                transactions = transactions.concat(await populateTransactionsFromPreMint({
+                    action,
+                    pendleFixture,
+                    slippage,
+                    underlyingAmount0: new TokenAmount(
                         initialTokens.underlyingToken0,
                         estimationResult.underlyingInfo.amountOut
-                    )],
-                    maxPaid: [new TokenAmount(
-                        initialTokens.underlyingToken0,
-                        estimationResult.underlyingInfo.amountOut
-                    )],
-                    received: [outYieldTokenAmount]
-                });
-
-                const otytAmounts: TokenAmount[] = await this.yieldContract.methods({signer, provider, chainId}).mintDetails(outYieldTokenAmount);
-                transactions.push({
-                    action: TransactionAction.mint,
-                    user: walletAddress,
-                    protocol: 'pendle',
-                    paid: [outYieldTokenAmount],
-                    maxPaid: [outYieldTokenAmount],
-                    received: otytAmounts,
-                })
-
-                if (action == Action.stakeOT || action == Action.stakeOTYT) {
-                    const otMarketDetail: OtherMarketDetails = await pendleFixture.otMarket.methods({signer, provider, chainId}).readMarketDetails();
-                    const baseTokenInOtMarketAmount: TokenAmount = new TokenAmount(
+                    ),
+                    baseTokenAmountOT: new TokenAmount(
                         initialTokens.baseToken,
                         estimationResult.split.ot
-                    );
-                    const otTokenIdxInMarket: number = isSameAddress(pendleFixture.ot.address, otMarketDetail.tokenReserves[0].token.address) ? 0 : 1;
-                    const otAmount: TokenAmount = otytAmounts[0];
-                    const otReserve: BN = BN.from(otMarketDetail.tokenReserves[otTokenIdxInMarket].rawAmount());
-                    const otMarketLpAmount: TokenAmount = new TokenAmount(
-                        new Token(
-                            pendleFixture.otMarket.address,
-                            networkInfo.decimalsRecord[pendleFixture.otMarket.address]
-                        ),
-                        BN.from(otMarketDetail.otherDetails.totalSupplyLP).mul(otAmount.rawAmount()).div(otReserve).toString()
+                    ),
+                    baseTokenAmountYT: new TokenAmount(
+                        initialTokens.baseToken,
+                        estimationResult.split.yt
                     )
-                    transactions.push({
-                        action: TransactionAction.addLiquidity,
-                        user: walletAddress,
-                        protocol: 'external',
-                        paid: [otAmount, baseTokenInOtMarketAmount],
-                        maxPaid: [
-                            otAmount,
-                            new TokenAmount(
-                                baseTokenInOtMarketAmount.token,
-                                calcSlippedUpAmount(BN.from(baseTokenInOtMarketAmount.rawAmount()), slippage).toString()
-                            )
-                        ],
-                        received: [otMarketLpAmount]
-                    });
-    
-                    transactions.push({
-                        action: TransactionAction.stake,
-                        user: walletAddress,
-                        protocol: 'pendle',
-                        paid: [otMarketLpAmount],
-                        maxPaid: [otMarketLpAmount],
-                        received: []
-                    });
-                }
-
-                if (action == Action.stakeYT || action == Action.stakeOTYT) {
-                    const addDualDetails: AddDualLiquidityDetails = await pendleFixture.ytMarket.methods({signer, provider, chainId}).addDualDetails(otytAmounts[1]);
-                    const baseTokenInYtMarketAmount: TokenAmount = addDualDetails.otherTokenAmount;
-                    const ytMarketLpAmount: TokenAmount = new TokenAmount(
-                        new Token(
-                            pendleFixture.ytMarket.address,
-                            networkInfo.decimalsRecord[pendleFixture.ytMarket.address]
-                        ),
-                        addDualDetails.lpMinted
-                    )
-                    transactions.push({
-                        action: TransactionAction.addLiquidity,
-                        user: walletAddress,
-                        protocol: 'pendle',
-                        paid: [otytAmounts[1], baseTokenInYtMarketAmount],
-                        maxPaid: [
-                            otytAmounts[1],
-                            new TokenAmount(
-                                baseTokenInYtMarketAmount.token,
-                                calcSlippedUpAmount(BN.from(baseTokenInYtMarketAmount.rawAmount()), slippage).toString()
-                            )
-                        ],
-                        received: [ytMarketLpAmount]
-                    });
-    
-                    transactions.push({
-                        action: TransactionAction.stake,
-                        user: walletAddress,
-                        protocol: 'pendle',
-                        paid: [ytMarketLpAmount],
-                        maxPaid: [ytMarketLpAmount],
-                        received: []
-                    });
-                };
-
-                var otPoolShare: BigNumber, ytPoolShare: BigNumber;
-
-                const otMarketAddLiqTransaction: Transaction | undefined = getAddOtLiqTxn(transactions, pendleFixture);
-                if (otMarketAddLiqTransaction === undefined) {
-                    otPoolShare = new BigNumber(0)
-                } else {
-                    const otMarketSupply: BN = await new Contract(pendleFixture.otMarket.address, contracts.UniswapV2Pair.abi, provider).totalSupply();
-                    otPoolShare = calcShareOfPool(otMarketSupply, BN.from(otMarketAddLiqTransaction.received[0].rawAmount()));
-                }
-    
-                const ytMarketAddLiqTransaction: Transaction | undefined = getAddYtLiqTxn(transactions, pendleFixture);
-                if (ytMarketAddLiqTransaction === undefined) {
-                    ytPoolShare = new BigNumber(0)
-                } else {
-                    const ytMarketSupply: BN = await new Contract(pendleFixture.ytMarket.address, contracts.IPendleMarket.abi, provider).totalSupply();
-                    ytPoolShare = calcShareOfPool(ytMarketSupply, BN.from(ytMarketAddLiqTransaction.received[0].rawAmount()));
-                }
+                }))
 
                 return {
                     tokenAmounts: [inputTokenAmount],
                     transactions,
-                    poolShares: {
-                        otPoolShare: otPoolShare.toFixed(DecimalsPrecision),
-                        ytPoolShare: ytPoolShare.toFixed(DecimalsPrecision)
-                    }
+                    poolShares: await getOtYtPoolShares({pendleFixture, transactions})
                 }
             }
         }
