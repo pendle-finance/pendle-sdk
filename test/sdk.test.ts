@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 import { getDecimals } from '../src/networks/helpers/getDecimals';
 
-var chainId = 43114;
+var chainId = 1;
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -65,7 +65,7 @@ describe('Sdk', () => {
 
   it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods({signer, provider, chainId}).fetchClaimableYields(
-      dummyAddress
+      "0x2ff85FEA35606D1B801629351dbe0F90e4E41E38"
     );
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });

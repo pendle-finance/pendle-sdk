@@ -4,6 +4,7 @@ import { TokenAmount } from "./tokenAmount";
 import pairsInfo from "../uniForkPairs/traderJoe.json";
 import { isSameAddress } from "../helpers";
 import { ETHAddress } from "../constants"
+import { distributeConstantsByNetwork } from "../helpers";
 export type Trade = {
     path: string[],
     input: TokenAmount,
@@ -53,6 +54,16 @@ export function computeTradeRoute(inToken: Token, outTokenAmount: TokenAmount): 
         return {
             path: [inToken.address],
             input: outTokenAmount,
+            outPut: outTokenAmount
+        }
+    }
+    if (isSameAddress(inToken.address, ETHAddress) && isSameAddress(outTokenAmount.token.address, distributeConstantsByNetwork(AvaxChainID).contractAddresses.tokens.WETH)) {
+        return {
+            path: [outTokenAmount.token.address],
+            input: new TokenAmount(
+                inToken,
+                outTokenAmount.rawAmount()
+            ),
             outPut: outTokenAmount
         }
     }
