@@ -175,7 +175,6 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
         return await fetchPriceFromCoingecko('joe');
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        console.log(process.env.COMPUTE_PRICE)
         if (process.env.COMPUTE_PRICE) {
           return await fetchPriceFromCoingecko('pendle');
         } else {
