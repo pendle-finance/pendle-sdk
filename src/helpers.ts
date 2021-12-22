@@ -1,6 +1,6 @@
 import { BigNumber as BN, Bytes, Contract, providers, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime, LMEpochDuration } from './constants'
+import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime, LMEpochDuration, ETHAddress } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { DecimalsPrecision } from './math/marketMath';
@@ -33,6 +33,13 @@ export const decimalFactor = (decimal: number): string => {
 
 export const isSameAddress = (address1: string, address2: string): boolean => {
   return address1.toLowerCase() == address2.toLowerCase()
+}
+
+export const areBothNative = (address1: string, address2: string, chainId?: number) => {
+  const networkInfo = distributeConstantsByNetwork(chainId);
+  const WETH = networkInfo.contractAddresses.tokens.WETH;
+  return (isSameAddress(address1, ETHAddress) || isSameAddress(address1, WETH)) 
+    && (isSameAddress(address2, ETHAddress) || isSameAddress(address2, WETH)); 
 }
 
 export const indexRange = (start: number, end: number): number[] => {
