@@ -224,8 +224,8 @@ export class OneClickWrapper {
         const forgeAddress = networkInfo.contractAddresses.forges[this.yieldContract.forgeIdInBytes];
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.yieldContract.forgeIdInBytes).abi, provider);
         const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, provider);
-        const zapEstimatorSingle = {} as Contract;
-        const zapEstimatorPAP = {} as Contract;
+        const zapEstimatorSingle = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorSingle, contracts.PendleZapEstimatorSingle.abi, provider);
+        const zapEstimatorPAP = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorPAP, contracts.PendleZapEstimatorPAP.abi, provider);
 
         const isUnderlyingLP = (): boolean => {
             return this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_SIMPLE || this.yieldContract.forgeIdInBytes == forgeIdsInBytes.SUSHISWAP_COMPLEX

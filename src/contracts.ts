@@ -21,6 +21,8 @@ const PendleSingleSidedStaking = require('@pendle/single-staking/build/artifacts
 const PendleSingleStakingManager = require('@pendle/single-staking/build/artifacts/contracts/SingleStakingManager.sol/SingleStakingManager.json');
 const PendleWrapper = require('../abis/PendleWrapper.json');
 const PendleTraderJoeYieldTokenHolder = require("@pendle/core/build/artifacts/contracts/core/TraderJoe/PendleTraderJoeYieldTokenHolder.sol/PendleTraderJoeYieldTokenHolder.json");
+const PendleZapEstimatorPAP = require('@pendle/core/build/artifacts/contracts/misc/PendleZapEstimator/PendleZapEstimatorPAP.sol/PendleZapEstimatorPAP.json');
+const PendleZapEstimatorSingle = require('@pendle/core/build/artifacts/contracts/misc/PendleZapEstimator/PendleZapEstimatorSingle.sol/PendleZapEstimatorSingle.json');
 const SushiMasterChef = require('../abis/SushiMasterChefABI.json');
 const UniswapRouter02 = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Router02.sol/IUniswapV2Router02.json');
 const JoeMasterChef = require('../abis/JoeMasterChefABI.json');
@@ -57,6 +59,8 @@ export const contracts = {
   PendleCompoundForge,
   PendleCompoundV2Forge,
   PendleTraderJoeYieldTokenHolder,
+  PendleZapEstimatorPAP,
+  PendleZapEstimatorSingle,
   SushiMasterChef,
   UniswapRouter02,
   JoeMasterChef,

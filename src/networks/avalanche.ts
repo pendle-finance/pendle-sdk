@@ -349,7 +349,9 @@ export const avalancheContracts: NetworkContractAddresses = {
         PendleWrapper: '0xa2bd794aa28a46f180fad87ece6b56e910434946',
         Comptroller: '0x486af39519b4dc9a7fccd318217352830e8ad9b4',
         JoeRouter: '0x60ae616a2155ee3d9a68541ba4544862310933d4',
-        TIMEStaking: '0x4456b87af11e87e329ab7d7c7a246ed1ac2168b9'
+        TIMEStaking: '0x4456b87af11e87e329ab7d7c7a246ed1ac2168b9',
+        PendleZapEstimatorPAP: '0xe9dadd8e4e48997264b839a38d5f67d321b7f6be',
+        PendleZapEstimatorSingle: '0xe42e8d0923cc9ff772b3b81125a628c771aa46e4'
     },
     tokens: {
         USDC: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
