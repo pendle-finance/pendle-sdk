@@ -1,8 +1,9 @@
 import * as dotenv from 'dotenv';
 import BigNumber from 'bignumber.js';
+import AvaxFlat from '@pendle/core/deployments/AVAX-flat.json';
+import MainnetFlat from '@pendle/core/deployments/mainnet-flat.json';
 import { Contract, providers } from 'ethers';
-import { Token, TokenAmount, contracts, distributeConstantsByNetwork, fetchTokenPrice } from '../src';
-import { flat } from '../scripts/flat';
+import { type NetworkInfo, Token, TokenAmount, contracts, distributeConstantsByNetwork, fetchTokenPrice } from '../src';
 
 dotenv.config();
 jest.setTimeout(30000);
@@ -18,16 +19,19 @@ const ChainIds: Record<string, number> = {
   AVALANCHE: 43114,
 };
 
-const NetworkConstants = {
+const NetworkConstants: Record<number, NetworkInfo & {
+  provider: providers.JsonRpcProvider;
+  flat: Record<string, string | number>
+}> = {
   [ChainIds.ETHEREUM]: {
     ...distributeConstantsByNetwork(ChainIds.ETHEREUM),
     provider: new providers.JsonRpcProvider(`https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`),
-    flat: flat.MainnetFlat,
+    flat: MainnetFlat,
   },
   [ChainIds.AVALANCHE]: {
     ...distributeConstantsByNetwork(ChainIds.AVALANCHE),
     provider: new providers.JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc'),
-    flat: flat.AvaxFlat,
+    flat: AvaxFlat,
   },
 };
 
@@ -79,41 +83,37 @@ async function getMarketSwapFees(): Promise<BigNumber>{
   const markets = {
     [ChainIds.ETHEREUM]: {
       AAVE: {
-        forge: flat.MainnetFlat.FORGE_AAVE_V2,
+        forge: MainnetFlat.FORGE_AAVE_V2,
         tokens: ['USDC'],
       },
       COMPOUND: {
-        forge: flat.MainnetFlat.FORGE_COMPOUND,
-        tokens: ['DAI'],
-      },
-      COMPOUND_V2: {
-        forge: flat.MainnetFlat.FORGE_COMPOUND_V2,
+        forge: MainnetFlat.FORGE_COMPOUND,
         tokens: ['DAI'],
       },
       SUSHISWAPSIMPLE: {
-        forge: flat.MainnetFlat.FORGE_SUSHISWAPSIMPLE,
+        forge: MainnetFlat.FORGE_SUSHISWAPSIMPLE,
         tokens: ['SLP_PENDLE_WETH'],
       },
       SUSHISWAPCOMPLEX: {
-        forge: flat.MainnetFlat.FORGE_SUSHISWAPCOMPLEX,
+        forge: MainnetFlat.FORGE_SUSHISWAPCOMPLEX,
         tokens: ['SLP_USDC_WETH'],
       },
     },
     [ChainIds.AVALANCHE]: {
       BENQI: {
-        forge: flat.AvaxFlat.FORGE_BENQI,
+        forge: AvaxFlat.FORGE_BENQI,
         tokens: ['USDC', 'WAVAX'],
       },
       XJOE: {
-        forge: flat.AvaxFlat.FORGE_XJOE,
+        forge: AvaxFlat.FORGE_XJOE,
         tokens: ['JOE'],
       },
       TRADERJOESIMPLE: {
-        forge: flat.AvaxFlat.FORGE_TRADERJOESIMPLE,
+        forge: AvaxFlat.FORGE_TRADERJOESIMPLE,
         tokens: ['JLP_WAVAX_PENDLE'],
       },
       WONDERLAND: {
-        forge: flat.AvaxFlat.FORGE_WONDERLAND,
+        forge: AvaxFlat.FORGE_WONDERLAND,
         tokens: ['MEMO'],
       },
     },
