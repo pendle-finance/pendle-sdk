@@ -10,7 +10,7 @@ import tokens from './traderJoeTokens.json';
 var chainId = 4314;
 
 const JoeFactoryAddress = '0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10';
-const JOE_INIT_CODE_HASH = '0x0bbca9af0511ad1a1da383135cf3a8d2ac620e549ef9f6ae3a4c33c2fed0af91'
+const JoeFactoryContract = new Contract(JoeFactoryAddress, contracts.UniForkFactory.abi);
 
 export type PoolDetail = {
     address: string,
@@ -27,12 +27,9 @@ export type PoolDetail = {
     decimals: number
 }
 
-async function getOnePool(tokenI: any, tokenJ: any, provider: providers.JsonRpcProvider): Promise<PoolDetail> {
+export async function getOnePool(tokenI: any, tokenJ: any, provider: providers.JsonRpcProvider): Promise<PoolDetail> {
     const pairContract = new Contract(
-        getCreate2Address(
-            JoeFactoryAddress, 
-            keccak256(['bytes'], [pack(['address', 'address'], [tokenI.address, tokenJ.address])]),
-            JOE_INIT_CODE_HASH),
+        await JoeFactoryContract.connect(provider).getPair(tokenI.address, tokenJ.address),
         contracts.UniswapV2Pair.abi,
         provider);
     const reserves = await pairContract.getReserves();
@@ -64,6 +61,7 @@ export async function generateTJPoolDetails(provider: providers.JsonRpcProvider)
             promises.push(getOnePool(tokens[i], tokens[j], provider));
         } 
     }
+
     res = await Promise.allSettled(promises).then((values) => {
         return values.filter((v) => v.status == "fulfilled").map((v: any)=> v.value);
     })

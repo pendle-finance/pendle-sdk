@@ -6,6 +6,7 @@ import { ETHAddress } from "../constants"
 import { distributeConstantsByNetwork } from "../helpers";
 import { PoolDetail } from "../uniForkPairs";
 import axios from "axios";
+import { utils } from "ethers";
 export type Trade = {
     path: string[],
     input: TokenAmount,
@@ -16,15 +17,14 @@ const AvaxChainID = 43114;
 
 export async function populateJoePairs(): Promise<PoolDetail[]> {
     var traderJoePairs = await axios.get('https://api.pendle.finance/pool/detail/avalanche').then((res: any) => res.data);
-    console.log(traderJoePairs);
-    return [];
+    return traderJoePairs;
 }
 
 function wrapTokenToJoeCurrency(token: Token): JoeCurrency {
     if (isSameAddress(token.address, ETHAddress)) {
         return CAVAX;
     }
-    return new JoeToken(AvaxChainID, token.address, token.decimals);
+    return new JoeToken(AvaxChainID, utils.getAddress(token.address), token.decimals);
 }
 
 function wrapTokenAmountToJoeCurrencyAmount(tokenAmount: TokenAmount): JoeCurrencyAmount {

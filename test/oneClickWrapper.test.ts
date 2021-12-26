@@ -1,10 +1,10 @@
-import { OneClickWrapper, Token, EXP_2022, EXP_2023, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails, ETHToken, dummyAddress, EXP_2022JUN, EXP_WONDERLAND } from "../src";
+import { OneClickWrapper, Token, EXP_2022, EXP_2023, YieldContract, forgeIdsInBytes, Action, TokenAmount, SimulationDetails, ETHToken, dummyAddress, EXP_2022JUN, EXP_WONDERLAND, getOnePool, generateTJPoolDetails } from "../src";
 import { NetworkInfo } from '../src/networks';
 
 import { ethers, BigNumber as BN, utils } from 'ethers';
 import * as dotenv from 'dotenv';
-import { distributeConstantsByNetwork } from "../src/helpers";
-import { populateJoePairs } from "../src/entities/tradeRouteProducer";
+import { distributeConstantsByNetwork, decimalFactor } from "../src/helpers";
+import { computeTradeRoute, populateJoePairs } from "../src/entities/tradeRouteProducer";
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -108,7 +108,7 @@ describe("One click wrapper", () => {
 
   })
 
-  it.only('apr', async() => {
+  it('apr', async() => {
     const res2 = await wrapper.methods({signer, provider: signer.provider, chainId}).apr(Action.stakeOTYT);
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
@@ -126,6 +126,31 @@ describe("One click wrapper", () => {
   })
 
   it('TradeRoute', async() => {
-    await populateJoePairs();
+    var trade = await computeTradeRoute(new Token('0xfb98b335551a418cd0737375a2ea0ded62ea213b', 18), new TokenAmount(
+      new Token(
+        '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', 6
+      ), decimalFactor(10)
+    ));
+    console.log(trade)
+  })
+
+  it.only('generator', async() => {
+    var tokenI =     {
+      "chainId": 43114,
+      "address": "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664",
+      "decimals": 6,
+      "name": "USD Coin - Bridged",
+      "symbol": "USDC.e",
+      "logoURI": "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664/logo.png"
+    };
+    var tokenJ =     {
+      "chainId": 43114,
+      "address": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+      "decimals": 18,
+      "name": "Wrapped AVAX",
+      "symbol": "WAVAX",
+      "logoURI": "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7/logo.png"
+    };
+    (await generateTJPoolDetails( provider))
   })
 })
