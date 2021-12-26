@@ -845,13 +845,13 @@ export class OneClickWrapper {
             var estimationResult: EstimatorPAPReseult = {} as EstimatorPAPReseult;
 
             for (var i = 0; i < 2; i ++) {
-                const wavaxTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(
+                const wavaxTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(
                     isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.WETH)
                         ? initialTokens.underlyingToken0
                         : initialTokens.underlyingToken1!,
                     outputAmount.wavax
                 ))
-                const pendleTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(
+                const pendleTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(
                     isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.PENDLE)
                         ? initialTokens.underlyingToken0
                         : initialTokens.underlyingToken1!,
@@ -950,8 +950,8 @@ export class OneClickWrapper {
             var estimationResult: EstimatorSingleResult = {} as EstimatorSingleResult;
 
             for (var i = 0; i < 2; i ++) {
-                const underlyingTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.underlyingToken0, outputAmount.underlying));
-                const baseTokenTrade: Trade = computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.baseToken, outputAmount.baseToken));
+                const underlyingTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.underlyingToken0, outputAmount.underlying));
+                const baseTokenTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.baseToken, outputAmount.baseToken));
                 tokenZapData.underlyingSwapPath = underlyingTrade.path;
                 tokenZapData.baseTokenSwapPath = baseTokenTrade.path;
 

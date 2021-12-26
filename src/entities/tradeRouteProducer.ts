@@ -1,10 +1,11 @@
 import {Pair, Token as JoeToken, TokenAmount as JoeTokenAmount,Trade as JoeTrade, CAVAX, Currency as JoeCurrency, CurrencyAmount as JoeCurrencyAmount} from "@traderjoe-xyz/sdk"
 import { Token, ETHToken } from "./token";
 import { TokenAmount } from "./tokenAmount";
-import pairsInfo from "../uniForkPairs/traderJoe.json";
 import { isSameAddress } from "../helpers";
 import { ETHAddress } from "../constants"
 import { distributeConstantsByNetwork } from "../helpers";
+import { PoolDetail } from "../uniForkPairs";
+import axios from "axios";
 export type Trade = {
     path: string[],
     input: TokenAmount,
@@ -13,16 +14,10 @@ export type Trade = {
 
 const AvaxChainID = 43114;
 
-var traderJoePairs: Pair[] = [];
-
-function populateJoePairs() {
-    for (const pInfo of pairsInfo) {
-        const token0: JoeToken = new JoeToken(AvaxChainID, pInfo.token0.address, pInfo.token0.decimals);
-        const token1: JoeToken = new JoeToken(AvaxChainID, pInfo.token1.address, pInfo.token1.decimals);
-        const token0Amount: JoeTokenAmount = new JoeTokenAmount(token0, pInfo.token0.reserve);
-        const token1Amount: JoeTokenAmount = new JoeTokenAmount(token1, pInfo.token1.reserve);
-        traderJoePairs.push(new Pair(token0Amount, token1Amount, AvaxChainID));
-    }
+export async function populateJoePairs(): Promise<PoolDetail[]> {
+    var traderJoePairs = await axios.get('https://api.pendle.finance/pool/detail/avalanche').then((res: any) => res.data);
+    console.log(traderJoePairs);
+    return [];
 }
 
 function wrapTokenToJoeCurrency(token: Token): JoeCurrency {
@@ -49,7 +44,7 @@ function unwrapJoeCurrencyToToken(joeToken: JoeCurrency): Token {
 function unwrapJoeCurrencyAmountToTokenAmount(joeTokenAmount: JoeTokenAmount): TokenAmount {
     return new TokenAmount(unwrapJoeCurrencyToToken(joeTokenAmount.token), joeTokenAmount.toExact());
 }
-export function computeTradeRoute(inToken: Token, outTokenAmount: TokenAmount): Trade {
+export async function computeTradeRoute(inToken: Token, outTokenAmount: TokenAmount): Promise<Trade> {
     if (isSameAddress(inToken.address, outTokenAmount.token.address)) {
         return {
             path: [inToken.address],
@@ -67,11 +62,14 @@ export function computeTradeRoute(inToken: Token, outTokenAmount: TokenAmount): 
             outPut: outTokenAmount
         }
     }
-    if (traderJoePairs.length === 0) {
-        populateJoePairs();
+    var traderJoePairs = await populateJoePairs();
+    const pairFormatter = (p: PoolDetail): Pair => {
+        const tokenAmount0: JoeTokenAmount = new JoeTokenAmount(new JoeToken(AvaxChainID, p.token0.address, p.token0.decimals), p.token0.reserve);
+        const tokenAmount1: JoeTokenAmount = new JoeTokenAmount(new JoeToken(AvaxChainID, p.token1.address, p.token1.decimals), p.token1.reserve);
+        return new Pair(tokenAmount0, tokenAmount1, AvaxChainID);
     }
     const outTokenAmountJoe: JoeCurrencyAmount = wrapTokenAmountToJoeCurrencyAmount(outTokenAmount);
-    const bestTrade: JoeTrade = JoeTrade.bestTradeExactOut(traderJoePairs, wrapTokenToJoeCurrency(inToken), outTokenAmountJoe)[0];
+    const bestTrade: JoeTrade = JoeTrade.bestTradeExactOut(traderJoePairs.map(pairFormatter), wrapTokenToJoeCurrency(inToken), outTokenAmountJoe)[0];
     return {
         path: bestTrade.route.path.map((t: JoeToken) => t.address),
         input: unwrapJoeCurrencyAmountToTokenAmount(bestTrade.inputAmount as JoeTokenAmount),
