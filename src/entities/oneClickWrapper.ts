@@ -1,15 +1,15 @@
-import { providers, BigNumber as BN } from "ethers";
+import { providers, BigNumber as BN, utils } from "ethers";
 import { AprInfo, ChainSpecifics } from "./types";
 import { dummyAddress, forgeIdsInBytes, zeroAddress, ONE_MINUTE, ETHAddress, ZERO } from "../constants";
 import { dummyTokenAmount, TokenAmount } from './tokenAmount';
 import { YieldContract } from "./yieldContract";
 import { Ot } from "./ot";
 import { Yt } from "./yt";
-import { Token } from "./token";
+import { Token, ETHToken } from "./token";
 import { Contract } from "ethers";
 import { StakingPool } from "./stakingPool";
 import { LMINFO, MARKETINFO, NetworkInfo, PENDLEMARKETNFO } from "../networks";
-import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, isSameAddress, submitTransaction, decimalFactor, getOutTokenAddress } from "../helpers";
+import { distributeConstantsByNetwork, getABIByForgeId, getCurrentTimestamp, isSameAddress, submitTransaction, decimalFactor, getOutTokenAddress, isNativeOrEquivalent } from "../helpers";
 import { contracts } from "../contracts";
 import { PendleMarket, Market, OtherMarketDetails, AddDualLiquidityDetails } from "./market";
 import { calcOtherTokenAmount, calcShareOfPool, calcSlippedDownAmount, calcSlippedUpAmount, DecimalsPrecision, PercentageMaxDecimals } from "../math/marketMath";
@@ -19,7 +19,14 @@ import { CurrencyAmount, ZeroCurrencyAmount } from "./currencyAmount";
 import { MasterChef } from "./masterChef";
 import { cdiv, rdiv } from "../math/mathLib"
 import { Comptroller } from "./comptroller";
-import { Trade, computeTradeRoute } from "./tradeRouteProducer";
+import { Trade, computeTradeRouteExactOut, computeTradeRouteExactIn } from "./tradeRouteProducer";
+import { 
+    PendleZapEstimatorSingle, 
+    SingleTokenZapDataStruct,
+    SwapInfoStructOutput,
+    BaseSplitStructOutput
+} from "@pendle/core/typechain-types/PendleZapEstimatorSingle";
+import { PAPReservesStructOutput, DoubleTokenZapDataStruct } from "@pendle/core/typechain-types/PendleZapEstimatorPAP";
 
 export enum Action {
     stakeOT,
@@ -158,38 +165,16 @@ export type DataAddLiqYT = {
     marketFactoryId: string;
     liqMiningAddr: string;
 }
-
-export type EstimatorTokenizeData = {
-    marketFactoryId: string;
-    forgeId: string;
-    underlyingAsset: string;
-    expiry: number;
-}
-
-export type EstimatorSwapInfo = {
-    amountIn: string;
-    amountOut: string;
-}
-
-export type EstimatorBaseTokenSplit = {
-    ot: string;
-    yt: string;
-}
-
-type PAPReserves = {
-    wavax: string;
-    pendle: string;
-}
 export type EstimatorPAPReseult = {
-    wavaxInfo: EstimatorSwapInfo,
-    pendleInfo: EstimatorSwapInfo,
-    amountToMintLP: PAPReserves,
-    split: EstimatorBaseTokenSplit
-}
+    wavaxInfo: SwapInfoStructOutput;
+    pendleInfo: SwapInfoStructOutput;
+    amountToMintLP: PAPReservesStructOutput;
+    split: BaseSplitStructOutput;
+  }
 export type EstimatorSingleResult = {
-    underlyingInfo: EstimatorSwapInfo,
-    baseTokenInfo: EstimatorSwapInfo,
-    split: EstimatorBaseTokenSplit
+    underInfo: SwapInfoStructOutput;
+    baseInfo: SwapInfoStructOutput;
+    split: BaseSplitStructOutput;
 }
 
 export type PairTokenAmount = {
@@ -224,7 +209,7 @@ export class OneClickWrapper {
         const forgeAddress = networkInfo.contractAddresses.forges[this.yieldContract.forgeIdInBytes];
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.yieldContract.forgeIdInBytes).abi, provider);
         const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, provider);
-        const zapEstimatorSingle = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorSingle, contracts.PendleZapEstimatorSingle.abi, provider);
+        const zapEstimatorSingle: PendleZapEstimatorSingle = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorSingle, contracts.PendleZapEstimatorSingle.abi, provider) as PendleZapEstimatorSingle;
         const zapEstimatorPAP = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorPAP, contracts.PendleZapEstimatorPAP.abi, provider);
 
         const isUnderlyingLP = (): boolean => {
@@ -795,6 +780,8 @@ export class OneClickWrapper {
                         networkInfo.contractAddresses.tokens.TIME,
                         networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.TIME]
                     );
+                } else if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.BENQI && isSameAddress(this.yieldContract.underlyingAsset.address, networkInfo.contractAddresses.tokens.WETH)) {
+                    tokens.underlyingToken0 = ETHToken;
                 } else {
                     tokens.underlyingToken0 = this.yieldContract.underlyingAsset
                 }
@@ -808,14 +795,6 @@ export class OneClickWrapper {
             dataPull: DataPull,
             estimationResult: EstimatorPAPReseult
         }> => {
-            type DoubleTokenZapData = {
-                mode: Action;
-                tknzData: EstimatorTokenizeData;
-                inAmount: string;
-                wavaxPath: string[];
-                pendlePath: string[];
-                slippage: string;
-            }
 
             const deadline = await getDeadline();;
             const initialTokens = getInitialTokens(pendleFixture);
@@ -826,83 +805,87 @@ export class OneClickWrapper {
                 mode: action,
                 inAmount: inputTokenAmount.rawAmount(),
                 slippage: rslippage
-            } as DoubleTokenZapData;
+            } as DoubleTokenZapDataStruct;
             const marketFactoryId: string = await pendleFixture.ytMarket.methods({signer, provider, chainId}).getMarketFactoryId();
             tokenZapData.tknzData = {
                 marketFactoryId,
                 forgeId: this.yieldContract.forgeIdInBytes,
-                underlyingAsset: this.yieldContract.underlyingAsset.address,
+                underAsset: this.yieldContract.underlyingAsset.address,
                 expiry: this.yieldContract.expiry
             }
 
-            const testOutPutAmount: string = decimalFactor(3);
-            var outputAmount: {wavax: string, pendle: string} = {
-                wavax: testOutPutAmount,
-                pendle: testOutPutAmount
-            }
             const dataPull = {} as DataPull;
             dataPull.deadline = deadline;
             var estimationResult: EstimatorPAPReseult = {} as EstimatorPAPReseult;
 
-            for (var i = 0; i < 2; i ++) {
-                const wavaxTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(
-                    isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.WETH)
-                        ? initialTokens.underlyingToken0
-                        : initialTokens.underlyingToken1!,
-                    outputAmount.wavax
-                ))
-                const pendleTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(
-                    isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.PENDLE)
-                        ? initialTokens.underlyingToken0
-                        : initialTokens.underlyingToken1!,
-                    outputAmount.pendle
-                ))
-                tokenZapData.wavaxPath = wavaxTrade.path;
-                tokenZapData.pendlePath = pendleTrade.path;
-
-                estimationResult = await zapEstimatorPAP.calcPapZapSwapInfo(tokenZapData);
+            var wavaxTrade: Trade = await computeTradeRouteExactIn(inputTokenAmount, 
+                isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.WETH)
+                    ? initialTokens.underlyingToken0
+                    : initialTokens.underlyingToken1!
+            );
+            var pendleTrade: Trade = await computeTradeRouteExactIn(inputTokenAmount, 
+                isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.PENDLE)
+                    ? initialTokens.underlyingToken0
+                    : initialTokens.underlyingToken1!
+            )
+            tokenZapData.wavaxPath = wavaxTrade.path;
+            tokenZapData.pendlePath = pendleTrade.path;
+            estimationResult = await zapEstimatorPAP.calcPapZapSwapInfo(tokenZapData);
                 
-                if (i == 0) {
-                    outputAmount.wavax = estimationResult.wavaxInfo.amountOut;
-                    outputAmount.pendle = estimationResult.pendleInfo.amountOut;
-                } else {
-                    dataPull.swaps = [];
-                    dataPull.pulls = [];
+            var wavaxEstimate: string = estimationResult.wavaxInfo.amountOut.toString();
+            var pendleEstimate: string = estimationResult.pendleInfo.amountOut.toString();
+            wavaxTrade = await computeTradeRouteExactOut(inputTokenAmount.token, new TokenAmount(
+                isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.WETH)
+                    ? initialTokens.underlyingToken0
+                    : initialTokens.underlyingToken1!,
+                wavaxEstimate)
+            );
+            pendleTrade = await computeTradeRouteExactOut(inputTokenAmount.token, new TokenAmount(
+                isSameAddress(initialTokens.underlyingToken0.address, networkInfo.contractAddresses.tokens.PENDLE)
+                    ? initialTokens.underlyingToken0
+                    : initialTokens.underlyingToken1!,
+                pendleEstimate)
+            );
+            tokenZapData.wavaxPath = wavaxTrade.path;
+            tokenZapData.pendlePath = pendleTrade.path;
+            estimationResult = await zapEstimatorPAP.calcPapZapSwapInfo(tokenZapData);
 
-                    if (isSameAddress(inputTokenAmount.token.address, ETHAddress)) {
-                        dataPull.pulls.push({
-                            token: inputTokenAmount.token.address,
-                            amount: estimationResult.wavaxInfo.amountOut
-                        })
-                        dataPull.swaps.push({
-                            amountInMax: estimationResult.pendleInfo.amountIn,
-                            amountOut: estimationResult.pendleInfo.amountOut,
-                            path: pendleTrade.path
-                        })
-                    } else if (isSameAddress(inputTokenAmount.token.address, networkInfo.contractAddresses.tokens.PENDLE)) {
-                        dataPull.pulls.push({
-                            token: inputTokenAmount.token.address,
-                            amount: estimationResult.pendleInfo.amountOut
-                        });
-                        dataPull.swaps.push({
-                            amountInMax: estimationResult.wavaxInfo.amountIn,
-                            amountOut: estimationResult.wavaxInfo.amountOut,
-                            path: wavaxTrade.path
-                        })
-                    } else {
-                        dataPull.swaps.push({
-                            amountInMax: estimationResult.wavaxInfo.amountIn,
-                            amountOut: estimationResult.wavaxInfo.amountOut,
-                            path: wavaxTrade.path
-                        })
-                        dataPull.swaps.push({
-                            amountInMax: estimationResult.pendleInfo.amountIn,
-                            amountOut: estimationResult.pendleInfo.amountOut,
-                            path: pendleTrade.path
-                        })
-                    }
-                }
+            dataPull.swaps = [];
+            dataPull.pulls = [];
+
+            if (isNativeOrEquivalent(inputTokenAmount.token.address, this.yieldContract.chainId)) {
+                dataPull.pulls.push({
+                    token: inputTokenAmount.token.address,
+                    amount: estimationResult.wavaxInfo.amountOut.toString()
+                })
+                dataPull.swaps.push({
+                    amountInMax: estimationResult.pendleInfo.amountIn.toString(),
+                    amountOut: estimationResult.pendleInfo.amountOut.toString(),
+                    path: pendleTrade.path
+                })
+            } else if (isSameAddress(inputTokenAmount.token.address, networkInfo.contractAddresses.tokens.PENDLE)) {
+                dataPull.pulls.push({
+                    token: inputTokenAmount.token.address,
+                    amount: estimationResult.pendleInfo.amountOut.toString()
+                });
+                dataPull.swaps.push({
+                    amountInMax: estimationResult.wavaxInfo.amountIn.toString(),
+                    amountOut: estimationResult.wavaxInfo.amountOut.toString(),
+                    path: wavaxTrade.path
+                })
+            } else {
+                dataPull.swaps.push({
+                    amountInMax: estimationResult.wavaxInfo.amountIn.toString(),
+                    amountOut: estimationResult.wavaxInfo.amountOut.toString(),
+                    path: wavaxTrade.path
+                })
+                dataPull.swaps.push({
+                    amountInMax: estimationResult.pendleInfo.amountIn.toString(),
+                    amountOut: estimationResult.pendleInfo.amountOut.toString(),
+                    path: pendleTrade.path
+                })
             }
+            
             return {
                 dataPull,
                 estimationResult
@@ -913,14 +896,6 @@ export class OneClickWrapper {
             dataPull: DataPull,
             estimationResult: EstimatorSingleResult
         }> => {
-            type SingleTokenZapData = {
-                mode: Action;
-                tknzData: EstimatorTokenizeData;
-                inAmount: string;
-                underlyingSwapPath: string[];
-                baseTokenSwapPath: string[];
-                slippage: string;
-            }
             const deadline = await getDeadline();;
             const initialTokens = getInitialTokens(pendleFixture);
 
@@ -930,79 +905,82 @@ export class OneClickWrapper {
                 mode: action,
                 inAmount: inputTokenAmount.rawAmount(),
                 slippage: rslippage
-            } as SingleTokenZapData;
+            } as SingleTokenZapDataStruct;
             const marketFactoryId: string = await pendleFixture.ytMarket.methods({signer, provider, chainId}).getMarketFactoryId();
             tokenZapData.tknzData = {
                 marketFactoryId,
                 forgeId: this.yieldContract.forgeIdInBytes,
-                underlyingAsset: this.yieldContract.underlyingAsset.address,
+                underAsset: this.yieldContract.underlyingAsset.address,
                 expiry: this.yieldContract.expiry
-            }
-
-            const testOutPutAmount: string = decimalFactor(3);
-            var outputAmount: {underlying: string, baseToken: string} = {
-                underlying: testOutPutAmount,
-                baseToken: testOutPutAmount
             }
 
             const dataPull = {} as DataPull;
             dataPull.deadline = deadline;
             var estimationResult: EstimatorSingleResult = {} as EstimatorSingleResult;
 
-            for (var i = 0; i < 2; i ++) {
-                const underlyingTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.underlyingToken0, outputAmount.underlying));
-                const baseTokenTrade: Trade = await computeTradeRoute(inputTokenAmount.token, new TokenAmount(initialTokens.baseToken, outputAmount.baseToken));
-                tokenZapData.underlyingSwapPath = underlyingTrade.path;
-                tokenZapData.baseTokenSwapPath = baseTokenTrade.path;
+            var underlyingTrade: Trade = await computeTradeRouteExactIn(inputTokenAmount, initialTokens.underlyingToken0);
+            var baseTokenTrade: Trade = await computeTradeRouteExactIn(inputTokenAmount, initialTokens.baseToken);
+            tokenZapData.underPath = underlyingTrade.path;
+            tokenZapData.basePath = baseTokenTrade.path;
+            estimationResult = await zapEstimatorSingle.calcSingleTokenZapSwapInfo(tokenZapData);
+            
+            var underlyingEstimate: string = estimationResult.underInfo.amountOut.toString();
+            var baseTokenEstimate: string = estimationResult.baseInfo.amountOut.toString();
+            underlyingTrade = await computeTradeRouteExactOut(inputTokenAmount.token, new TokenAmount(initialTokens.underlyingToken0, underlyingEstimate));
+            baseTokenTrade = await computeTradeRouteExactOut(inputTokenAmount.token, new TokenAmount(initialTokens.baseToken, baseTokenEstimate));
+            tokenZapData.underPath = underlyingTrade.path;
+            tokenZapData.basePath = baseTokenTrade.path;
+            estimationResult = await zapEstimatorSingle.calcSingleTokenZapSwapInfo(tokenZapData);
 
-                estimationResult = await zapEstimatorSingle.calcSingleTokenZapSwapInfo(tokenZapData);
-                if (i == 0) {
-                    outputAmount.underlying = estimationResult.underlyingInfo.amountOut;
-                    outputAmount.baseToken = estimationResult.baseTokenInfo.amountOut;
+            dataPull.swaps = [];
+            dataPull.pulls = [];
+
+            if (isSameAddress(initialTokens.underlyingToken0.address, initialTokens.baseToken.address)) {
+                if (isSameAddress(inputTokenAmount.token.address, initialTokens.underlyingToken0.address)) {
+                    dataPull.pulls.push({
+                        token: inputTokenAmount.token.address,
+                        amount: inputTokenAmount.rawAmount()
+                    })
                 } else {
-                    dataPull.swaps = [];
-                    dataPull.pulls = [];
+                    dataPull.swaps.push({
+                        amountInMax: inputTokenAmount.rawAmount(),
+                        amountOut: BN.from(estimationResult.underInfo.amountOut).add(estimationResult.baseInfo.amountOut).toString(),
+                        path: underlyingTrade.path
+                    })
+                }
+            } else {
+                var amountToPull: BN = BN.from(0);
+                if (!isSameAddress(inputTokenAmount.token.address, initialTokens.underlyingToken0.address)) {
+                    dataPull.swaps.push({
+                        amountInMax: estimationResult.underInfo.amountIn.toString(),
+                        amountOut: estimationResult.underInfo.amountOut.toString(),
+                        path: underlyingTrade.path
+                    })
+                } else {
+                    amountToPull = amountToPull.add(estimationResult.underInfo.amountIn);
+                }
+                if (!isSameAddress(inputTokenAmount.token.address, initialTokens.baseToken.address)) {
+                    dataPull.swaps.push({
+                        amountInMax: estimationResult.baseInfo.amountIn.toString(),
+                        amountOut: estimationResult.baseInfo.amountOut.toString(),
+                        path: baseTokenTrade.path
+                    })
+                } else {
+                    amountToPull = amountToPull.add(estimationResult.baseInfo.amountIn);
+                }
 
-                    if (isSameAddress(initialTokens.underlyingToken0.address, initialTokens.baseToken.address)) {
-                        if (!isSameAddress(inputTokenAmount.token.address, initialTokens.underlyingToken0.address)) {
-                            dataPull.swaps.push({
-                                amountInMax: inputTokenAmount.rawAmount(),
-                                amountOut: BN.from(estimationResult.underlyingInfo.amountOut).add(estimationResult.baseTokenInfo.amountOut).toString(),
-                                path: underlyingTrade.path
-                            })
-                        } else {
-                            dataPull.pulls.push({
-                                token: inputTokenAmount.token.address,
-                                amount: inputTokenAmount.rawAmount()
-                            })
-                        }
-                        break;
-                    }
-                    var amountToPull: BN = BN.from(0);
-                    if (!isSameAddress(inputTokenAmount.token.address, initialTokens.underlyingToken0.address)) {
-                        dataPull.swaps.push({
-                            amountInMax: estimationResult.underlyingInfo.amountIn,
-                            amountOut: estimationResult.underlyingInfo.amountOut,
-                            path: underlyingTrade.path
-                        })
-                    } else {
-                        amountToPull.add(estimationResult.underlyingInfo.amountIn);
-                    }
-                    if (!isSameAddress(inputTokenAmount.token.address, initialTokens.baseToken.address)) {
-                        dataPull.swaps.push({
-                            amountInMax: estimationResult.baseTokenInfo.amountIn,
-                            amountOut: estimationResult.baseTokenInfo.amountOut,
-                            path: baseTokenTrade.path
-                        })
-                    } else {
-                        amountToPull = amountToPull.add(estimationResult.baseTokenInfo.amountIn);
-                    }
-
+                if (amountToPull.gt(0)) {
                     dataPull.pulls.push({
                         token: inputTokenAmount.token.address,
                         amount: amountToPull.toString()
                     })
                 }
+            }
+
+            if (isNativeOrEquivalent(inputTokenAmount.token.address, this.yieldContract.chainId)) {
+                dataPull.swaps.forEach((s: DataSwap) => {
+                    s.path[0] = inputTokenAmount.token.address
+                })
             }
             return {
                 dataPull,
@@ -1060,22 +1038,22 @@ export class OneClickWrapper {
                             networkInfo.contractAddresses.tokens.WETH,
                             networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.WETH]
                         ),
-                        estimationResult.amountToMintLP.wavax
+                        estimationResult.amountToMintLP.wavax.toString()
                     ),
                     underlyingAmount1: new TokenAmount(
                         new Token(
                             networkInfo.contractAddresses.tokens.PENDLE,
                             networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.PENDLE]
                         ),
-                        estimationResult.amountToMintLP.pendle
+                        estimationResult.amountToMintLP.pendle.toString()
                     ),
                     baseTokenAmountOT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.ot
+                        estimationResult.split.ot.toString()
                     ),
                     baseTokenAmountYT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.yt
+                        estimationResult.split.yt.toString()
                     )
                 }));
 
@@ -1101,15 +1079,15 @@ export class OneClickWrapper {
                     slippage,
                     underlyingAmount0: new TokenAmount(
                         initialTokens.underlyingToken0,
-                        estimationResult.underlyingInfo.amountOut
+                        estimationResult.underInfo.amountOut.toString()
                     ),
                     baseTokenAmountOT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.ot
+                        estimationResult.split.ot.toString()
                     ),
                     baseTokenAmountYT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.yt
+                        estimationResult.split.yt.toString()
                     )
                 }))
 
@@ -1131,22 +1109,12 @@ export class OneClickWrapper {
             const deadline: number = await getDeadline();
             dataPull.deadline = deadline;
 
-            const maxEthSwapped: BN = dataPull.swaps.reduce((p: BN, s: DataSwap): BN=> {
-                if (isSameAddress(ETHAddress, s.path[0])) {
-                    return p.add(s.amountInMax);
+            const maxEthPaid: BN = sDetails.tokenAmounts.reduce((p: BN, t: TokenAmount): BN => {
+                if (isSameAddress(t.token.address, ETHAddress)) {
+                    return p.add(t.rawAmount());
                 }
-                return p
-            }, ZERO)
-
-            const maxEthPulled: BN = dataPull.pulls.reduce((p: BN, pull: PairTokenAmount)=> {
-                if (isSameAddress(ETHAddress, pull.token)) {
-                    return p.add(pull.amount);
-                } else {
-                    return p;
-                }
-            }, ZERO )
-
-            const maxEthPaid: BN = maxEthPulled.add(maxEthSwapped);
+                return p;
+            }, ZERO);
 
             const dataTknz: DataTknz = {
                 forge: forgeAddress,
@@ -1394,7 +1362,8 @@ export class OneClickWrapper {
             simulateDual,
             simulateSingle,
             send,
-            apr
+            apr,
+            getDataPullWithSwapsForSingleUnderlying
         }
     }
 }

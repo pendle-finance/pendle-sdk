@@ -4,7 +4,7 @@ import { NetworkInfo } from '../src/networks';
 import { ethers, BigNumber as BN, utils } from 'ethers';
 import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork, decimalFactor } from "../src/helpers";
-import { computeTradeRoute, populateJoePairs } from "../src/entities/tradeRouteProducer";
+import { computeTradeRouteExactOut, populateJoePairs } from "../src/entities/tradeRouteProducer";
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -74,12 +74,12 @@ describe("One click wrapper", () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner('0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC');
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.WONDERLAND),
+      utils.parseBytes32String(forgeIdsInBytes.BENQI),
       new Token(
-        '0x136acd46c134e8269052c62a67042d6bdedde3c9',
-        9
+        networkInfo.contractAddresses.tokens.WETH,
+        18
       ),
-      EXP_WONDERLAND.toNumber(),
+      EXP_2023.toNumber(),
       chainId
     );
     wrapper = new OneClickWrapper(yieldContract)
@@ -113,44 +113,34 @@ describe("One click wrapper", () => {
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it('send', async() => {
-    const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateDual(Action.stakeOTYT, new TokenAmount(
-      new Token(
-        networkInfo.contractAddresses.tokens.USDC,
-        6
-      ),
-      BN.from(10).pow(5).toString()
-    ), 0.01)
-    const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.01);
+  it.only('send', async() => {
+    // const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateDual(Action.stakeOTYT, new TokenAmount(
+    //   new Token(
+    //     networkInfo.contractAddresses.tokens.USDC,
+    //     6
+    //   ),
+    //   BN.from(10).pow(5).toString()
+    // ), 0.01)
+    const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(ETHToken, decimalFactor(20)), 0.001);
+    const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.001);
     console.log(JSON.stringify(res, null, '  '));
   })
 
   it('TradeRoute', async() => {
-    var trade = await computeTradeRoute(new Token('0xfb98b335551a418cd0737375a2ea0ded62ea213b', 18), new TokenAmount(
+    var trade = await computeTradeRouteExactOut(ETHToken, new TokenAmount(
       new Token(
-        '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', 6
-      ), decimalFactor(10)
+        '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7', 18
+      ), decimalFactor(9)
     ));
+    // var trade = await computeTradeRouteExactOut(new Token('0xfb98b335551a418cd0737375a2ea0ded62ea213b', 18), new TokenAmount(
+    //   new Token(
+    //     '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', 6
+    //   ), decimalFactor(10)
+    // ));
     console.log(trade)
   })
 
-  it.only('generator', async() => {
-    var tokenI =     {
-      "chainId": 43114,
-      "address": "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664",
-      "decimals": 6,
-      "name": "USD Coin - Bridged",
-      "symbol": "USDC.e",
-      "logoURI": "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664/logo.png"
-    };
-    var tokenJ =     {
-      "chainId": 43114,
-      "address": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-      "decimals": 18,
-      "name": "Wrapped AVAX",
-      "symbol": "WAVAX",
-      "logoURI": "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7/logo.png"
-    };
-    (await generateTJPoolDetails( provider))
+  it('simulate Single', async() => {
+    console.log(JSON.stringify(await wrapper.methods({signer, provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(USDCToken, decimalFactor(10)), 0.001), null, '  '));
   })
 })

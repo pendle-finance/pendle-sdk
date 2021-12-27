@@ -35,6 +35,12 @@ export const isSameAddress = (address1: string, address2: string): boolean => {
   return address1.toLowerCase() == address2.toLowerCase()
 }
 
+export const isNativeOrEquivalent = (address: string, chainId?: number): boolean => {
+  if (isSameAddress(address, ETHAddress)) return true;
+  const WETH = distributeConstantsByNetwork(chainId).contractAddresses.tokens.WETH;
+  return isSameAddress(address, WETH);
+}
+
 export const areBothNative = (address1: string, address2: string, chainId?: number) => {
   const networkInfo = distributeConstantsByNetwork(chainId);
   const WETH = networkInfo.contractAddresses.tokens.WETH;
