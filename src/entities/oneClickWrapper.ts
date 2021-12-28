@@ -27,6 +27,17 @@ import {
     BaseSplitStructOutput
 } from "@pendle/core/typechain-types/PendleZapEstimatorSingle";
 import { PAPReservesStructOutput, DoubleTokenZapDataStruct } from "@pendle/core/typechain-types/PendleZapEstimatorPAP";
+import { 
+    PendleWrapper,
+    DataPullStruct,
+    DataSwapStruct,
+    PairTokenAmountStruct,
+    DataAddLiqOTStruct,
+    DataAddLiqYTStruct,
+    DataTknzSingleStruct,
+    DataAddLiqJoeStruct as DataAddLiqUniFork,
+    DataTknzStruct
+} from "@pendle/core/typechain-types/PendleWrapper";
 
 export enum Action {
     stakeOT,
@@ -61,7 +72,7 @@ export type SimulationDetails = {
         otPoolShare: string
         ytPoolShare: string
     },
-    dataPull: DataPull
+    dataPull: DataPullStruct
 }
 
 export type WrapperAPRInfo = {
@@ -92,14 +103,6 @@ const dummyTransaction: Transaction = {
     received: [dummyTokenAmount, dummyTokenAmount],
     protocol: "pendle"
 }
-const dummySimulation = {
-    tokenAmounts: [dummyTokenAmount],
-    transactions: [dummyTransaction],
-    poolShares: {
-        otPoolShare: '0.5',
-        ytPoolShare: '0.5'
-    }
-}
 
 const forgeIdToMode: Record<string, number> = {
     [forgeIdsInBytes.BENQI]: 0,
@@ -109,28 +112,10 @@ const forgeIdToMode: Record<string, number> = {
     [forgeIdsInBytes.WONDERLAND]: 3
 }
 
-export type DataTknzSingle = {
-    token: string;
-    amount: string;
-}
-
-export const dummyDataTknzSingle: DataTknzSingle = {
+export const dummyDataTknzSingle: DataTknzSingleStruct = {
     token: zeroAddress,
     amount: '0'
 }
-
-export type DataAddLiqUniFork = {
-    tokenA: string;
-    tokenB: string;
-    amountADesired: string; // input
-    amountBDesired: string; // theoritical amount + slippage
-    amountAMin: string; // input
-    amountBMin: string; // theoritical amount - slippage
-    deadline: number; // timestamp + 3 hr
-    kyberPool: string;
-    kybervReserveRatioBounds: number[];
-}
-
 export const dummyDataAddLiqUniFork: DataAddLiqUniFork = {
     tokenA: zeroAddress,
     tokenB: zeroAddress,
@@ -138,33 +123,9 @@ export const dummyDataAddLiqUniFork: DataAddLiqUniFork = {
     amountBDesired: '0',
     amountAMin: '0',
     amountBMin: '0',
-    deadline: 0,
-    kyberPool: zeroAddress,
-    kybervReserveRatioBounds: [0, 0],
+    deadline: 0
 }
 
-export type DataTknz = {
-    single: DataTknzSingle;
-    double: DataAddLiqUniFork;
-    forge: string; // address
-    expiryYT: number;
-}
-
-export type DataAddLiqOT = {
-    baseToken: string;
-    amountTokenDesired: string; // theoritical + slippage
-    amountTokenMin: string; // theoritical - slippage
-    deadline: number; // + 3hr
-    liqMiningAddr: string;
-}
-
-export type DataAddLiqYT = {
-    baseToken: string;
-    amountTokenDesired: string; // theoritical + slippage
-    amountTokenMin: string; // theoritical - slippagef
-    marketFactoryId: string;
-    liqMiningAddr: string;
-}
 export type EstimatorPAPReseult = {
     wavaxInfo: SwapInfoStructOutput;
     pendleInfo: SwapInfoStructOutput;
@@ -175,23 +136,6 @@ export type EstimatorSingleResult = {
     underInfo: SwapInfoStructOutput;
     baseInfo: SwapInfoStructOutput;
     split: BaseSplitStructOutput;
-}
-
-export type PairTokenAmount = {
-    token: string;
-    amount: string;
-}
-
-export type DataSwap = {
-    amountInMax: string;
-    amountOut: string;
-    path: string[];
-}
-
-export type DataPull = {
-    swaps: DataSwap[];
-    pulls: PairTokenAmount[];
-    deadline: number;
 }
 
 export class OneClickWrapper {
@@ -208,7 +152,7 @@ export class OneClickWrapper {
         const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, provider);
         const forgeAddress = networkInfo.contractAddresses.forges[this.yieldContract.forgeIdInBytes];
         const pendleForgeContract = new Contract(forgeAddress, getABIByForgeId(this.yieldContract.forgeIdInBytes).abi, provider);
-        const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, provider);
+        const PendleWrapper = new Contract(networkInfo.contractAddresses.misc.PendleWrapper, contracts.PendleWrapper.abi, provider) as PendleWrapper;
         const zapEstimatorSingle: PendleZapEstimatorSingle = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorSingle, contracts.PendleZapEstimatorSingle.abi, provider) as PendleZapEstimatorSingle;
         const zapEstimatorPAP = new Contract(networkInfo.contractAddresses.misc.PendleZapEstimatorPAP, contracts.PendleZapEstimatorPAP.abi, provider);
 
@@ -331,9 +275,9 @@ export class OneClickWrapper {
                 }
             })
 
-            const dataPull: DataPull = {
+            const dataPull: DataPullStruct = {
                 swaps: [],
-                pulls: testSimulation.dataPull.pulls.map((p: PairTokenAmount): PairTokenAmount => {
+                pulls: testSimulation.dataPull.pulls.map((p: PairTokenAmountStruct): PairTokenAmountStruct => {
                     return {
                         token: p.token,
                         amount: BN.from(p.amount).mul(desiredAmount).div(testAmount).toString()
@@ -624,7 +568,7 @@ export class OneClickWrapper {
                 },
                 dataPull: {
                     swaps: [],
-                    pulls: finalTokenAmounts.map((t: TokenAmount): PairTokenAmount => {
+                    pulls: finalTokenAmounts.map((t: TokenAmount): PairTokenAmountStruct => {
                         return {
                             token: t.token.address,
                             amount: t.rawAmount()
@@ -701,14 +645,14 @@ export class OneClickWrapper {
                     ytPoolShare: simulation.poolShares.ytPoolShare
                 },
                 dataPull: {
-                    swaps: simulation.dataPull.swaps.map((s: DataSwap) => {
+                    swaps: simulation.dataPull.swaps.map((s: DataSwapStruct) => {
                         return {
                             amountInMax: s.amountInMax,
                             amountOut: s.amountOut,
                             path: unwrapEthInPathStartingToken(s.path)
                         }
                     }),
-                    pulls: simulation.dataPull.pulls.map((p: PairTokenAmount): PairTokenAmount => {
+                    pulls: simulation.dataPull.pulls.map((p: PairTokenAmountStruct): PairTokenAmountStruct => {
                         if (isSameAddress(networkInfo.contractAddresses.tokens.WETH, p.token)) {
                             p.token = ETHAddress
                         }
@@ -792,7 +736,7 @@ export class OneClickWrapper {
         }
 
         const getDataPullWithSwapsForPAP = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, pendleFixture: PendleFixture): Promise<{
-            dataPull: DataPull,
+            dataPull: DataPullStruct,
             estimationResult: EstimatorPAPReseult
         }> => {
 
@@ -814,7 +758,7 @@ export class OneClickWrapper {
                 expiry: this.yieldContract.expiry
             }
 
-            const dataPull = {} as DataPull;
+            const dataPull = {} as DataPullStruct;
             dataPull.deadline = deadline;
             var estimationResult: EstimatorPAPReseult = {} as EstimatorPAPReseult;
 
@@ -893,7 +837,7 @@ export class OneClickWrapper {
         }
 
         const getDataPullWithSwapsForSingleUnderlying = async (action: Action, inputTokenAmount: TokenAmount, slippage: number, pendleFixture: PendleFixture): Promise<{
-            dataPull: DataPull,
+            dataPull: DataPullStruct,
             estimationResult: EstimatorSingleResult
         }> => {
             const deadline = await getDeadline();;
@@ -914,7 +858,7 @@ export class OneClickWrapper {
                 expiry: this.yieldContract.expiry
             }
 
-            const dataPull = {} as DataPull;
+            const dataPull = {} as DataPullStruct;
             dataPull.deadline = deadline;
             var estimationResult: EstimatorSingleResult = {} as EstimatorSingleResult;
 
@@ -978,7 +922,7 @@ export class OneClickWrapper {
             }
 
             if (isNativeOrEquivalent(inputTokenAmount.token.address, this.yieldContract.chainId)) {
-                dataPull.swaps.forEach((s: DataSwap) => {
+                dataPull.swaps.forEach((s: DataSwapStruct) => {
                     s.path[0] = inputTokenAmount.token.address
                 })
             }
@@ -988,8 +932,8 @@ export class OneClickWrapper {
             }
         }
 
-        const getSwapTransactionsFromDataPulls = (inputToken: Token, dataPull: DataPull, slippage: number, walletAddress?: string): Transaction[] => {
-            var transactions: Transaction[] = dataPull.swaps.map((swap: DataSwap): Transaction => {
+        const getSwapTransactionsFromDataPulls = (inputToken: Token, dataPull: DataPullStruct, slippage: number, walletAddress?: string): Transaction[] => {
+            var transactions: Transaction[] = dataPull.swaps.map((swap: DataSwapStruct): Transaction => {
                 const outTokenAddress: string = getOutTokenAddress(swap.path);
                 const outToken: Token = new Token(
                     outTokenAddress,
@@ -1002,11 +946,11 @@ export class OneClickWrapper {
                     )],
                     maxPaid: [new TokenAmount(
                         inputToken,
-                        swap.amountInMax
+                        swap.amountInMax.toString()
                     )],
                     received: [new TokenAmount(
                         outToken,
-                        swap.amountOut
+                        swap.amountOut.toString()
                     )],
                     user: walletAddress,
                     protocol: "external",
@@ -1101,11 +1045,15 @@ export class OneClickWrapper {
             return simulationDetails!
         }
 
+        const getBaseTokenForceThreshold = (baseTokenAmount: BN): BN => {
+            return baseTokenAmount.div(20);
+        }
+
         const send = async (action: Action, sDetails: SimulationDetails, slippage: number): Promise<providers.TransactionResponse> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
             const sTxns: Transaction[] = sDetails.transactions;
             
-            const dataPull: DataPull = sDetails.dataPull;
+            const dataPull: DataPullStruct = sDetails.dataPull;
             const deadline: number = await getDeadline();
             dataPull.deadline = deadline;
 
@@ -1116,18 +1064,15 @@ export class OneClickWrapper {
                 return p;
             }, ZERO);
 
-            const dataTknz: DataTknz = {
+            const dataTknz: DataTknzStruct = {
                 forge: forgeAddress,
                 expiryYT: this.yieldContract.expiry
-            } as DataTknz;
+            } as DataTknzStruct;
 
             if (isUnderlyingLP()) {
                 dataTknz.single = dummyDataTknzSingle;
 
-                const dataAddLiqUniFork: DataAddLiqUniFork = {
-                    kyberPool: zeroAddress,
-                    kybervReserveRatioBounds: [0, 0]
-                } as DataAddLiqUniFork;
+                const dataAddLiqUniFork: DataAddLiqUniFork = {} as DataAddLiqUniFork;
                 const addUnderlyingLiqTxn: Transaction = sTxns.find((txn: Transaction) => txn.action == TransactionAction.preMint)!;
                 dataAddLiqUniFork.tokenA = addUnderlyingLiqTxn.paid[0].token.address;
                 dataAddLiqUniFork.tokenB = addUnderlyingLiqTxn.paid[1].token.address;
@@ -1140,14 +1085,14 @@ export class OneClickWrapper {
             } else {
                 const preMintTxn: Transaction = sTxns.find((txn: Transaction) => txn.action == TransactionAction.preMint)!;
                 dataTknz.double = dummyDataAddLiqUniFork;
-                const dataTknzSingle: DataTknzSingle = {
+                const dataTknzSingle: DataTknzSingleStruct = {
                     token: preMintTxn.maxPaid[0].token.address,
                     amount: preMintTxn.maxPaid[0].rawAmount()
                 }
                 dataTknz.single = dataTknzSingle;
             }
 
-            var dataAddLiqOT: DataAddLiqOT = {} as DataAddLiqOT, dataAddLiqYT: DataAddLiqYT = {} as DataAddLiqYT;
+            var dataAddLiqOT: DataAddLiqOTStruct = {} as DataAddLiqOTStruct, dataAddLiqYT: DataAddLiqYTStruct = {} as DataAddLiqYTStruct;
             if (action == Action.stakeOT || action == Action.stakeOTYT) {
                 const otAddLiqTxn: Transaction = getAddOtLiqTxn(sTxns, pendleFixture)!;
                 const baseTokenExpectedAmount: TokenAmount = otAddLiqTxn.paid.find((t: TokenAmount) => !isSameAddress(t.token.address, pendleFixture.ot.address))!;
@@ -1173,32 +1118,39 @@ export class OneClickWrapper {
             const mode: number = forgeIdToMode[this.yieldContract.forgeIdInBytes];
             switch (action) {
                 case Action.stakeOT:
+                    var baseTokenAmount: BN = BN.from(dataAddLiqOT.amountTokenDesired);
                     var args: any[] = [
                         mode,
                         dataPull,
                         dataTknz,
-                        dataAddLiqOT
+                        dataAddLiqOT,
+                        getBaseTokenForceThreshold(baseTokenAmount),
+                        pendleFixture.ytMarket.address
                     ];
                     // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForOT', args, maxEthPaid);
 
                 case Action.stakeYT:
+                    baseTokenAmount = BN.from(dataAddLiqYT.amountTokenDesired);
                     args = [
                         mode,
                         dataPull,
                         dataTknz,
-                        dataAddLiqYT
+                        dataAddLiqYT,
+                        getBaseTokenForceThreshold(baseTokenAmount)
                     ];
                     // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForYT', args, maxEthPaid);
 
                 case Action.stakeOTYT:
+                    baseTokenAmount = BN.from(dataAddLiqYT.amountTokenDesired).add(dataAddLiqOT.amountTokenDesired);
                     args = [
                         mode,
                         dataPull,
                         dataTknz,
                         dataAddLiqOT,
-                        dataAddLiqYT
+                        dataAddLiqYT,
+                        getBaseTokenForceThreshold(baseTokenAmount)
                     ];
                     // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForOTandYT', args, maxEthPaid);

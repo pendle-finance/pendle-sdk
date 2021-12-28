@@ -2222,10 +2222,10 @@
     ethers "^5.0.1"
     web3 "^1.6.1"
 
-"@pendle/core@1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.4.0.tgz#613f5cf6b75bb33b14a9489e5c460e7347f739f2"
-  integrity sha512-XWW+XQaDfA5aNJ8o8JmzOnIW7UMUJqaO/vibs59yOgs3nND7SA1IM6rZ2C8uFY1+GHZa10PeK//FTwCR2zXr8g==
+"@pendle/core@1.6.0-beta.3":
+  version "1.6.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.6.0-beta.3.tgz#211d5375b55f7f804af7824ebb9fd49978c2352d"
+  integrity sha512-+kaEL0KiW117EZ4OwFWHgsm29JkAtO90EC1OxTeNGmYYfphzGfGvE7mAGnsouaU53l3U2CBGwG0gJpFdTDNSMQ==
 
 "@pendle/single-staking@^0.0.1":
   version "0.0.1"
