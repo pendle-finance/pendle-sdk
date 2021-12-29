@@ -1124,7 +1124,7 @@ export class OneClickWrapper {
                         dataPull,
                         dataTknz,
                         dataAddLiqOT,
-                        getBaseTokenForceThreshold(baseTokenAmount),
+                        getBaseTokenForceThreshold(baseTokenAmount).toString(),
                         pendleFixture.ytMarket.address
                     ];
                     // console.log(JSON.stringify(args, null, '  '));
@@ -1137,7 +1137,7 @@ export class OneClickWrapper {
                         dataPull,
                         dataTknz,
                         dataAddLiqYT,
-                        getBaseTokenForceThreshold(baseTokenAmount)
+                        getBaseTokenForceThreshold(baseTokenAmount).toString()
                     ];
                     // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForYT', args, maxEthPaid);
@@ -1150,7 +1150,7 @@ export class OneClickWrapper {
                         dataTknz,
                         dataAddLiqOT,
                         dataAddLiqYT,
-                        getBaseTokenForceThreshold(baseTokenAmount)
+                        getBaseTokenForceThreshold(baseTokenAmount).toString()
                     ];
                     // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForOTandYT', args, maxEthPaid);
@@ -1315,7 +1315,6 @@ export class OneClickWrapper {
             simulateSingle,
             send,
             apr,
-            getDataPullWithSwapsForSingleUnderlying
         }
     }
 }
