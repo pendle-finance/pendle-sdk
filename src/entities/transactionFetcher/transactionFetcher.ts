@@ -124,6 +124,7 @@ export class TransactionFetcher {
       ],
       network: chainIdToNetworkMapping[this.network],
       chainId: this.network,
+      timestamp: mintObj.timestamp,
     }));
   }
 
@@ -196,6 +197,7 @@ export class TransactionFetcher {
       ],
       network: chainIdToNetworkMapping[this.network],
       chainId: this.network,
+      timestamp: redeemObj.timestamp,
     }));
   }
 
@@ -325,6 +327,7 @@ export class TransactionFetcher {
       ],
       network: chainIdToNetworkMapping[this.network],
       chainId: this.network,
+      timestamp: liquidityObj.timestamp,
     }));
   }
 }
