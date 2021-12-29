@@ -300,12 +300,9 @@ export class TransactionFetcher {
       PendleSubgraphUrlMapping[this.network],
       query
     );
-
-    return response.liquidityPools.map((liquidityObj: any) => ({
-      action: liquidityObj.type,
-      hash: liquidityObj.id,
-      amount: { currency: 'USD', amount: parseFloat(liquidityObj.amountUSD) },
-      paid: [
+    
+    return response.liquidityPools.map((liquidityObj: any) => {
+      const transferredTokens = [
         new TokenAmount(
           new Token(liquidityObj.inToken0.id, liquidityObj.inToken0.decimals),
           liquidityObj.inAmount0
@@ -314,20 +311,18 @@ export class TransactionFetcher {
           new Token(liquidityObj.inToken1.id, liquidityObj.inToken1.decimals),
           liquidityObj.inAmount1
         ),
-      ],
-      received: [
-        // new TokenAmount(
-        //   new Token(mintObj.xytAsset.id, mintObj.xytAsset.decimals),
-        //   mintObj.amountMinted
-        // ),
-        // new TokenAmount(
-        //   new Token(mintObj.otAsset.id, mintObj.otAsset.decimals),
-        //   mintObj.amountMinted
-        // ),
-      ],
-      network: chainIdToNetworkMapping[this.network],
-      chainId: this.network,
-      timestamp: liquidityObj.timestamp,
-    }));
-  }
+      ];
+      const isAddLiquidity = liquidityObj.type == "Join";
+      return {
+        action: liquidityObj.type,
+        hash: liquidityObj.id,
+        amount: { currency: 'USD', amount: parseFloat(liquidityObj.amountUSD) },
+        paid: isAddLiquidity ? transferredTokens: [],
+        received: isAddLiquidity ? [] : transferredTokens,
+        network: chainIdToNetworkMapping[this.network],
+        chainId: this.network,
+        timestamp: liquidityObj.timestamp,
+      }
+    })
+  };
 }
