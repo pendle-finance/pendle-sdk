@@ -6,13 +6,9 @@ import { Contract, providers } from 'ethers';
 import { type NetworkInfo, Token, TokenAmount, contracts, distributeConstantsByNetwork, fetchTokenPrice } from '../src';
 
 dotenv.config();
-jest.setTimeout(30000);
 
-describe('Get funds from treasury', () => {
-  it('Gets funds from treasury', async () => {
-    await main();
-  });
-});
+const expiredKeywords = ['2021'];
+const excludesExpiredKeywords = (key: string) => !expiredKeywords.some(x => key.includes(x));
 
 const ChainIds: Record<string, number> = {
   ETHEREUM: 1,
@@ -57,7 +53,7 @@ async function getTreasuryMultisigFunds(): Promise<BigNumber> {
       const chainIdInt = parseInt(chainId);
       const { provider, decimalsRecord, flat } = NetworkConstants[chainIdInt];
       const pools = Object.entries(flat)
-        .filter(([key, value]) => key.startsWith('POOL_'))
+        .filter(([key, value]) => key.startsWith('POOL_') && excludesExpiredKeywords(key))
         .map(([key, value]) => value) as string[];
       const fundsPerPool = pools.map(async (pool) => {
         const poolAddress = pool.toLowerCase();
@@ -123,7 +119,7 @@ async function getMarketSwapFees(): Promise<BigNumber>{
     const chainIdInt = parseInt(chainId);
     const { provider, decimalsRecord, flat } = NetworkConstants[chainIdInt];
     const expiries = Object.entries(flat)
-      .filter(([key, value]) => key.startsWith('TIME_'))
+      .filter(([key, value]) => key.startsWith('TIME_') && excludesExpiredKeywords(key))
       .map(([key, value]) => value);
     return await Promise.all(
       Object.values(market).map(async ({ forge, tokens }) => {
@@ -155,3 +151,10 @@ async function getMarketSwapFees(): Promise<BigNumber>{
 function sumArray(arr: BigNumber[]): BigNumber {
   return arr.reduce((acc, curr) => acc.plus(curr), new BigNumber(0));
 }
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
