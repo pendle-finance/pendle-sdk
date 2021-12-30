@@ -13,6 +13,7 @@ import {
 import { TRANSACTION } from "./transactionFetcher/types";
 import { calcPrincipalForSLPYT } from "../math/marketMath";
 import { ChainSpecifics } from "./types";
+import { getCurrentTimestamp } from "..";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
@@ -131,13 +132,23 @@ export class YieldContract {
             }
         }
         const redeem = async (toRedeem: TokenAmount): Promise<providers.TransactionResponse> => {
-            const args = [
-                this.forgeIdInBytes,
-                this.underlyingAsset.address,
-                this.expiry,
-                toRedeem.rawAmount()
-            ];
-            return submitTransaction(pendleRouterContract, signer!, 'redeemUnderlying', args);
+            const currentTime = await getCurrentTimestamp(provider);
+            if (currentTime > this.expiry) {
+                const args = [
+                    this.forgeIdInBytes,
+                    this.underlyingAsset.address,
+                    this.expiry,
+                ]
+                return submitTransaction(pendleRouterContract, signer!, "redeemAfterExpiry", args);
+            } else {
+                const args = [
+                    this.forgeIdInBytes,
+                    this.underlyingAsset.address,
+                    this.expiry,
+                    toRedeem.rawAmount()
+                ];
+                return submitTransaction(pendleRouterContract, signer!, 'redeemUnderlying', args);
+            }
         }
 
         const getPrincipalPerYT = async (): Promise<TokenAmount> => {
