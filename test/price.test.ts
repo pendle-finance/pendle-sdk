@@ -5,8 +5,11 @@ import { avalancheContracts } from "../src/networks";
 import { decimalFactor, getGasLimitWithETH } from "../src/helpers";
 import { EXP_2023, forgeIdsInBytes, Token, TokenAmount, YieldContract } from "../src";
 import { getGasPrice } from "../src/fetchers/gasPriceFetcher";
-const chainId: number = 43114;
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+const chainId: number = 1;
 jest.setTimeout(300000);
 
 describe("price fetcher", () => {
@@ -22,7 +25,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0xfb98b335551a418cd0737375a2ea0ded62ea213b", chainId: chainId});
+        const res = await fetchTokenPrice({provider, address: "0x31654eb46a3a450265c6dfc4fc4fbbfe371e26fe", chainId: chainId});
         // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })

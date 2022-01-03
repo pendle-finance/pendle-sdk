@@ -7,7 +7,7 @@ import { distributeConstantsByNetwork, indexRange } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(300000);
 
-const chainId: number = 43114;
+const chainId: number = 1;
 const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
 function getMainnetTokens() {
@@ -50,11 +50,11 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner();
-        market = Market.find('0x11b9346eefa301e278f246d857c0a6edfbf97fb4', chainId)
+        market = Market.find('0x685d32f394a5f03e78a1a0f6a91b4e2bf6f52cfe', chainId)
         // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 
-    it.only("PendleMarket.readMarketDetails", async () => {
+    it("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods({signer, provider, chainId}).readMarketDetails();
 
         console.log(JSON.stringify(marketDetails, null, '  '));
@@ -136,6 +136,11 @@ describe("Market", () => {
 
     it.skip('PendleMarket.removeSingle', async () => {
         const response = await market.methods({signer, provider, chainId}).removeSingle(0.5, dummyToken, 0.001);
+        console.log(response);
+    })
+
+    it.only('PendleMarket.getSwapFeeApr', async() => {
+        const response = await market.methods({signer, provider, chainId}).getSwapFeeApr();
         console.log(response);
     })
 
