@@ -4,7 +4,7 @@ import { providers, Contract, BigNumber as BN, utils } from "ethers"
 import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO, YTINFO } from '../networks'
-import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, isSameAddress, submitTransaction } from '../helpers'
+import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, isSameAddress, submitTransaction, getCurrentTimestamp } from '../helpers'
 import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
@@ -13,7 +13,6 @@ import {
 import { TRANSACTION } from "./transactionFetcher/types";
 import { calcPrincipalForSLPYT } from "../math/marketMath";
 import { ChainSpecifics } from "./types";
-import { getCurrentTimestamp } from "..";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
