@@ -4,7 +4,7 @@ import { Contract, providers, BigNumber as BN, utils } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
-import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, getCurrentTimestamp, isSameAddress, xor, decimalFactor, indexRange, submitTransaction } from '../helpers'
+import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, getCurrentTimestamp, isSameAddress, xor, decimalFactor, indexRange, submitTransaction, isExpired } from '../helpers'
 import { CurrencyAmount, ZeroCurrencyAmount } from './currencyAmount';
 import { YieldContract } from './yieldContract';
 import {
@@ -12,7 +12,7 @@ import {
   PendleAmmQuery,
 } from './transactionFetcher';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
-import { forgeIdsInBytes, ONE_DAY, ONE_MINUTE, ETHAddress, ZERO } from '../constants';
+import { forgeIdsInBytes, ONE_DAY, ONE_MINUTE, ETHAddress, ZERO, RONE } from '../constants';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield, fetchWonderlandYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactionFetcher/types';
 import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
@@ -224,6 +224,26 @@ export class PendleMarket extends Market {
       return this.marketFactoryId;
     }
 
+    const getMarketReserves = async (): Promise<MarketReservesRaw> => {
+      const yieldContract = this.yieldContract(); 
+      var marketReserves: MarketReservesRaw;
+      if (!(await isExpired(yieldContract.expiry, provider))) {
+        marketReserves = await marketContract.getReserves();
+      } else {
+        const YTContract: Contract = new Contract(this.tokens[0].address, contracts.IERC20.abi, provider);
+        const baseTokenContract: Contract = new Contract(this.tokens[1].address, contracts.IERC20.abi, provider);
+        marketReserves = {
+          xytWeight: ZERO,
+          tokenWeight: RONE,
+        } as MarketReservesRaw;
+        var promises = [];
+        promises.push(YTContract.balanceOf(this.address).then((res: BN) => {marketReserves.xytBalance = res}));
+        promises.push(baseTokenContract.balanceOf(this.address).then((res: BN) => {marketReserves.tokenBalance = res}));
+        await Promise.all(promises);
+      }
+      return marketReserves;
+    }
+
     const getUnderlyingYieldRate = async ({ underlyingAsset, yieldBearingAsset }: { underlyingAsset: string, yieldBearingAsset: string }): Promise<number> => {
 
       if (chainId == 42) return 0; // return 0 for kovan 
@@ -265,7 +285,7 @@ export class PendleMarket extends Market {
     }
 
     const readMarketDetails = async (): Promise<MarketDetails> => {
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const ytReserveDetails: TokenReserveDetails = {
         reserves: new TokenAmount(
           this.tokens[0],
@@ -843,7 +863,8 @@ export class PendleMarket extends Market {
     }
 
     const getLPPriceBigNumber = async (): Promise<BigNumber> => {
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const yieldContract = this.yieldContract(); 
+      var marketReserves: MarketReservesRaw = await getMarketReserves()
       const liquidity: BigNumber = await getLiquidityValueBigNumber(marketReserves);
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const decimal: number = networkInfo.decimalsRecord[this.address];

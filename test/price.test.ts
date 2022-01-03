@@ -1,4 +1,4 @@
-import { fetchTokenPrice } from "../src/fetchers/priceFetcher";
+import { fetchTokenPrice, fetchPENDLEPriceFromCache } from "../src/fetchers/priceFetcher";
 import { ethers, BigNumber as BN, providers } from 'ethers';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield } from "../src/fetchers/externalYieldRateFetcher";
 import { avalancheContracts } from "../src/networks";
@@ -21,12 +21,13 @@ describe("price fetcher", () => {
         signer = provider.getSigner();
       });
 
-    it('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0x82922e6fbe83547c5e2e0229815942a2108e4624", chainId: chainId});
+    it.only('price', async() => {
+        const res = await fetchTokenPrice({provider, address: "0xfb98b335551a418cd0737375a2ea0ded62ea213b", chainId: chainId});
+        // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })
 
-    it.only('external rate', async() => {
+    it('external rate', async() => {
         // for (const om of avalancheContracts.otherMarkets!) {
         //     const res = await fetchSushiForkYield(om.address, 43114)
         //     console.log('market:', om.address);

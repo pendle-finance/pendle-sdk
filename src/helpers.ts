@@ -141,6 +141,11 @@ export function getCurrentTimestampLocal() {
   return curHour;
 }
 
+export async function isExpired(expiry: number, provider: JsonRpcProvider): Promise<boolean> {
+  const currentTime = await getCurrentTimestamp(provider);
+  return currentTime > expiry;
+}
+
 export function getLMStartTime (chainId: number | undefined): BN {
   switch (chainId) {
     case 1:

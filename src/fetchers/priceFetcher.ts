@@ -118,6 +118,13 @@ export async function fetchWrappedMEMOPrice(wMEMOAddress: string, MEMOAddress: s
   return (await fetchTokenPrice({address: MEMOAddress, provider, chainId})).multipliedBy(MEMOExchangeRate);
 }
 
+export async function fetchPENDLEPriceFromCache(): Promise<BigNumber> {
+  const price = await axios.get(`https://api.pendle.finance/price/pendle?chainId=1`)
+    .then((res: any) => {
+      return res.data
+    });
+  return new BigNumber(price);
+}
 export async function fetchBasicTokenPrice(address: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1) {
@@ -128,7 +135,11 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
         return new BigNumber(1)
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        return await fetchPriceFromCoingecko('pendle');
+        if (process.env.COMPUTE_PRICE) {
+          return await fetchPriceFromCoingecko('pendle');
+        } else {
+          return await fetchPENDLEPriceFromCache();
+        }
 
       case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLowerCase():
@@ -164,7 +175,11 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
         return await fetchPriceFromCoingecko('joe');
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        return await fetchPriceFromCoingecko('pendle');
+        if (process.env.COMPUTE_PRICE) {
+          return await fetchPriceFromCoingecko('pendle');
+        } else {
+          return await fetchPENDLEPriceFromCache();
+        }
 
       case networkInfo.contractAddresses.tokens.QI:
         return await fetchPriceFromCoingecko('benqi');

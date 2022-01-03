@@ -4,7 +4,7 @@ import { providers, Contract, BigNumber as BN, utils } from "ethers"
 import { forgeIdsInBytes, dummyAddress } from "../constants";
 import { contracts } from '../contracts';
 import { NetworkInfo, OTINFO, YTINFO } from '../networks'
-import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, isSameAddress, submitTransaction } from '../helpers'
+import { decimalFactor, distributeConstantsByNetwork, getABIByForgeId, isSameAddress, submitTransaction, getCurrentTimestamp } from '../helpers'
 import { rmul, cmul } from "../math/mathLib";
 import {
     TransactionFetcher as SubgraphTransactions,
@@ -131,13 +131,23 @@ export class YieldContract {
             }
         }
         const redeem = async (toRedeem: TokenAmount): Promise<providers.TransactionResponse> => {
-            const args = [
-                this.forgeIdInBytes,
-                this.underlyingAsset.address,
-                this.expiry,
-                toRedeem.rawAmount()
-            ];
-            return submitTransaction(pendleRouterContract, signer!, 'redeemUnderlying', args);
+            const currentTime = await getCurrentTimestamp(provider);
+            if (currentTime > this.expiry) {
+                const args = [
+                    this.forgeIdInBytes,
+                    this.underlyingAsset.address,
+                    this.expiry,
+                ]
+                return submitTransaction(pendleRouterContract, signer!, "redeemAfterExpiry", args);
+            } else {
+                const args = [
+                    this.forgeIdInBytes,
+                    this.underlyingAsset.address,
+                    this.expiry,
+                    toRedeem.rawAmount()
+                ];
+                return submitTransaction(pendleRouterContract, signer!, 'redeemUnderlying', args);
+            }
         }
 
         const getPrincipalPerYT = async (): Promise<TokenAmount> => {
