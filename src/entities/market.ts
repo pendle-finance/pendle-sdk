@@ -863,7 +863,6 @@ export class PendleMarket extends Market {
     }
 
     const getLPPriceBigNumber = async (): Promise<BigNumber> => {
-      const yieldContract = this.yieldContract(); 
       var marketReserves: MarketReservesRaw = await getMarketReserves()
       const liquidity: BigNumber = await getLiquidityValueBigNumber(marketReserves);
       const totalSupplyLp: BN = await marketContract.totalSupply();
