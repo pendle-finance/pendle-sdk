@@ -1,6 +1,8 @@
 import { Contract, BigNumber as BN } from "ethers";
 import { Token } from "./token";
-import { contracts, ETHAddress, fetchValuation, ONE_DAY } from "..";
+import { contracts } from "../contracts";
+import { fetchValuation } from "../fetchers";
+import { ETHAddress, ONE_DAY } from "../constants";
 import { distributeConstantsByNetwork } from "../helpers";
 import { AprInfo, ChainSpecifics } from "./types";
 import { TokenAmount } from "./tokenAmount";

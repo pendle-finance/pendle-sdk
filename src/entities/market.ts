@@ -225,7 +225,6 @@ export class PendleMarket extends Market {
     }
 
     const getMarketReserves = async (): Promise<MarketReservesRaw> => {
-      const yieldContract = this.yieldContract(); 
       var marketReserves: MarketReservesRaw;
       if (!(await isExpired(yieldContract.expiry, provider))) {
         marketReserves = await marketContract.getReserves();
@@ -794,6 +793,7 @@ export class PendleMarket extends Market {
     }
 
     const getYTPrice = async (marketReserves: MarketReservesRaw | undefined): Promise<BigNumber> => {
+      if (await isExpired(yieldContract.expiry, provider)) return new BigNumber(0);
       if (marketReserves === undefined) {
         marketReserves = await marketContract.getReserves();
       }
@@ -863,7 +863,6 @@ export class PendleMarket extends Market {
     }
 
     const getLPPriceBigNumber = async (): Promise<BigNumber> => {
-      const yieldContract = this.yieldContract(); 
       var marketReserves: MarketReservesRaw = await getMarketReserves()
       const liquidity: BigNumber = await getLiquidityValueBigNumber(marketReserves);
       const totalSupplyLp: BN = await marketContract.totalSupply();
@@ -872,16 +871,20 @@ export class PendleMarket extends Market {
     }
 
     const getSwapFeeAprBigNumber = async (): Promise<BigNumber> => {
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      if (await isExpired(yieldContract.expiry, provider)) return new BigNumber(0);
 
-      const currentTime: number = await getCurrentTimestamp(provider);
-
-      const volumeToday: CurrencyAmount = await getVolume(currentTime - ONE_DAY.toNumber(), currentTime);
-
-      var liquidityToday: CurrencyAmount = await getLiquidityValue(marketReserves);
-      const swapFee: BN = await pendleDataContract.swapFee();
-      const protocolFee: BN = await pendleDataContract.protocolSwapFee();
-      const swapFeeApr: BigNumber = calcSwapFeeAPR(new BigNumber(volumeToday.amount), swapFee, protocolFee, new BigNumber(liquidityToday.amount));
+      var promises = [];
+      var marketReserves: MarketReservesRaw, volumeToday: CurrencyAmount, swapFee: BN, protocolFee: BN;
+      promises.push(marketContract.getReserves().then((res: MarketReservesRaw) => {marketReserves = res}));
+      promises.push( getCurrentTimestamp(provider).then(async (currentTime: number) => {
+        volumeToday = await getVolume(currentTime - ONE_DAY.toNumber(), currentTime);
+      }));
+      promises.push(pendleDataContract.swapFee().then((res: BN) => {swapFee = res}))
+      promises.push(pendleDataContract.protocolSwapFee().then((res: BN) => {protocolFee = res}))
+      await Promise.all(promises);
+      
+      var liquidityToday: CurrencyAmount = await getLiquidityValue(marketReserves!);
+      const swapFeeApr: BigNumber = calcSwapFeeAPR(new BigNumber(volumeToday!.amount), swapFee!, protocolFee!, new BigNumber(liquidityToday.amount));
       return swapFeeApr;
     }
 

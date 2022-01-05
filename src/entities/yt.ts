@@ -12,8 +12,7 @@ export type YtOrMarketInterest = {
     interest: TokenAmount;
 };
 
-const YT_NOT_EXIST = "No YT is found at the given address";
-const YT_MARKET_FEED_NOT_FOUND = "No Market found with this YT"; 
+const YT_MARKET_FEED_NOT_FOUND = "No Market found with this YT "; 
 
 export class Yt extends Token {
 
@@ -32,12 +31,12 @@ export class Yt extends Token {
             return isSameAddress(address, y.address);
         })
         if (ytInfo === undefined) {
-            throw new Error(YT_NOT_EXIST);
+            throw new Error(`No YT is found at the given address ${address}, at chainId ${chainId}`);
         }
         const markets: PENDLEMARKETNFO[] | undefined = networkInfo.contractAddresses.pendleMarkets;
         const marketInfo: PENDLEMARKETNFO | undefined = markets.find((m: PENDLEMARKETNFO) => isSameAddress(m.pair[0], address) || isSameAddress(m.pair[1], address));
         if (marketInfo === undefined) {
-            throw new Error(YT_MARKET_FEED_NOT_FOUND);
+            throw new Error(YT_MARKET_FEED_NOT_FOUND + address);
         }
         const priceFeedMarketAddress: string = marketInfo.address;
         return new Yt(
