@@ -108,12 +108,12 @@ describe("One click wrapper", () => {
 
   })
 
-  it('apr', async() => {
+  it.only('apr', async() => {
     const res2 = await wrapper.methods({signer, provider: signer.provider, chainId}).apr(Action.stakeOTYT);
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it.only('send', async() => {
+  it('send', async() => {
     // const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateDual(Action.stakeOTYT, new TokenAmount(
     //   new Token(
     //     networkInfo.contractAddresses.tokens.USDC,
@@ -121,7 +121,7 @@ describe("One click wrapper", () => {
     //   ),
     //   BN.from(10).pow(5).toString()
     // ), 0.01)
-    const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(PENDLE, decimalFactor(18)), 0.01);
+    const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateSingle(Action.stakeYT, new TokenAmount(PENDLE, decimalFactor(18)), 0.01);
     console.log(JSON.stringify(sim_res, null, '  '));
     const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.01);
     console.log(JSON.stringify(res, null, '  '));

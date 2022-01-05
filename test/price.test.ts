@@ -9,7 +9,7 @@ import { getGasPrice } from "../src/fetchers/gasPriceFetcher";
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const chainId: number = 1;
+const chainId: number = 43114;
 jest.setTimeout(300000);
 
 describe("price fetcher", () => {
@@ -25,7 +25,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0x31654eb46a3a450265c6dfc4fc4fbbfe371e26fe", chainId: chainId});
+        const res = await fetchTokenPrice({provider, address: "0xd5736ba0be93c99a10e2264e8e4ebd54633306f8", chainId: chainId});
         // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })
