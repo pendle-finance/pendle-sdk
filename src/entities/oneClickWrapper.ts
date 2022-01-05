@@ -794,6 +794,8 @@ export class OneClickWrapper {
             tokenZapData.pendlePath = pendleTrade.path;
             estimationResult = await zapEstimatorPAP.calcPapZapSwapInfo(tokenZapData);
 
+            console.log(estimationResult.split.ot.toString());
+
             dataPull.swaps = [];
             dataPull.pulls = [];
 
@@ -993,11 +995,11 @@ export class OneClickWrapper {
                     ),
                     baseTokenAmountOT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.ot.toString()
+                        calcSlippedDownAmount(estimationResult.split.ot, slippage).toString()
                     ),
                     baseTokenAmountYT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.yt.toString()
+                        calcSlippedDownAmount(estimationResult.split.yt, slippage).toString()
                     )
                 }));
 
@@ -1027,11 +1029,11 @@ export class OneClickWrapper {
                     ),
                     baseTokenAmountOT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.ot.toString()
+                        calcSlippedDownAmount(estimationResult.split.ot, slippage).toString()
                     ),
                     baseTokenAmountYT: new TokenAmount(
                         initialTokens.baseToken,
-                        estimationResult.split.yt.toString()
+                        calcSlippedDownAmount(estimationResult.split.yt, slippage).toString()
                     )
                 }))
 
@@ -1152,7 +1154,7 @@ export class OneClickWrapper {
                         dataAddLiqYT,
                         getBaseTokenForceThreshold(baseTokenAmount).toString()
                     ];
-                    // console.log(JSON.stringify(args, null, '  '));
+                    console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForOTandYT', args, maxEthPaid);
             }
         }
