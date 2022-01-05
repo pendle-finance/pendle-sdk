@@ -27,8 +27,7 @@
     "hooks": {
       "pre-commit": "tsdx lint"
     }
-  },git push
-  
+  },
   "prettier": {
     "printWidth": 80,
     "semi": true,
