@@ -58,7 +58,7 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
         {
           pairs(where: { id: "${poolAddress}" }) {
             hourData(first: 24, where: {date_gt: ${dateAfter}}, orderBy: date, orderDirection: desc) {
-              volumeUSD
+              untrackedVolumeUSD
               reserveUSD
               date
             }
@@ -71,7 +71,7 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
       const pair = data.pairs[0]
 
       const volumeUSD = pair.hourData.reduce((accumulator: any, hourData: any) => {
-        return accumulator.plus(hourData.volumeUSD)
+        return accumulator.plus(hourData.untrackedVolumeUSD)
       }, new BigNumberjs(0))
 
       const reserveUSD = pair.reserveUSD;
