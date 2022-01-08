@@ -1154,7 +1154,7 @@ export class OneClickWrapper {
                         dataAddLiqYT,
                         getBaseTokenForceThreshold(baseTokenAmount).toString()
                     ];
-                    console.log(JSON.stringify(args, null, '  '));
+                    // console.log(JSON.stringify(args, null, '  '));
                     return submitTransaction(PendleWrapper, signer!, 'insAddDualLiqForOTandYT', args, maxEthPaid);
             }
         }

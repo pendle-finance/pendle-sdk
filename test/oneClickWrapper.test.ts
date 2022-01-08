@@ -74,12 +74,12 @@ describe("One click wrapper", () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner('0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC');
     yieldContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.JOE_SIMPLE),
+      utils.parseBytes32String(forgeIdsInBytes.WONDERLAND),
       new Token(
-        "0x3acd2ff1c3450bc8a9765afd8d0dea8e40822c86",
-        18
+        "0x136acd46c134e8269052c62a67042d6bdedde3c9",
+        9
       ),
-      EXP_2023.toNumber(),
+      EXP_WONDERLAND.toNumber(),
       chainId
     );
     wrapper = new OneClickWrapper(yieldContract)
@@ -108,12 +108,12 @@ describe("One click wrapper", () => {
 
   })
 
-  it.only('apr', async() => {
+  it('apr', async() => {
     const res2 = await wrapper.methods({signer, provider: signer.provider, chainId}).apr(Action.stakeOTYT);
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it('send', async() => {
+  it.only('send', async() => {
     // const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateDual(Action.stakeOTYT, new TokenAmount(
     //   new Token(
     //     networkInfo.contractAddresses.tokens.USDC,
@@ -121,7 +121,7 @@ describe("One click wrapper", () => {
     //   ),
     //   BN.from(10).pow(5).toString()
     // ), 0.01)
-    const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateSingle(Action.stakeYT, new TokenAmount(PENDLE, decimalFactor(18)), 0.01);
+    const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(WETH, decimalFactor(20)), 0.01);
     console.log(JSON.stringify(sim_res, null, '  '));
     const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.01);
     console.log(JSON.stringify(res, null, '  '));
@@ -142,6 +142,6 @@ describe("One click wrapper", () => {
   })
 
   it('simulate Single', async() => {
-    console.log(JSON.stringify(await wrapper.methods({signer, provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(USDCToken, decimalFactor(10)), 0.001), null, '  '));
+    console.log(JSON.stringify(await wrapper.methods({signer, provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(USDCToken, decimalFactor(5)), 0.001), null, '  '));
   })
 })

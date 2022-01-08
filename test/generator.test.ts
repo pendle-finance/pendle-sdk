@@ -1,12 +1,14 @@
 
 import * as dotenv from 'dotenv';
 import { ethers } from 'ethers';
-import { generateTJPoolDetails } from '../src';
+import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor } from '../src';
+import { computeTradeRouteExactIn } from '../src/entities/tradeRouteProducer';
 
 dotenv.config()
 jest.setTimeout(300000);
 
 var chainId = 43114;
+const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
 describe("Staking pools", () => {
     let provider: ethers.providers.JsonRpcProvider;
@@ -23,5 +25,20 @@ describe("Staking pools", () => {
         const res = await generateTJPoolDetails(provider)
         console.log(JSON.stringify(res, null, '  '));
         console.log(res.length)
+    })
+
+    it.only('compute trade route', async()=> {
+        const res = await computeTradeRouteExactIn(new TokenAmount(
+            new Token(
+                networkInfo.contractAddresses.tokens.USDC,
+                6
+            ),
+            decimalFactor(5)
+        ),
+        new Token(
+            networkInfo.contractAddresses.tokens.MIM,
+            18
+        ))
+        console.log(res);
     })
 })

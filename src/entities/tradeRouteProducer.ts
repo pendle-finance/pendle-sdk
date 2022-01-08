@@ -69,7 +69,11 @@ export async function computeTradeRouteExactOut(inToken: Token, outTokenAmount: 
         return new Pair(tokenAmount0, tokenAmount1, AvaxChainID);
     }
     const outTokenAmountJoe: JoeCurrencyAmount = wrapTokenAmountToJoeCurrencyAmount(outTokenAmount);
-    const bestTrade: JoeTrade = JoeTrade.bestTradeExactOut(traderJoePairs.map(pairFormatter), wrapTokenToJoeCurrency(inToken), outTokenAmountJoe)[0];
+    var bestTrades: JoeTrade[] = JoeTrade.bestTradeExactOut(traderJoePairs.map(pairFormatter), wrapTokenToJoeCurrency(inToken), outTokenAmountJoe, {maxHops: 2, maxNumResults: 1});
+    if (bestTrades.length == 0) {
+        bestTrades = JoeTrade.bestTradeExactOut(traderJoePairs.map(pairFormatter), wrapTokenToJoeCurrency(inToken), outTokenAmountJoe, {maxHops: 3, maxNumResults: 1});
+    }
+    const bestTrade: JoeTrade = bestTrades[0];
     const path: string[] = bestTrade.route.path.map((t: JoeToken) => t.address);
     path[0] = inToken.address; path[path.length - 1] = outTokenAmount.token.address;
     return {
@@ -104,7 +108,11 @@ export async function computeTradeRouteExactIn(inTokenAmount: TokenAmount, outTo
         return new Pair(tokenAmount0, tokenAmount1, AvaxChainID);
     }
     const inTokenAmountJoe: JoeCurrencyAmount = wrapTokenAmountToJoeCurrencyAmount(inTokenAmount);
-    const bestTrade: JoeTrade = JoeTrade.bestTradeExactIn(traderJoePairs.map(pairFormatter), inTokenAmountJoe, wrapTokenToJoeCurrency(outToken))[0];
+    var bestTrades: JoeTrade[] = JoeTrade.bestTradeExactIn(traderJoePairs.map(pairFormatter), inTokenAmountJoe, wrapTokenToJoeCurrency(outToken), {maxHops: 2, maxNumResults: 1});
+    if (bestTrades.length == 0) {
+        bestTrades = JoeTrade.bestTradeExactIn(traderJoePairs.map(pairFormatter), inTokenAmountJoe, wrapTokenToJoeCurrency(outToken), {maxHops: 3, maxNumResults: 1});
+    }
+    const bestTrade: JoeTrade = bestTrades[0];
     const path: string[] = bestTrade.route.path.map((t: JoeToken) => t.address);
     path[0] = inTokenAmount.token.address; path[path.length - 1] = outToken.address;
     return {
