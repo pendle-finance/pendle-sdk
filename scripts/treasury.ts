@@ -3,22 +3,25 @@ import BigNumber from 'bignumber.js';
 import AvaxFlat from '@pendle/core/deployments/AVAX-flat.json';
 import MainnetFlat from '@pendle/core/deployments/mainnet-flat.json';
 import { Contract, providers } from 'ethers';
-import { type NetworkInfo, Token, TokenAmount, contracts, distributeConstantsByNetwork, fetchTokenPrice } from '../src';
+import { type NetworkInfo, Token, TokenAmount, contracts, distributeConstantsByNetwork, fetchValuation } from '../src';
 
 dotenv.config();
 
 const expiredKeywords = ['2021'];
-const excludesExpiredKeywords = (key: string) => !expiredKeywords.some(x => key.includes(x));
+const excludesExpiredKeywords = (key: string) => !expiredKeywords.some((x) => key.includes(x));
 
 const ChainIds: Record<string, number> = {
   ETHEREUM: 1,
   AVALANCHE: 43114,
 };
 
-const NetworkConstants: Record<number, NetworkInfo & {
-  provider: providers.JsonRpcProvider;
-  flat: Record<string, string | number>
-}> = {
+const NetworkConstants: Record<
+  number,
+  NetworkInfo & {
+    provider: providers.JsonRpcProvider;
+    flat: Record<string, string | number>;
+  }
+> = {
   [ChainIds.ETHEREUM]: {
     ...distributeConstantsByNetwork(ChainIds.ETHEREUM),
     provider: new providers.JsonRpcProvider(`https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`),
@@ -61,8 +64,7 @@ async function getTreasuryMultisigFunds(): Promise<BigNumber> {
         const tokenContract = new Contract(poolAddress, contracts.IERC20.abi, provider);
         const amount = await tokenContract.callStatic.balanceOf(treasury);
         const tokenAmount = new TokenAmount(token, amount.toString());
-        const price = await fetchTokenPrice({ chainId: chainIdInt, address: poolAddress, provider });
-        return price.times(tokenAmount.formattedAmount());
+        return new BigNumber((await fetchValuation(tokenAmount, provider, chainIdInt)).amount);
       });
       return await Promise.all(fundsPerPool);
     })
@@ -71,7 +73,7 @@ async function getTreasuryMultisigFunds(): Promise<BigNumber> {
   return sumArray(fundsPerChain.flat());
 }
 
-async function getMarketSwapFees(): Promise<BigNumber>{
+async function getMarketSwapFees(): Promise<BigNumber> {
   type MarketInfo = {
     forge: string;
     tokens: string[];
@@ -128,12 +130,11 @@ async function getMarketSwapFees(): Promise<BigNumber>{
           tokens.map(async (t: string) => {
             const tokenAddress = (flat[`TOKEN_${t.toUpperCase()}`] as string).toLowerCase();
             const token = new Token(tokenAddress, decimalsRecord[tokenAddress]);
-            const price = await fetchTokenPrice({ chainId: chainIdInt, provider, address: tokenAddress });
             const feesInUSD = await expiries
               .map(async (expiry) => await forgeContract.callStatic.totalFee(tokenAddress, expiry))
-              .map(async (amount) => new TokenAmount(token, (await amount).toString()).formattedAmount())
-              .map(async (amount) => price.times(await amount))
-              .reduce(async (acc, curr) => (await acc).plus(await curr));
+              .map(async (amount) => new TokenAmount(token, (await amount).toString()))
+              .map(async (amount) => await fetchValuation(await amount, provider, chainIdInt))
+              .reduce(async (acc, curr) => (await acc).plus((await curr).amount), Promise.resolve(new BigNumber(0)));
             return feesInUSD;
           })
         );
