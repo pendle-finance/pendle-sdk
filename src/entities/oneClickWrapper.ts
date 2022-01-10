@@ -981,7 +981,7 @@ export class OneClickWrapper {
                     slippage,
                     underlyingAmount0: new TokenAmount(
                         new Token(
-                            networkInfo.contractAddresses.tokens.WETH,
+                            isSameAddress(inputTokenAmount.token.address, ETHAddress) ? ETHAddress : networkInfo.contractAddresses.tokens.WETH,
                             networkInfo.decimalsRecord[networkInfo.contractAddresses.tokens.WETH]
                         ),
                         estimationResult.amountToMintLP.wavax.toString()
