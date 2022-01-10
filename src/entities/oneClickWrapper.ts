@@ -53,7 +53,9 @@ export enum TransactionAction {
     removeLiquidity,
     swap,
     stake,
-    unstake
+    unstake,
+    wrap,
+    unwrap
 }
 
 export type Transaction = {
@@ -897,11 +899,19 @@ export class OneClickWrapper {
             } else {
                 var amountToPull: BN = BN.from(0);
                 if (!isSameAddress(inputTokenAmount.token.address, initialTokens.underlyingToken0.address)) {
-                    dataPull.swaps.push({
-                        amountInMax: estimationResult.underInfo.amountIn.toString(),
-                        amountOut: estimationResult.underInfo.amountOut.toString(),
-                        path: underlyingTrade.path
-                    })
+                    if (this.yieldContract.forgeIdInBytes == forgeIdsInBytes.BENQI && isSameAddress(this.yieldContract.underlyingAsset.address, networkInfo.contractAddresses.tokens.WETH) && isSameAddress(inputTokenAmount.token.address, networkInfo.contractAddresses.tokens.WETH)) {
+                        dataPull.swaps.push({
+                            amountInMax: estimationResult.underInfo.amountIn.toString(),
+                            amountOut: estimationResult.underInfo.amountOut.toString(),
+                            path: [networkInfo.contractAddresses.tokens.WETH, ETHAddress]
+                        })
+                    } else {
+                        dataPull.swaps.push({
+                            amountInMax: estimationResult.underInfo.amountIn.toString(),
+                            amountOut: estimationResult.underInfo.amountOut.toString(),
+                            path: underlyingTrade.path
+                        })
+                    }
                 } else {
                     amountToPull = amountToPull.add(estimationResult.underInfo.amountIn);
                 }
@@ -941,6 +951,25 @@ export class OneClickWrapper {
                     outTokenAddress,
                     networkInfo.decimalsRecord[outTokenAddress]
                 )
+                if (isNativeOrEquivalent(inputToken.address, this.yieldContract.chainId) && isNativeOrEquivalent(outTokenAddress, this.yieldContract.chainId)) {
+                    return {
+                        paid: [new TokenAmount(
+                            inputToken,
+                            swap.amountInMax.toString()
+                        )],
+                        maxPaid: [new TokenAmount(
+                            inputToken,
+                            swap.amountInMax.toString()
+                        )],
+                        received: [new TokenAmount(
+                            outToken,
+                            swap.amountOut.toString()
+                        )],
+                        user: walletAddress,
+                        protocol: "external",
+                        action: isSameAddress(inputToken.address, ETHAddress) ? TransactionAction.wrap : TransactionAction.unwrap
+                    }
+                }
                 return {
                     paid: [new TokenAmount(
                         inputToken,
