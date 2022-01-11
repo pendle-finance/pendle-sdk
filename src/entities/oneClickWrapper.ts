@@ -796,8 +796,6 @@ export class OneClickWrapper {
             tokenZapData.pendlePath = pendleTrade.path;
             estimationResult = await zapEstimatorPAP.calcPapZapSwapInfo(tokenZapData);
 
-            console.log(estimationResult.split.ot.toString());
-
             dataPull.swaps = [];
             dataPull.pulls = [];
 
