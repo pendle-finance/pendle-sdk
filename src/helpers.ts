@@ -1,6 +1,6 @@
 import { BigNumber as BN, Bytes, Contract, providers, utils } from 'ethers';
 import { mainnetContracts, kovanContracts, avalancheContracts, NetworkInfo, StakingPoolType } from './networks'
-import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime, LMEpochDuration } from './constants'
+import { decimalsRecords, forgeIdsInBytes, gasBuffer, ONE_MINUTE, ONE_DAY, ZERO, LMStartTime, LMEpochDuration, ETHAddress } from './constants'
 import { contracts } from "./contracts";
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { DecimalsPrecision } from './math/marketMath';
@@ -33,6 +33,19 @@ export const decimalFactor = (decimal: number): string => {
 
 export const isSameAddress = (address1: string, address2: string): boolean => {
   return address1.toLowerCase() == address2.toLowerCase()
+}
+
+export const isNativeOrEquivalent = (address: string, chainId?: number): boolean => {
+  if (isSameAddress(address, ETHAddress)) return true;
+  const WETH = distributeConstantsByNetwork(chainId).contractAddresses.tokens.WETH;
+  return isSameAddress(address, WETH);
+}
+
+export const areBothNative = (address1: string, address2: string, chainId?: number) => {
+  const networkInfo = distributeConstantsByNetwork(chainId);
+  const WETH = networkInfo.contractAddresses.tokens.WETH;
+  return (isSameAddress(address1, ETHAddress) || isSameAddress(address1, WETH)) 
+    && (isSameAddress(address2, ETHAddress) || isSameAddress(address2, WETH)); 
 }
 
 export const indexRange = (start: number, end: number): number[] => {
@@ -237,6 +250,10 @@ export async function estimateGas(contract: Contract, fromAddress: string, funcN
   return BN.from(getGasLimitWithETH(gasEstimate, value).gasLimit);
 }
 
-// export const getGlobalEpochId = (): number => {
-//   return (currentTime - launchTime) / 7 days + 1
-// };
+export function getInTokenAddress(path: string[]): string {
+  return path[0];
+}
+
+export function getOutTokenAddress(path: string[]): string {
+  return path[path.length - 1];
+}
