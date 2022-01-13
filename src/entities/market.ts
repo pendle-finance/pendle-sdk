@@ -37,7 +37,8 @@ export type MarketDetails = {
     swapFeeApr: string,
     impliedYield: string,
     underlyingYieldRate: number,
-    YTPrice: CurrencyAmount
+    YTPrice: CurrencyAmount,
+    underlyingPrice: CurrencyAmount
   }
 }
 
@@ -321,7 +322,7 @@ export class PendleMarket extends Market {
 
       const swapFeeApr: BigNumber = calcSwapFeeAPR(new BigNumber(volumeToday.amount), swapFee, protocolFee, new BigNumber(liquidityToday.amount));
 
-      const { ytPrice, impliedYield }: { ytPrice: BigNumber, impliedYield: BigNumber } = await getYTPriceAndImpliedYield(marketReserves);
+      const { ytPrice, principalValuation, impliedYield }: { ytPrice: BigNumber, principalValuation: BigNumber, impliedYield: BigNumber } = await getYTPriceAndImpliedYield(marketReserves);
 
       const volume24hChange: string = new BigNumber(volumeYesterday.amount).lte(0)
         ? new BigNumber(volumeToday.amount).lte(0) ? '0' : '1'
@@ -341,6 +342,10 @@ export class PendleMarket extends Market {
           YTPrice: {
             currency: 'USD',
             amount: ytPrice.toFixed(DecimalsPrecision)
+          },
+          underlyingPrice: {
+            currency: 'USD',
+            amount: principalValuation.toFixed(DecimalsPrecision)
           },
           underlyingYieldRate
         }
@@ -804,15 +809,17 @@ export class PendleMarket extends Market {
       return ytPrice;
     }
 
-    const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, impliedYield: BigNumber }> => {
+    const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, principalValuation: BigNumber, impliedYield: BigNumber }> => {
       const ytPrice: BigNumber = await getYTPrice(marketReserves);
       const principalPerYT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
-      const p: BigNumber = ytPrice.dividedBy((await fetchValuation(principalPerYT, provider, chainId)).amount);
+      const principalValuationPerYT = await fetchValuation(principalPerYT, provider, chainId);
+      const p: BigNumber = ytPrice.dividedBy(principalValuationPerYT.amount);
 
       // means yield is infinite
       if (p.isGreaterThanOrEqualTo(ONE)) {
         return {
           ytPrice: ytPrice,
+          principalValuation: new BigNumber(principalValuationPerYT.amount),
           impliedYield: new BigNumber(999999999)
         };
       }
@@ -823,6 +830,7 @@ export class PendleMarket extends Market {
 
       return {
         ytPrice: ytPrice,
+        principalValuation: new BigNumber(principalValuationPerYT.amount),
         impliedYield: y_annum
       };
     }
