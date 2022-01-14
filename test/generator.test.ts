@@ -1,7 +1,7 @@
 
 import * as dotenv from 'dotenv';
 import { ethers } from 'ethers';
-import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor } from '../src';
+import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor, getTokens } from '../src';
 import { computeTradeRouteExactIn } from '../src/entities/tradeRouteProducer';
 
 dotenv.config()
@@ -27,7 +27,7 @@ describe("Staking pools", () => {
         console.log(res.length)
     })
 
-    it.only('compute trade route', async()=> {
+    it('compute trade route', async()=> {
         const res = await computeTradeRouteExactIn(new TokenAmount(
             new Token(
                 networkInfo.contractAddresses.tokens.USDC,

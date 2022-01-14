@@ -1,12 +1,8 @@
-import {TokenAmount as JoeTokenAmount, Token as JoeToken} from "@traderjoe-xyz/sdk"
 import { providers, Contract } from "ethers";
 import { contracts } from "../contracts";
-import { getCreate2Address } from "@ethersproject/address";
-import { pack, keccak256 } from '@ethersproject/solidity'
 import { isSameAddress } from "../helpers";
-import { distributeConstantsByNetwork, Call_MultiCall } from "../helpers";
-import { NetworkInfo } from "../networks";
-import tokens from './traderJoeTokens.json';
+import cachedTokens from './traderJoeTokens.json';
+const axios = require('axios');
 var chainId = 4314;
 
 const JoeFactoryAddress = '0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10';
@@ -25,6 +21,17 @@ export type PoolDetail = {
         reserve: string
     },
     decimals: number
+}
+
+export async function getTokens() {
+    var url = "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/joe.tokenlist.json";
+
+    const tokens = axios.get(url).then((res: any) => {
+        return res.data.tokens;
+    }).catch((err: any) => {
+        return cachedTokens.tokens;
+    });
+    return tokens;
 }
 
 export async function getOnePool(tokenI: any, tokenJ: any, provider: providers.JsonRpcProvider): Promise<PoolDetail> {
@@ -51,13 +58,14 @@ export async function getOnePool(tokenI: any, tokenJ: any, provider: providers.J
     })
 }
 export async function generateTJPoolDetails(provider: providers.JsonRpcProvider) {
+    const tokens = await getTokens();
     const leng = tokens.length;
     var res = [];
     const promises = [];
 
     for (var i = 0; i < leng; i ++) {
         for (var j = i + 1; j < leng; j ++) {
-            if (tokens[i].chainId != 43114 || tokens[j].chainId != 43114) continue;
+            if (tokens[i].chainId != chainId || tokens[j].chainId != chainId) continue;
             promises.push(getOnePool(tokens[i], tokens[j], provider));
         } 
     }
