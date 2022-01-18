@@ -244,45 +244,7 @@ export class PendleMarket extends Market {
       return marketReserves;
     }
 
-    const getUnderlyingYieldRate = async ({ underlyingAsset, yieldBearingAsset }: { underlyingAsset: string, yieldBearingAsset: string }): Promise<number> => {
-
-      if (chainId == 42) return 0; // return 0 for kovan 
-      var underlyingYieldRate: number = 0;
-      try {
-        switch (yieldContract.forgeIdInBytes) {
-          case forgeIdsInBytes.AAVE:
-            underlyingYieldRate = await fetchAaveYield(yieldContract.underlyingAsset.address);
-            break;
-
-          case forgeIdsInBytes.COMPOUND:
-            underlyingYieldRate = await fetchCompoundYield(yieldBearingAsset);
-            break;
-
-          case forgeIdsInBytes.BENQI:
-            underlyingYieldRate = await fetchBenqiYield(underlyingAsset);
-            break;
-
-          case forgeIdsInBytes.SUSHISWAP_COMPLEX:
-          case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-          case forgeIdsInBytes.JOE_COMPLEX:
-          case forgeIdsInBytes.JOE_SIMPLE:
-            underlyingYieldRate = await fetchSushiForkYield(yieldBearingAsset, chainId);
-            break;
-
-          case forgeIdsInBytes.XJOE:
-            underlyingYieldRate = await fetchXJOEYield(provider, chainId);
-            break;
-
-          case forgeIdsInBytes.WONDERLAND:
-            underlyingYieldRate = await fetchWonderlandYield(provider, chainId);
-            break;
-
-          // TODO: add Uniswap support here
-        }
-      } catch (err) {
-      }
-      return underlyingYieldRate;
-    }
+ 
 
     const readMarketDetails = async (): Promise<MarketDetails> => {
       const marketReserves: MarketReservesRaw = await getMarketReserves();
@@ -304,7 +266,7 @@ export class PendleMarket extends Market {
       const yieldBearingAsset: string = Yt.find(this.tokens[0].address, chainId).yieldBearingAddress;
       var promises: Promise<any>[] = [];
       var underlyingYieldRate: number = 0;
-      promises.push(getUnderlyingYieldRate({ underlyingAsset, yieldBearingAsset }).then((res: number) => underlyingYieldRate = res));
+      promises.push(yieldContract.methods({signer, provider, chainId}).getUnderlyingYieldRate().then((res: number) => underlyingYieldRate = res));
 
       const currentTime: number = await getCurrentTimestamp(provider);
 
@@ -811,8 +773,7 @@ export class PendleMarket extends Market {
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, principalValuation: BigNumber, impliedYield: BigNumber }> => {
       const ytPrice: BigNumber = await getYTPrice(marketReserves);
-      const principalPerYT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
-      const principalValuationPerYT = await fetchValuation(principalPerYT, provider, chainId);
+      const principalValuationPerYT: CurrencyAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalValuationPerYT();
       const p: BigNumber = ytPrice.dividedBy(principalValuationPerYT.amount);
 
       // means yield is infinite

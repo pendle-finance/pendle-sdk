@@ -13,6 +13,9 @@ import {
 import { TRANSACTION } from "./transactionFetcher/types";
 import { calcPrincipalForSLPYT } from "../math/marketMath";
 import { ChainSpecifics } from "./types";
+import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield } from "../fetchers/externalYieldRateFetcher";
+import { CurrencyAmount } from "./currencyAmount";
+import { fetchValuation } from "../fetchers";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
@@ -56,6 +59,46 @@ export class YieldContract {
         const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, provider);
         const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, provider);
 
+        const getUnderlyingYieldRate = async (): Promise<number> => {
+
+            if (chainId == 42) return 0; // return 0 for kovan 
+            var underlyingYieldRate: number = 0;
+            try {
+              switch (this.forgeIdInBytes) {
+                case forgeIdsInBytes.AAVE:
+                  underlyingYieldRate = await fetchAaveYield(this.underlyingAsset.address);
+                  break;
+      
+                case forgeIdsInBytes.COMPOUND:
+                  underlyingYieldRate = await fetchCompoundYield(this.yieldToken.address);
+                  break;
+      
+                case forgeIdsInBytes.BENQI:
+                  underlyingYieldRate = await fetchBenqiYield(this.underlyingAsset.address);
+                  break;
+      
+                case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+                case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+                case forgeIdsInBytes.JOE_COMPLEX:
+                case forgeIdsInBytes.JOE_SIMPLE:
+                  underlyingYieldRate = await fetchSushiForkYield(this.yieldToken.address, chainId);
+                  break;
+      
+                case forgeIdsInBytes.XJOE:
+                  underlyingYieldRate = await fetchXJOEYield(provider, chainId);
+                  break;
+      
+                case forgeIdsInBytes.WONDERLAND:
+                  underlyingYieldRate = await fetchWonderlandYield(provider, chainId);
+                  break;
+      
+                // TODO: add Uniswap support here
+              }
+            } catch (err) {
+            }
+            return underlyingYieldRate;
+        }
+        
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeIdInBytes == forgeIdsInBytes.AAVE || this.forgeIdInBytes == forgeIdsInBytes.COMPOUND) {
                 const response = await pendleForgeContract.callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
@@ -180,12 +223,20 @@ export class YieldContract {
             }
         }
 
+        const getPrincipalValuationPerYT = async(): Promise<{principal: TokenAmount, valuation: CurrencyAmount}> => {
+            const principal = await getPrincipalPerYT();
+            const valuation = await fetchValuation(principal, provider, chainId);
+            return {principal, valuation};
+        }
+
         return {
             mintDetails,
             mint,
             redeemDetails,
             redeem,
             getPrincipalPerYT,
+            getPrincipalValuationPerYT,
+            getUnderlyingYieldRate
         };
     }
 
