@@ -927,6 +927,14 @@ export class UniForkMarket extends Market {
     }
   }
 
+  public yieldContract(chainId?: number): YieldContract {
+    try {
+      const ot: Ot = Ot.find(this.tokens[0].address, chainId);
+      return ot.yieldContract(chainId);
+    } catch (err) {
+      throw new Error(`${this.address} is not an OT market on chain ${chainId}`);
+    }
+  }
   public static methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
     const fetchClaimableRewardsFromOTMarkets = async (markets: UniForkMarket[], userAddress: string): Promise<TokenAmount[]> => {
@@ -1051,18 +1059,9 @@ export class UniForkMarket extends Market {
         .multipliedBy(decimalFactor(networkInfo.decimalsRecord[otAddress])).div(otReserve.toString());
     }
 
-    const getYieldContract = (): YieldContract => {
-      try {
-        const ot: Ot = Ot.find(this.tokens[0].address, chainId);
-        return ot.yieldContract(chainId);
-      } catch (err) {
-        throw new Error(`${this.address} is not an OT market on chain ${chainId}`);
-      }
-    }
-
     const getOtPriceAndImpliedDiscount = async(): Promise<{otPrice: BigNumber, impliedDiscount: BigNumber}> => {
       const otPrice: BigNumber = await getOtPrice();
-      const yieldContract: YieldContract = getYieldContract();
+      const yieldContract: YieldContract = this.yieldContract();
       const principalPerOT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
       const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, provider, chainId);
       const p: BigNumber = (new BigNumber(principalValuation.amount).minus(otPrice)).dividedBy(principalValuation.amount);
