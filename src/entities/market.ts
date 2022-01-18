@@ -773,7 +773,7 @@ export class PendleMarket extends Market {
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, principalValuation: BigNumber, impliedYield: BigNumber }> => {
       const ytPrice: BigNumber = await getYTPrice(marketReserves);
-      const principalValuationPerYT: CurrencyAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalValuationPerYT();
+      const principalValuationPerYT: CurrencyAmount = (await yieldContract.methods({signer, provider, chainId}).getPrincipalValuationPerYT()).valuation;
       const p: BigNumber = ytPrice.dividedBy(principalValuationPerYT.amount);
 
       // means yield is infinite
