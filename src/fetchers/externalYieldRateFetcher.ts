@@ -2,9 +2,8 @@ import { request, gql } from 'graphql-request'
 import BigNumberjs from 'bignumber.js';
 import { sushiswapSubgraphApi, traderJoeSubgraphApi, ONE_DAY} from '../constants';
 import { NetworkInfo } from '../networks';
-import { distributeConstantsByNetwork, getBlocksomeDurationEarlier, isSameAddress, getCurrentTimestampLocal, getCurrentTimestamp } from '../helpers';
+import { distributeConstantsByNetwork, isSameAddress, getCurrentTimestampLocal, getCurrentTimestamp } from '../helpers';
 import { BigNumber as BN, providers, Contract } from "ethers"
-import { getxJOEExchangeRate } from './priceFetcher';
 import BigNumber from 'bignumber.js';
 import { contracts } from '../contracts';
 import { fetchValuation } from './priceFetcher';
@@ -58,7 +57,7 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
         {
           pairs(where: { id: "${poolAddress}" }) {
             hourData(first: 24, where: {date_gt: ${dateAfter}}, orderBy: date, orderDirection: desc) {
-              untrackedVolumeUSD
+              volumeUSD
               reserveUSD
               date
             }
@@ -71,7 +70,7 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
       const pair = data.pairs[0]
 
       const volumeUSD = pair.hourData.reduce((accumulator: any, hourData: any) => {
-        return accumulator.plus(hourData.untrackedVolumeUSD)
+        return accumulator.plus(hourData.volumeUSD)
       }, new BigNumberjs(0))
 
       const reserveUSD = pair.reserveUSD;

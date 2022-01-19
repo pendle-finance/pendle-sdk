@@ -9,7 +9,7 @@ import { getGasPrice } from "../src/fetchers/gasPriceFetcher";
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const chainId: number = 43114;
+const chainId: number = 1;
 jest.setTimeout(300000);
 
 describe("price fetcher", () => {
@@ -24,19 +24,19 @@ describe("price fetcher", () => {
         signer = provider.getSigner();
       });
 
-    it.only('price', async() => {
+    it('price', async() => {
         const res = await fetchTokenPrice({provider, address: "0xd5736ba0be93c99a10e2264e8e4ebd54633306f8", chainId: chainId});
         // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })
 
-    it('external rate', async() => {
+    it.only('external rate', async() => {
         // for (const om of avalancheContracts.otherMarkets!) {
         //     const res = await fetchSushiForkYield(om.address, 43114)
         //     console.log('market:', om.address);
         //     console.log('yield:', res);
         // }
-        console.log(await fetchWonderlandYield(provider, chainId))
+        console.log(await fetchSushiForkYield('0x37922c69b08babcceae735a31235c81f1d1e8e43', chainId))
     })
 
     it('gas price', async() => {
