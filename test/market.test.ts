@@ -139,13 +139,13 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it.only('PendleMarket.getSwapFeeApr', async() => {
+    it('PendleMarket.getSwapFeeApr', async() => {
         const response = await market.methods({signer, provider, chainId}).getSwapFeeApr();
         console.log(response);
     })
 
-    it('UniForkMarket.readMarketDetails', async() => {
-        const sushiMarket = UniForkMarket.find('0x2c80d72af9ab0bb9d98f607c817c6f512dd647e6', chainId);
+    it.only('UniForkMarket.readMarketDetails', async() => {
+        const sushiMarket = UniForkMarket.find('0x588dc0dd7c8be073e9da79307e023f1f756f06c6', chainId);
         const response = await sushiMarket.methods({signer, provider, chainId}).readMarketDetails();
         console.log(JSON.stringify(response, null, '  '));
     })

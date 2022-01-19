@@ -890,7 +890,7 @@ export type OtherMarketDetails = {
     liquidity: CurrencyAmount,
     totalSupplyLP: string,
     otPrice?: CurrencyAmount,
-    impliedDiscount?: string
+    impliedYield?: string
   }
 }
 
@@ -1021,12 +1021,12 @@ export class UniForkMarket extends Market {
         }
       };
       try {
-        const {otPrice, impliedDiscount} = await getOtPriceAndImpliedDiscount();
+        const {otPrice, impliedYield} = await getOtPriceAndimpliedYield();
         marketDetails.otherDetails.otPrice = {
           currency: 'USD',
           amount: otPrice.toFixed(DecimalsPrecision)
         };
-        marketDetails.otherDetails.impliedDiscount = impliedDiscount.toFixed(DecimalsPrecision);
+        marketDetails.otherDetails.impliedYield = impliedYield.toFixed(DecimalsPrecision);
       } catch(err) {}
       
       return marketDetails;
@@ -1059,9 +1059,9 @@ export class UniForkMarket extends Market {
         .multipliedBy(decimalFactor(networkInfo.decimalsRecord[otAddress])).div(otReserve.toString());
     }
 
-    const getOtPriceAndImpliedDiscount = async(): Promise<{otPrice: BigNumber, impliedDiscount: BigNumber}> => {
+    const getOtPriceAndimpliedYield = async(): Promise<{otPrice: BigNumber, impliedYield: BigNumber}> => {
       const otPrice: BigNumber = await getOtPrice();
-      const yieldContract: YieldContract = this.yieldContract();
+      const yieldContract: YieldContract = this.yieldContract(chainId);
       const principalPerOT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
       const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, provider, chainId);
       const p: BigNumber = (new BigNumber(principalValuation.amount).minus(otPrice)).dividedBy(principalValuation.amount);
@@ -1070,7 +1070,7 @@ export class UniForkMarket extends Market {
       if (p.isGreaterThanOrEqualTo(ONE)) {
         return {
           otPrice: otPrice,
-          impliedDiscount: new BigNumber(999999999)
+          impliedYield: new BigNumber(999999999)
         };
       }
       const currentTime: number = await getCurrentTimestamp(provider);
@@ -1079,7 +1079,7 @@ export class UniForkMarket extends Market {
       const y_annum: BigNumber = calcImpliedYield(p, daysLeft);
       return {
         otPrice: otPrice,
-        impliedDiscount: y_annum
+        impliedYield: y_annum
       };
     }
 
