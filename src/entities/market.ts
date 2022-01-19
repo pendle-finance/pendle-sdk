@@ -1061,7 +1061,7 @@ export class UniForkMarket extends Market {
 
     const getOtPriceAndImpliedDiscount = async(): Promise<{otPrice: BigNumber, impliedDiscount: BigNumber}> => {
       const otPrice: BigNumber = await getOtPrice();
-      const yieldContract: YieldContract = this.yieldContract();
+      const yieldContract: YieldContract = this.yieldContract(chainId);
       const principalPerOT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
       const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, provider, chainId);
       const p: BigNumber = (new BigNumber(principalValuation.amount).minus(otPrice)).dividedBy(principalValuation.amount);
