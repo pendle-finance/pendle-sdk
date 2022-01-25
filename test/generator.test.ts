@@ -1,7 +1,7 @@
 
 import * as dotenv from 'dotenv';
-import { ethers } from 'ethers';
-import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor } from '../src';
+import { ethers, providers } from 'ethers';
+import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor, getOnePool } from '../src';
 import { computeTradeRouteExactIn } from '../src/entities/tradeRouteProducer';
 
 dotenv.config()
@@ -21,10 +21,31 @@ describe("Staking pools", () => {
         signer = provider.getSigner();
     });
     
-    it('generate', async() => {
+    it.only('generate', async() => {
         const res = await generateTJPoolDetails(provider)
         console.log(JSON.stringify(res, null, '  '));
         console.log(res.length)
+    })
+
+    it('generate one pool', async() => {
+        const t0 = {
+            chainId: 43114,
+            address: '0x8F47416CaE600bccF9530E9F3aeaA06bdD1Caa79',
+            decimals: 18,
+            name: 'THOR v2',
+            symbol: 'THOR',
+            logoURI: 'https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0x8F47416CaE600bccF9530E9F3aeaA06bdD1Caa79/logo.png'
+        };
+        const t1= {
+            chainId: 43114,
+            address: '0xd9D90f882CDdD6063959A9d837B05Cb748718A05',
+            decimals: 18,
+            name: 'More Token',
+            symbol: 'MORE',
+            logoURI: 'https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xd9D90f882CDdD6063959A9d837B05Cb748718A05/logo.png'
+        }
+        const res = await getOnePool(t0, t1, provider);
+        console.log(JSON.stringify(res, null, '  '))
     })
 
     it('compute trade route', async()=> {

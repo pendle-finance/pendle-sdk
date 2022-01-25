@@ -3,7 +3,7 @@ import { contracts } from "../contracts";
 import { isSameAddress } from "../helpers";
 import cachedTokens from './traderJoeTokens.json';
 const axios = require('axios');
-var chainId = 4314;
+var chainId = 43114;
 
 const JoeFactoryAddress = '0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10';
 const JoeFactoryContract = new Contract(JoeFactoryAddress, contracts.UniForkFactory.abi);
@@ -59,7 +59,7 @@ export async function getOnePool(tokenI: any, tokenJ: any, provider: providers.J
 }
 export async function generateTJPoolDetails(provider: providers.JsonRpcProvider) {
     const tokens = await getTokens();
-    const leng = tokens.length;
+    const leng = tokens.length; 
     var res = [];
     const promises = [];
 
