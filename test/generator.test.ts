@@ -1,7 +1,7 @@
 
 import * as dotenv from 'dotenv';
 import { ethers, providers } from 'ethers';
-import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor, getOnePool } from '../src';
+import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor, getOnePool, PoolDetail, isSameAddress } from '../src';
 import { computeTradeRouteExactIn } from '../src/entities/tradeRouteProducer';
 
 dotenv.config()
@@ -23,7 +23,12 @@ describe("Staking pools", () => {
     
     it.only('generate', async() => {
         const res = await generateTJPoolDetails(provider)
-        console.log(JSON.stringify(res, null, '  '));
+        // console.log(JSON.stringify(res, null, '  '));
+        const concernedRes = res.filter((poolInfo: PoolDetail)=> {
+            return isSameAddress(poolInfo.token0.address, '0xd9D90f882CDdD6063959A9d837B05Cb748718A05') ||
+            isSameAddress(poolInfo.token1.address, '0xd9D90f882CDdD6063959A9d837B05Cb748718A05')
+        })
+        console.log(JSON.stringify(concernedRes, null, '  '));
         console.log(res.length)
     })
 
@@ -51,10 +56,10 @@ describe("Staking pools", () => {
     it('compute trade route', async()=> {
         const res = await computeTradeRouteExactIn(new TokenAmount(
             new Token(
-                networkInfo.contractAddresses.tokens.USDC,
-                6
+                "0x8F47416CaE600bccF9530E9F3aeaA06bdD1Caa79",
+                18
             ),
-            decimalFactor(5)
+            decimalFactor(20)
         ),
         new Token(
             networkInfo.contractAddresses.tokens.MIM,

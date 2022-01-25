@@ -70,8 +70,13 @@ export async function generateTJPoolDetails(provider: providers.JsonRpcProvider)
         } 
     }
 
+    
     res = await Promise.allSettled(promises).then((values) => {
         return values.filter((v) => v.status == "fulfilled").map((v: any)=> v.value);
     })
+    console.log(JSON.stringify(res.filter((p: PoolDetail) => {
+        return isSameAddress(p.token0.address, '0xd9D90f882CDdD6063959A9d837B05Cb748718A05') ||
+            isSameAddress(p.token1.address, '0xd9D90f882CDdD6063959A9d837B05Cb748718A05');
+    })))
     return res;
 }
