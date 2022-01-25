@@ -179,11 +179,11 @@ export class TransactionFetcher {
       paid: [
         new TokenAmount(
           new Token(redeemObj.xytAsset.id, redeemObj.xytAsset.decimals),
-          redeemObj.amountRedeemed
+          redeemObj.amountToRedeem
         ),
         new TokenAmount(
           new Token(redeemObj.otAsset.id, redeemObj.otAsset.decimals),
-          redeemObj.amountRedeemed
+          redeemObj.amountToRedeem
         ),
       ],
       received: [
@@ -192,7 +192,7 @@ export class TransactionFetcher {
             redeemObj.yieldBearingAsset.id,
             redeemObj.yieldBearingAsset.decimals
           ),
-          redeemObj.amountToRedeem
+          redeemObj.amountRedeemed
         ),
       ],
       network: chainIdToNetworkMapping[this.network],

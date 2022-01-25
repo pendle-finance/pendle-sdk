@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 import { distributeConstantsByNetwork } from '../src/helpers';
 import { getDecimals } from '../src/networks/helpers/getDecimals';
 
-var chainId = 1;
+var chainId = 43114;
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -63,7 +63,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods({signer, provider, chainId}).fetchClaimableYields(
       "0x2ff85FEA35606D1B801629351dbe0F90e4E41E38"
     );
@@ -116,16 +116,24 @@ describe('Sdk', () => {
     console.log(JSON.stringify(valuations, null, '  '));
   })
 
-  it('TokenAmounts.balancesOf', async () => {
-    const networkInfo = distributeConstantsByNetwork(1);
+  it.only('TokenAmounts.balancesOf', async () => {
+    const networkInfo = distributeConstantsByNetwork(chainId);
     const balances = await TokenAmount.methods({signer, provider, chainId}).balancesOf({
-      user: dummyAddress, tokens: [
+      user: "0xed2a7edd7413021d440b09d654f3b87712abab66", tokens: [
         new Token(
           networkInfo.contractAddresses.tokens.USDC,
           6
         ),
         new Token(
-          '0xbcca60bb61934080951369a648fb03df4f96263c',
+          '0xd586e7f844cea2f87f50152665bcbc2c279d8d70',
+          18
+        ),
+        new Token(
+          '0x63a72806098bd3d9520cc43356dd78afe5d386d9',
+          18
+        ),
+        new Token(
+          '0xc7198437980c041c805a1edcba50c1ce5db95118',
           6
         )
       ]

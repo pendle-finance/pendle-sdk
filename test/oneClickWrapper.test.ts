@@ -113,7 +113,7 @@ describe("One click wrapper", () => {
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it.only('send', async() => {
+  it('send', async() => {
     // const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateDual(Action.stakeOTYT, new TokenAmount(
     //   new Token(
     //     networkInfo.contractAddresses.tokens.USDC,
@@ -128,11 +128,16 @@ describe("One click wrapper", () => {
     console.log(JSON.stringify(res, null, '  '));
   })
 
-  it('TradeRoute', async() => {
-    var trade = await computeTradeRouteExactOut(ETHToken, new TokenAmount(
+  it.only('TradeRoute', async() => {
+    var trade = await computeTradeRouteExactOut(
       new Token(
-        '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7', 18
-      ), decimalFactor(9)
+        '0xab592d197ACc575D16C3346f4EB70C703F308D1E',
+        18
+      ),
+      new TokenAmount(
+      new Token(
+        '0xfb98b335551a418cd0737375a2ea0ded62ea213b', 18
+      ), decimalFactor(20)
     ));
     // var trade = await computeTradeRouteExactOut(new Token('0xfb98b335551a418cd0737375a2ea0ded62ea213b', 18), new TokenAmount(
     //   new Token(

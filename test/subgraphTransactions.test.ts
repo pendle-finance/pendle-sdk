@@ -6,7 +6,7 @@ dotenv.config();
 
 describe('Transaction Entity', () => {
   let transaction: TransactionFetcher;
-  const network = 1;
+  const network = 43114;
   beforeAll(() => {
     transaction = new TransactionFetcher(network);
   });
@@ -22,15 +22,15 @@ describe('Transaction Entity', () => {
     console.log('getMintTransactions', result);
   });
 
-  it('Transaction.getRedeemTransactions', async () => {
+  it.only('Transaction.getRedeemTransactions', async () => {
     const result = await transaction.getRedeemTransactions({
       page: 1,
       limit: 1,
-      underlyingTokenAddress: '0x397ff1542f962076d0bfe58ea045ffa2d347aca0',
-      expiry: 1672272000,
-      forgeId: 'SushiswapComplex',
+      underlyingTokenAddress: '0x136acd46c134e8269052c62a67042d6bdedde3c9',
+      expiry: 1645660800,
+      forgeId: 'Wonderland',
     });
-    console.log('getRedeemTransactions', result);
+    console.log('getRedeemTransactions', JSON.stringify(result, null, '  '));
   });
 
   it('Transaction.getSwapTransactions', async () => {
