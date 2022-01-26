@@ -316,7 +316,7 @@ export class PendleMarket extends Market {
 
     const swapExactInDetails = async (inTokenAmount: TokenAmount, slippage: number): Promise<SwapDetails> => {
       const inAmount: BN = BN.from(inTokenAmount.rawAmount());
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
       const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(inTokenAmount.token, marketReserves, true);
       const outAmount: BN = calcExactOut(
@@ -363,7 +363,7 @@ export class PendleMarket extends Market {
 
     const swapExactOutDetails = async (outTokenAmount: TokenAmount, slippage: number): Promise<SwapDetails> => {
       const outAmount: BN = BN.from(outTokenAmount.rawAmount());
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const swapFee: BN = await pendleDataContract.swapFee();
       const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(outTokenAmount.token, marketReserves, false);
       if (outAmount.gte(tokenDetailsRelative.outReserve)) {
@@ -438,7 +438,7 @@ export class PendleMarket extends Market {
     }
 
     const addDualDetails = async (tokenAmount: TokenAmount, _: number): Promise<AddDualLiquidityDetails> => {
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
       const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(tokenAmount.token, marketReserves, true);
       const otherAmount: BN = calcOtherTokenAmount(tokenDetailsRelative.inReserve, tokenDetailsRelative.outReserve, inAmount);
@@ -483,7 +483,7 @@ export class PendleMarket extends Market {
     }
 
     const addSingleDetails = async (tokenAmount: TokenAmount): Promise<AddSingleLiquidityDetails> => {
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
@@ -522,7 +522,7 @@ export class PendleMarket extends Market {
     }
 
     const addSingle = async (tokenAmount: TokenAmount, slippage: number): Promise<providers.TransactionResponse> => {
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const totalSupplyLp: BN = await marketContract.totalSupply();
       const swapFee: BN = await pendleDataContract.swapFee();
       const inAmount: BN = BN.from(tokenAmount.rawAmount());
@@ -585,7 +585,7 @@ export class PendleMarket extends Market {
       }
 
       const totalSupplyLp: BN = await marketContract.totalSupply();
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const xytRedeemAmout: BN = marketReserves.xytBalance.mul(redeemAmount).div(totalSupplyLp);
       const baseTokenRedeemAmount: BN = marketReserves.tokenBalance.mul(redeemAmount).div(totalSupplyLp);
       return {
@@ -640,7 +640,7 @@ export class PendleMarket extends Market {
         }
       }
       const totalSupplyLp: BN = await marketContract.totalSupply();
-      const marketReserves: MarketReservesRaw = await marketContract.getReserves();
+      const marketReserves: MarketReservesRaw = await getMarketReserves();
       const tokenDetailsRelative: TokenDetailsRelative = getTokenDetailsRelative(outToken, marketReserves, false);
       const swapFee: BN = await pendleDataContract.swapFee();
 

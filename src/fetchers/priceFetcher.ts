@@ -112,10 +112,23 @@ export async function fetchxJOEPrice(xJOEAddress: string, JOEAddress: string, pr
   return (await fetchTokenPrice({address: JOEAddress, provider, chainId})).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, provider))
 }
 
-export async function fetchWrappedMEMOPrice(wMEMOAddress: string, MEMOAddress: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
+export async function fetchWrappedMEMOPrice(provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
+  if (chainId != 43114) return new BigNumber(0);
+  const wMEMOMIMLPAddress = "0x4d308C46EA9f234ea515cC51F16fba776451cac8"
+  const wMEMOMIMLP = new Contract(wMEMOMIMLPAddress, contracts.UniswapV2Pair.abi, provider);
+  var marketReserve = await wMEMOMIMLP.getReserves();
+  const wMEMOReserve = marketReserve.reserve0;
+  const MIMReserve = marketReserve.reserve1;
+  const wMEMOPrice = new BigNumber(1).multipliedBy(MIMReserve.toString()).div(decimalFactor(18))
+  .multipliedBy(decimalFactor(18)).div(wMEMOReserve.toString());
+  return wMEMOPrice;
+}
+
+export async function fetchMemoPrice(wMEMOAddress: string, MEMOAddress: string, provider: providers.JsonRpcProvider, chainId: number): Promise<BigNumber> {
   const wMEMOContract: Contract = new Contract(wMEMOAddress, contracts.WrappedMEMO.abi, provider);
   const MEMOExchangeRate: BigNumber = new BigNumber((await wMEMOContract.wMEMOToMEMO(decimalFactor(18))).toString()).div(decimalFactor(9));
-  return (await fetchTokenPrice({address: MEMOAddress, provider, chainId})).multipliedBy(MEMOExchangeRate);
+  return (await fetchTokenPrice({address: wMEMOAddress, provider, chainId})).div(MEMOExchangeRate);
+  
 }
 
 export async function fetchPENDLEPriceFromCache(): Promise<BigNumber> {
@@ -175,7 +188,7 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
         return await fetchPriceFromCoingecko('joe');
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        if (process.env.COMPUTE_PRICE) {
+      if (process.env.COMPUTE_PRICE) {
           return await fetchPriceFromCoingecko('pendle');
         } else {
           return await fetchPENDLEPriceFromCache();
@@ -185,10 +198,10 @@ export async function fetchBasicTokenPrice(address: string, provider: providers.
         return await fetchPriceFromCoingecko('benqi');
 
       case networkInfo.contractAddresses.tokens.MEMO:
-        return await fetchPriceFromCoingecko('wonderland');
+        return await fetchMemoPrice(networkInfo.contractAddresses.tokens.wMEMO, address, provider, chainId);
 
       case networkInfo.contractAddresses.tokens.wMEMO:
-        return await fetchWrappedMEMOPrice(address, networkInfo.contractAddresses.tokens.MEMO, provider, chainId);
+        return await fetchWrappedMEMOPrice(provider, chainId);
 
       case networkInfo.contractAddresses.tokens.xJOE:
         return await fetchxJOEPrice(address, networkInfo.contractAddresses.tokens.JOE, provider, chainId);
