@@ -14,7 +14,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x37922c69b08babcceae735a31235c81f1d1e8e43"
             ],
             expiry: EXP_2022,
-            active: true,
+            active: false,
             startTime: "1629331200"
         },
         {
@@ -28,7 +28,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x397ff1542f962076d0bfe58ea045ffa2d347aca0"
             ],
             expiry: EXP_2022,
-            active: true,
+            active: false,
             startTime: "1629331200"
         },
         {
@@ -42,7 +42,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0xbcca60bb61934080951369a648fb03df4f96263c"
             ],
             expiry: EXP_2021,
-            active: true,
+            active: false,
             startTime: "1623888000"
         },
         {
@@ -70,7 +70,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
             ],
             expiry: EXP_2021,
-            active: true,
+            active: false,
             startTime: "1623888000"
         },
         {
@@ -106,7 +106,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true,
+            active: false,
             startTime: "1629331200"
         },
         {
@@ -161,7 +161,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true,
+            active: false,
             startTime: "1629936000"
         },
         {
@@ -172,7 +172,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true,
+            active: false,
             startTime: "1629936000"
         },
         {
@@ -183,7 +183,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true,
+            active: false,
             startTime: "1629936000"
         },
         {
@@ -194,7 +194,7 @@ export const mainnetContracts: NetworkContractAddresses = {
                 "0x808507121b80c02388fad14726482e061b8da827"
             ],
             interestTokensAddresses: [],
-            active: true,
+            active: false,
             startTime: "1629936000"
         },
         {
@@ -207,7 +207,7 @@ export const mainnetContracts: NetworkContractAddresses = {
             interestTokensAddresses: [
                 "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2"
             ],
-            active: true,
+            active: false,
             startTime: "1631145600"
         },
         {
@@ -470,6 +470,13 @@ export const mainnetContracts: NetworkContractAddresses = {
                 '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
                 '0x808507121b80c02388fad14726482e061b8da827'
             ]
+        }
+    ],
+    merkleDistributors: [
+        {
+            token: '0x808507121b80c02388fad14726482e061b8da827',
+            // TODO: Replace this with the actual contract once deployed
+            distributor: '0x000000000000000000000000000000000000dead',
         }
     ],
     misc: {
