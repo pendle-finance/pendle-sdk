@@ -9,3 +9,4 @@ export * from './yieldContract';
 export * from './types';
 export * from './oneClickWrapper';
 export * from './tokenDistributor';
+export * from './merkleDistributor';
