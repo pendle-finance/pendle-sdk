@@ -23,14 +23,21 @@ export type PoolDetail = {
     decimals: number
 }
 
+
+const DisabledTokens = new Set([
+    "0x027dbca046ca156de9622cd1e2d907d375e53aa7".toLowerCase() // AMPL
+])
+
 export async function getTokens() {
     var url = "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/joe.tokenlist.json";
 
-    const tokens = axios.get(url).then((res: any) => {
+    const tokens = (await axios.get(url).then((res: any) => {
         return res.data.tokens;
     }).catch((err: any) => {
         return cachedTokens.tokens;
-    });
+    })).filter((t:any) => !DisabledTokens.has(t.address.toLowerCase()));
+    // .filter((t:any) => !DisabledTokens.has(t.address.toLowerCase()));
+
     return tokens;
 }
 

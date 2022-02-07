@@ -1,7 +1,7 @@
 
 import * as dotenv from 'dotenv';
 import { ethers, providers } from 'ethers';
-import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor, getOnePool, PoolDetail, isSameAddress } from '../src';
+import { generateTJPoolDetails, TokenAmount, NetworkInfo, distributeConstantsByNetwork, Token, decimalFactor, getOnePool, PoolDetail, isSameAddress, getTokens } from '../src';
 import { computeTradeRouteExactIn } from '../src/entities/tradeRouteProducer';
 
 dotenv.config()
@@ -21,7 +21,7 @@ describe("Staking pools", () => {
         signer = provider.getSigner();
     });
     
-    it.only('generate', async() => {
+    it('generate', async() => {
         const res = await generateTJPoolDetails(provider)
         // console.log(JSON.stringify(res, null, '  '));
         const concernedRes = res.filter((poolInfo: PoolDetail)=> {
@@ -66,5 +66,9 @@ describe("Staking pools", () => {
             18
         ))
         console.log(res);
+    })
+
+    it.only('getToken', async() => {
+        console.log(JSON.stringify(await getTokens(), null, '  '));
     })
 })

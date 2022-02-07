@@ -72,7 +72,7 @@ describe("One click wrapper", () => {
 
     // const providerUrl = `http://127.0.0.1:8545`;
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
-    signer = provider.getSigner('0xf8865de3BEe5c84649b14F077B36A8f90eE90FeC');
+    signer = provider.getSigner('0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
     yieldContract = new YieldContract(
       utils.parseBytes32String(forgeIdsInBytes.JOE_SIMPLE),
       new Token(
@@ -122,10 +122,10 @@ describe("One click wrapper", () => {
     //   BN.from(10).pow(5).toString()
     // ), 0.01)
     const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateSingle(Action.stakeOTYT, new TokenAmount(new Token(
-      '0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab', 18
-    ), decimalFactor(18)), 0.01);
+      '0x027dbca046ca156de9622cd1e2d907d375e53aa7', 9
+    ), decimalFactor(9)), 0.001);
     console.log(JSON.stringify(sim_res, null, '  '));
-    const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.01);
+    const res = await wrapper.methods({signer, provider: signer.provider, chainId}).send(Action.stakeOTYT, sim_res, 0.001);
     console.log(JSON.stringify(res, null, '  '));
   })
 
