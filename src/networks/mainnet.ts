@@ -472,13 +472,6 @@ export const mainnetContracts: NetworkContractAddresses = {
             ]
         }
     ],
-    merkleDistributors: [
-        {
-            token: '0x808507121b80c02388fad14726482e061b8da827',
-            // TODO: Replace this with the actual contract once deployed
-            distributor: '0x000000000000000000000000000000000000dead',
-        }
-    ],
     misc: {
         PendleRedeemProxy: '0x5d5c1238b1549bcd7ff9e8994045891edd195568',
         PendleLiquidityRewardsReader: '0xa081bf40a06a5885fe5d70521249e8d253dfc2f3',
@@ -489,7 +482,9 @@ export const mainnetContracts: NetworkContractAddresses = {
         MasterChef: '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd',
         PendleWrapper: '0x82c9d29739333258f08cd3957d2a7ac7f4d53fab', //Dummy
         Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888',
-        SushiRouter: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f'
+        SushiRouter: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f',
+        // TODO: Replace this with the actual contract once deployed
+        PendleMerkleDistributor: '0x000000000000000000000000000000000000dead'
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',

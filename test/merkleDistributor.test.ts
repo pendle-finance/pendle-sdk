@@ -15,9 +15,11 @@ function parse(message: any): string {
   return JSON.parse(JSON.stringify(message));
 }
 
-describe(PendleMerkleDistributor, () => {
+// TODO: Neither of these tests work until the contract is deployed
+describe.skip(PendleMerkleDistributor, () => {
   let provider: providers.JsonRpcProvider;
   let signer: providers.JsonRpcSigner;
+  let distributor: PendleMerkleDistributor;
 
   beforeAll(async () => {
     const providerUrl =
@@ -27,34 +29,21 @@ describe(PendleMerkleDistributor, () => {
     // const providerUrl = 'http://127.0.0.1:8545';
     provider = new providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
+    distributor = new PendleMerkleDistributor();
   });
 
-  it('read single token claimable yield', async () => {
-    const singleTokenYield = await PendleMerkleDistributor.methods({
-      signer,
-      provider,
-      chainId,
-    }).fetchTokenClaimableYield({
-      token: pendleToken,
-      userAddress: dummyUser,
-    });
-    console.log('Single token claimable yield', parse(singleTokenYield));
+  it('read Pendle claimable yield', async () => {
+    const yields = await distributor.methods({ signer, provider, chainId }).fetchClaimableYield(dummyUser);
+    console.log('Pendle claimable yield', parse(yields));
   });
 
-  it('read all tokens claimable yields', async () => {
-    const yields = await PendleMerkleDistributor.methods({ signer, provider, chainId }).fetchClaimableYields(dummyUser);
-    console.log('All claimable yields', parse(yields));
-  });
-
-  // TODO: Test this after the contract is deployed
-  it.skip('claim yield for a single token', async () => {
-    const distributor = PendleMerkleDistributor.find({ chainId, address: pendleToken.address });
+  it('claim Pendle yield', async () => {
     const tokenContract = new Contract(pendleToken.address, contracts.IERC20.abi, provider);
     const balanceBefore = await tokenContract.balanceOf(dummyUser);
-    await distributor.methods({ signer, provider, chainId }).claim({ token: pendleToken, userAddress: dummyUser });
+    await distributor.methods({ signer, provider, chainId }).claim(dummyUser);
     const balanceAfter = await tokenContract.balanceOf(dummyUser);
     console.log(
-      'Claim yield for single token\nBefore claim:',
+      'Claim Pendle yield\nBefore claim:',
       balanceBefore.toString(),
       '\nAfter claim:',
       balanceAfter.toString()

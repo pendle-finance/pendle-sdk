@@ -17,7 +17,6 @@ export type NetworkContractAddresses = {
     OTs: OTINFO[],
     pendleMarkets: PENDLEMARKETNFO[],
     otherMarkets?: MARKETINFO[],
-    merkleDistributors?: MERKLEDISTRIBUTORINFO[],
     misc: Record<string, string>,
     tokens: Record<string, string>,
     forges: Record<string, string>
@@ -65,9 +64,4 @@ export enum StakingPoolType {
     PendleSingleSided = 'PendleSingleStaking',
     LmV1Multi = 'PendleLiquidityMiningMulti',
     LmV2Multi = 'PendleLiquidityMiningMultiV2'
-}
-
-export type MERKLEDISTRIBUTORINFO = {
-    token: string,
-    distributor: string
 }
