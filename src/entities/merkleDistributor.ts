@@ -1,8 +1,9 @@
 import keccak256 from 'keccak256';
-import { BigNumber as BN, Contract, utils } from 'ethers';
+import { BigNumber as BN, BigNumberish, Contract, utils } from 'ethers';
 import { MerkleTree } from 'merkletreejs';
 import { EthConsts } from '@pendle/constants';
 import { contracts } from '../contracts';
+import { PendleRewardDetails, fetchTotalPendleRewards } from '../fetchers';
 import { distributeConstantsByNetwork, isSameAddress, submitTransaction } from '../helpers';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
@@ -15,16 +16,28 @@ import type { ChainSpecifics } from './types';
 // extend this distributor to another chain ever arise, a chainId instance
 // variable can be added.
 export class PendleMerkleDistributor {
-  // TODO: Complete this function to fetch merkle tree from backend server
+  private _pendleRewardDetails?: PendleRewardDetails[];
+
+  public async pendleRewardDetails(): Promise<PendleRewardDetails[]> {
+    this._pendleRewardDetails ??= await fetchTotalPendleRewards();
+    return this._pendleRewardDetails;
+  }
+
+  private hashPendleRewardDetails(address: string, amount: BigNumberish): string {
+    return utils.solidityKeccak256(['address', 'uint256'], [address, amount]);
+  }
+
+  // TODO: See if this can be optimized by deserializing a Merkle tree from the backend server
   public async merkleTree(): Promise<MerkleTree> {
-    return new MerkleTree([], keccak256, { sort: true });
+    const details = await this.pendleRewardDetails();
+    const elements = details.map(({ address, amount }) => this.hashPendleRewardDetails(address, amount));
+    return new MerkleTree(elements, keccak256, { sort: true });
   }
 
   public async fetchUserTotalAmount(userAddress: string): Promise<BN> {
-    // TODO: Replace dummy data with backend server data
-    const data = await [{ address: '0xD08c8e6d78a1f64B1796d6DC3137B19665cb6F1F', amount: BN.from(10).pow(17) }];
+    const data = await this.pendleRewardDetails();
     const { amount } = data.find(({ address }) => isSameAddress(address, userAddress)) ?? {};
-    return amount ?? BN.from(0);
+    return BN.from(amount ?? 0);
   }
 
   public methods({ signer, provider, chainId = EthConsts.common.CHAIN_ID }: ChainSpecifics) {
@@ -32,6 +45,7 @@ export class PendleMerkleDistributor {
     const distributorAddress = networkInfo.contractAddresses.misc.PendleMerkleDistributor;
     // TODO: Annotate the contract with the appropriate type
     const distributorContract = new Contract(distributorAddress, contracts.PendleMerkleDistributor.abi, provider); // as PendleMerkleDistributor;
+    // const distributorContract = { callStatic: {claimedAmount: (address: string) => { return BN.from(0) }} } as unknown as Contract; // for testing
     const pendleToken = Token.find(networkInfo.contractAddresses.tokens.PENDLE);
 
     // Fetch claimable Pendle yield
@@ -47,7 +61,7 @@ export class PendleMerkleDistributor {
     // Claim the Pendle yield
     const claim = async (userAddress: string) => {
       const [amount, merkleTree] = await Promise.all([this.fetchUserTotalAmount(userAddress), this.merkleTree()]);
-      const leaf = utils.solidityKeccak256(['address', 'uint256'], [userAddress, amount]);
+      const leaf = this.hashPendleRewardDetails(userAddress, amount);
       const proof = merkleTree.getHexProof(leaf);
       return submitTransaction(distributorContract, signer!, 'claim', [userAddress, amount, proof]);
     };
