@@ -17,7 +17,7 @@ export class PendleMerkleDistributor {
   private _pendleRewardDetails?: PendleRewardDetails[];
 
   public async pendleRewardDetails(): Promise<PendleRewardDetails[]> {
-    this._pendleRewardDetails ??= await fetchTotalPendleRewards();
+    this._pendleRewardDetails = this._pendleRewardDetails ?? await fetchTotalPendleRewards();
     return this._pendleRewardDetails;
   }
 
