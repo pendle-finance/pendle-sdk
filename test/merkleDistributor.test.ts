@@ -15,8 +15,7 @@ function parse(message: any): string {
   return JSON.parse(JSON.stringify(message));
 }
 
-// TODO: Neither of these tests work until the contract is deployed
-describe.skip(PendleMerkleDistributor, () => {
+describe(PendleMerkleDistributor, () => {
   let provider: providers.JsonRpcProvider;
   let signer: providers.JsonRpcSigner;
   let distributor: PendleMerkleDistributor;
@@ -39,8 +38,12 @@ describe.skip(PendleMerkleDistributor, () => {
 
   it('claim Pendle yield', async () => {
     const tokenContract = new Contract(pendleToken.address, contracts.IERC20.abi, provider);
-    const balanceBefore = await tokenContract.balanceOf(dummyUser);
-    await distributor.methods({ signer, provider, chainId }).claim(dummyUser);
+    const { fetchClaimableYield, claim } = distributor.methods({ signer, provider, chainId });
+    const [balanceBefore, expectedAmount] = await Promise.all([
+      tokenContract.balanceOf(dummyUser),
+      fetchClaimableYield(dummyUser),
+    ]);
+    await claim(dummyUser);
     const balanceAfter = await tokenContract.balanceOf(dummyUser);
     console.log(
       'Claim Pendle yield\nBefore claim:',
@@ -48,5 +51,6 @@ describe.skip(PendleMerkleDistributor, () => {
       '\nAfter claim:',
       balanceAfter.toString()
     );
+    expect(balanceAfter.sub(balanceBefore).toString()).toBe(expectedAmount.rawAmount());
   });
 });

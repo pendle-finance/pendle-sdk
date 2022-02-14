@@ -8,9 +8,7 @@ import { distributeConstantsByNetwork, isSameAddress, submitTransaction } from '
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import type { ChainSpecifics } from './types';
-
-// TODO: Annotate the contract with the appropriate type
-// import type { PendleMerkleDistributor } from '@pendle/core/typechain-types';
+import type { PendleMerkleDistributor as PendleMerkleDistributorContract } from '@pendle/core/typechain-types';
 
 // This class currently works only on Ethereum Mainnet. Should the need to
 // extend this distributor to another chain ever arise, a chainId instance
@@ -27,7 +25,6 @@ export class PendleMerkleDistributor {
     return utils.solidityKeccak256(['address', 'uint256'], [address, amount]);
   }
 
-  // TODO: See if this can be optimized by deserializing a Merkle tree from the backend server
   public async merkleTree(): Promise<MerkleTree> {
     const details = await this.pendleRewardDetails();
     const elements = details.map(({ address, amount }) => this.hashPendleRewardDetails(address, amount));
@@ -43,11 +40,9 @@ export class PendleMerkleDistributor {
   public methods({ signer, provider, chainId = EthConsts.common.CHAIN_ID }: ChainSpecifics) {
     const networkInfo = distributeConstantsByNetwork(chainId);
     const distributorAddress = networkInfo.contractAddresses.misc.PendleMerkleDistributor;
-    // TODO: Annotate the contract with the appropriate type
-    const distributorContract = new Contract(distributorAddress, contracts.PendleMerkleDistributor.abi, provider); // as PendleMerkleDistributor;
-    // const distributorContract = { callStatic: {claimedAmount: (address: string) => { return BN.from(0) }} } as unknown as Contract; // for testing
+    const distributorContract = new Contract(distributorAddress, contracts.PendleMerkleDistributor.abi, provider) as PendleMerkleDistributorContract;
     const pendleToken = Token.find(networkInfo.contractAddresses.tokens.PENDLE);
-
+    
     // Fetch claimable Pendle yield
     const fetchClaimableYield = async (userAddress: string): Promise<TokenAmount> => {
       const [totalAmount, claimedAmount] = await Promise.all([

@@ -35,10 +35,7 @@ const WrappedMEMO = require('../abis/WrappedMEMO.json');
 const TIMEStaking = require('../abis/TIMEStaking.json');
 const MEMOToken = require('../abis/MEMO.json');
 const UniForkFactory = require('@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Factory.sol/IUniswapV2Factory.json')
-
-// TODO: Uncomment this once the contract is deployed
-// const PendleMerkleDistributor = require('@pendle/core/build/artifacts/contracts/misc/PendleMerkleDistributor.sol/PendleMerkleDistributor.json');
-const PendleMerkleDistributor = { abi: '' };
+const PendleMerkleDistributor = require('@pendle/core/build/artifacts/contracts/misc/PendleMerkleDistributor.sol/PendleMerkleDistributor.json');
 
 //TODO: User proper IERC20
 

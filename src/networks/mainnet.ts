@@ -483,8 +483,7 @@ export const mainnetContracts: NetworkContractAddresses = {
         PendleWrapper: '0x82c9d29739333258f08cd3957d2a7ac7f4d53fab', //Dummy
         Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888',
         SushiRouter: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f',
-        // TODO: Replace this with the actual contract once deployed
-        PendleMerkleDistributor: '0x000000000000000000000000000000000000dead'
+        PendleMerkleDistributor: '0xc7566aae77105d1917acb0507bae66b521a9ae35'
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
