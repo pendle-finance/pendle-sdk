@@ -46,26 +46,28 @@
     }
   ],
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^5.0.5",
-    "husky": "^7.0.1",
-    "size-limit": "^5.0.5",
+    "@size-limit/preset-small-lib": "^7.0.8",
+    "husky": "^7.0.4",
+    "size-limit": "^7.0.8",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
-    "typescript": "^4.4.3"
+    "typescript": "^4.5.5"
   },
   "dependencies": {
-    "@pendle/constants": "^0.4.0",
-    "@pendle/core": "^1.6.2",
+    "@pendle/constants": "^0.6.4",
+    "@pendle/core": "^1.7.0",
     "@pendle/single-staking": "^0.0.1",
     "@pendle/subgraph-sdk": "^1.1.1",
-    "@traderjoe-xyz/sdk": "^0.8.5",
-    "@types/jest": "^27.0.2",
-    "axios": "^0.21.4",
-    "bignumber.js": "^9.0.1",
-    "dotenv": "^10.0.0",
-    "ethers": "^5.4.7",
-    "graphql": "^15.6.1",
-    "graphql-request": "^3.5.0",
-    "ts-node": "^10.2.1"
+    "@traderjoe-xyz/sdk": "^1.1.1",
+    "@types/jest": "^27.4.0",
+    "axios": "^0.26.0",
+    "bignumber.js": "^9.0.2",
+    "dotenv": "^16.0.0",
+    "ethers": "^5.5.4",
+    "graphql": "^16.3.0",
+    "graphql-request": "^4.0.0",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.27",
+    "ts-node": "^10.5.0"
   }
 }
