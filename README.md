@@ -213,6 +213,24 @@ yieldContract.methods(JsonRpcSigner, chainId?).redeemDetails(otAmount: TokenAmou
 yieldContract.methods(JsonRpcSigner, chainId?).redeem(otAmount: TokenAmount) => Promise<TransactionResponse>
 ```
 
+## Pendle Merkle Distributor
+
+### Instance Methods:
+
+```typescript
+type PendleRewardDetails = {
+    address: string;
+    amount: string;
+};
+
+pendleMerkleDistributor.methods({signer?, provider, chainId = 1}).fetchClaimableYield(userAddress: string) => Promise<TokenAmount>;
+pendleMerkleDistributor.methods({signer?, provider, chainId = 1}).claim(userAddress: string) => Promise<TransactionResponse>;
+
+pendleMerkleDistributor.pendleRewardDetails() => Promise<PendleRewardDetails[]>;
+pendleMerkleDistributor.merkleTree() => Promise<MerkleTree>;
+pendleMerkleDistributor.fetchUserTotalAmount(userAddress: string) => Promise<BN>;
+```
+
 ## Misc functions:
 
 ```
