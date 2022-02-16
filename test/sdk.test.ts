@@ -2,10 +2,10 @@ import { Yt, Ot, StakingPool, PendleMarket, dummyAddress, Sdk, TokenAmount, ETHT
 // import { Market } from '../src/entities/market';
 import { Contract, ethers, providers } from 'ethers';
 import * as dotenv from 'dotenv';
-import { distributeConstantsByNetwork } from '../src/helpers';
+import { distributeConstantsByNetwork, binarySearchGas } from '../src/helpers';
 import { getDecimals } from '../src/networks/helpers/getDecimals';
 
-var chainId = 43114;
+var chainId = 1;
 
 dotenv.config();
 jest.setTimeout(300000);
@@ -39,7 +39,7 @@ describe('Sdk', () => {
 
   it('Market.methods.fetchInterests', async () => {
     const userInterests = await PendleMarket.methods({signer, provider, chainId}).fetchInterests(
-      dummyUser
+      "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     );
     console.log(JSON.stringify(userInterests, null, '  '));
   });
@@ -63,9 +63,9 @@ describe('Sdk', () => {
     console.log(JSON.stringify(xyt, null, '  '))
   })
 
-  it('StakingPool.methods.fetchInterestsAndRewards', async () => {
+  it.only('StakingPool.methods.fetchInterestsAndRewards', async () => {
     const interestsAndRewards = await StakingPool.methods({signer, provider, chainId}).fetchClaimableYields(
-      "0x2ff85FEA35606D1B801629351dbe0F90e4E41E38"
+      "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     );
     console.log(JSON.stringify(interestsAndRewards, null, '  '));
   });
@@ -116,7 +116,7 @@ describe('Sdk', () => {
     console.log(JSON.stringify(valuations, null, '  '));
   })
 
-  it.only('TokenAmounts.balancesOf', async () => {
+  it('TokenAmounts.balancesOf', async () => {
     const networkInfo = distributeConstantsByNetwork(chainId);
     const balances = await TokenAmount.methods({signer, provider, chainId}).balancesOf({
       user: "0xed2a7edd7413021d440b09d654f3b87712abab66", tokens: [

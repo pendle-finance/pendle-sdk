@@ -3,7 +3,10 @@ import { ethers } from 'ethers'
 import { LMINFO, NetworkInfo } from "../src/networks";
 import { distributeConstantsByNetwork } from "../src/helpers";
 import { dummyAddress, StakingPool } from "../src";
-var chainId = 43114;
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+var chainId = 1;
 
 describe('Redeem Proxy', () => {
     let provider: ethers.providers.JsonRpcProvider;
@@ -29,5 +32,10 @@ describe('Redeem Proxy', () => {
     it('redeemTokenDist', async() => {
         const res = await RedeemProxy.methods({signer, provider, chainId}).callStatic.redeemTokenDist(['0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7', '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5'], '0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
         console.log(JSON.stringify(res, null, '  '));
+    })
+    
+    it.only('binary search gas', async() => {
+        const res = await RedeemProxy.methods({signer, provider, chainId}).estimateGasForClaimYields({interestStakingPools: [StakingPool.find('0x309d8cf8f7c3340b50ff0ef457075a3c5792203f', '0xb124c4e18a282143d362a066736fd60d22393ef4', chainId)]})
+        console.log(res)
     })
 })

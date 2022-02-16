@@ -1,6 +1,6 @@
 import { providers, Contract, BigNumber as BN } from 'ethers';
 // import { contractAddresses } from '../constants';
-import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlocksomeDurationEarlier, Call_MultiCall, Result_MultiCall, getLMStartTime, submitTransaction } from '../helpers'
+import { getCurrentEpochId, indexRange, distributeConstantsByNetwork, isSameAddress, getCurrentTimestamp, getABIByStakingPoolType, getBlocksomeDurationEarlier, Call_MultiCall, Result_MultiCall, getLMStartTime, submitTransaction, submitTransactionWithBinarySearchedGasLimit } from '../helpers'
 import { LMEpochDuration, VestingEpoches, ALLOCATION_DENOMINATOR, dummyAddress, HG } from '../constants';
 import { contracts } from '../contracts';
 import { Token } from './token';
@@ -414,13 +414,13 @@ export class StakingPool {
           expiry,
           BN.from(amount.rawAmount())
         ];
-        return submitTransaction(stakingPoolContract, signer!, 'withdraw', args);
+        return submitTransactionWithBinarySearchedGasLimit(stakingPoolContract, false, signer!, 'withdraw', args);
       } else if (this.isLmV2()) {
         const args: any[] = [
           await signer!.getAddress(),
           BN.from(amount.rawAmount())
         ];
-        return submitTransaction(stakingPoolContract, signer!, 'withdraw', args);
+        return submitTransactionWithBinarySearchedGasLimit(stakingPoolContract, false, signer!, 'withdraw', args);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const userAddress: string = await signer!.getAddress();
         const userPendleBalance: BN = BN.from((await balanceOf(userAddress)).amount.rawAmount());
@@ -430,14 +430,14 @@ export class StakingPool {
         const args: any[] = [
           shareToRedeem
         ];
-        return submitTransaction(stakingPoolContract, signer!, 'leave', args);
+        return submitTransactionWithBinarySearchedGasLimit(stakingPoolContract, false, signer!, 'leave', args);
       } else if (this.contractType == StakingPoolType.LmV1Multi) {
         const args: any[] = [
           await signer!.getAddress(),
           expiry,
           BN.from(amount.rawAmount())
         ];
-        return submitTransaction(stakingPoolContract, signer!, 'withdrawTo', args);
+        return submitTransactionWithBinarySearchedGasLimit(stakingPoolContract, false, signer!, 'withdrawTo', args);
       } else {
         throw Error(UNSUPPORTED_TYPE);
       }

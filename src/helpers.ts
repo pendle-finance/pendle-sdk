@@ -245,9 +245,50 @@ export async function submitTransaction(contract: Contract, signer: providers.Js
   return contract.connect(signer)[funcName](...args, getGasLimitWithETH(gasEstimate, value));
 }
 
+export async function submitTransactionWithBinarySearchedGasLimit(contract: Contract, isRedeemProxy: boolean, signer: providers.JsonRpcSigner, funcName: string, args: any[], value: BN = ZERO): Promise<providers.TransactionResponse> {
+  const gasEstimate: BN = await binarySearchGas(contract, isRedeemProxy, await signer.getAddress(), funcName, args, value);
+  return contract.connect(signer)[funcName](...args, {gasLimit: gasEstimate, value: value});
+}
+
 export async function estimateGas(contract: Contract, fromAddress: string, funcName: string, args: any[], value: BN = ZERO): Promise<BN> {
   const gasEstimate: BN = await contract.estimateGas[funcName](...args, { from: fromAddress, value: value });
   return BN.from(getGasLimitWithETH(gasEstimate, value).gasLimit);
+}
+
+async function isGasLimitSufficient(contract: Contract, fromAddress: string, funcName: string, args: any[], value: BN, gasLimit: BN, isRedeemProxy: boolean): Promise<boolean> {
+  var isSuccessful = await contract.callStatic[funcName](...args, {from: fromAddress, value: value, gasLimit: gasLimit})
+                            .then((res) => {
+                              if (!isRedeemProxy) return true;
+                              for (const reason of res.lmRewardsFailureReasons) {
+                                if (reason !== "") return false;
+                              }
+                              for (const reason of res.lmInterestsFailureReasons) {
+                                if (reason !== "") return false;
+                              }
+                              return true;
+                            })
+                            .catch((err: any) => {return false;})
+  return isSuccessful;
+}
+
+export async function binarySearchGas(contract: Contract, isRedeemProxy: boolean, fromAddress: string, funcName: string, args: any[], value: BN = ZERO): Promise<BN> {
+  const ethersEstimate: BN = await contract.estimateGas[funcName](...args, { from: fromAddress, value: value });
+  var leftBound = ethersEstimate; var rightBound = ethersEstimate.mul(3);
+
+  if (! await isGasLimitSufficient(contract, fromAddress, funcName, args, value, rightBound, isRedeemProxy)) throw new Error(`Cannot Estimate Gas`);
+
+  var gasLimitRange = BN.from(100000);
+  // Invariant (assumption): rightBound gas limit is always sufficient
+  while (true) {
+    if (rightBound.sub(leftBound).lt(gasLimitRange)) return rightBound;
+    var mid = (leftBound.add(rightBound)).div(2);
+    var isSufficient = await isGasLimitSufficient(contract, fromAddress, funcName, args, value, mid, isRedeemProxy);
+    if (isSufficient) {
+      rightBound = mid;
+    } else {
+      leftBound = mid;
+    }
+  }
 }
 
 export function getInTokenAddress(path: string[]): string {

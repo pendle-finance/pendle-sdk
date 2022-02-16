@@ -4,7 +4,7 @@ import { StakingPool } from "./stakingPool";
 import { PendleMarket } from "./market";
 import { Yt } from "./yt";
 import { contracts } from "../contracts";
-import { distributeConstantsByNetwork, estimateGas, indexRange, isSameAddress, submitTransaction } from "../helpers";
+import { distributeConstantsByNetwork, submitTransactionWithBinarySearchedGasLimit, indexRange, isSameAddress, submitTransaction, binarySearchGas } from "../helpers";
 import { LMINFO, NetworkInfo, OTINFO, PENDLEMARKETNFO, YTINFO } from "../networks";
 import { Ot } from "./ot";
 import { GasInfo, getGasPrice } from "../fetchers/gasPriceFetcher";
@@ -213,7 +213,7 @@ export class RedeemProxy {
         }): Promise<providers.TransactionResponse> => {
             const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            return submitTransaction(redeemProxyContract, signer!, 'redeem', args);
+            return submitTransactionWithBinarySearchedGasLimit(redeemProxyContract, true, signer!, 'redeem', args);
         }
 
         const estimateGasForClaimYields = async ({
@@ -233,7 +233,7 @@ export class RedeemProxy {
         }): Promise<GasInfo> => {
             const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            const gasLimit: BN = await estimateGas(redeemProxyContract, userAddress, 'redeem', args)
+            const gasLimit: BN = await binarySearchGas(redeemProxyContract, true, userAddress, 'redeem', args)
             const gasPrice: BN = await getGasPrice(chainId);
 
             return {
