@@ -213,7 +213,7 @@ export class RedeemProxy {
         }): Promise<providers.TransactionResponse> => {
             const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            return submitTransactionWithBinarySearchedGasLimit(redeemProxyContract, true, signer!, 'redeem', args);
+            return submitTransactionWithBinarySearchedGasLimit(redeemProxyContract, chainId == 1, signer!, 'redeem', args);
         }
 
         const estimateGasForClaimYields = async ({
