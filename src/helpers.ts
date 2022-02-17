@@ -271,18 +271,18 @@ async function isGasLimitSufficient(contract: Contract, fromAddress: string, fun
   return isSuccessful;
 }
 
-export async function binarySearchGas(contract: Contract, isRedeemProxy: boolean, fromAddress: string, funcName: string, args: any[], value: BN = ZERO): Promise<BN> {
+export async function binarySearchGas(contract: Contract, isRedeemProxyOld: boolean, fromAddress: string, funcName: string, args: any[], value: BN = ZERO): Promise<BN> {
   const ethersEstimate: BN = await contract.estimateGas[funcName](...args, { from: fromAddress, value: value });
   var leftBound = ethersEstimate; var rightBound = ethersEstimate.mul(3);
 
-  if (! await isGasLimitSufficient(contract, fromAddress, funcName, args, value, rightBound, isRedeemProxy)) throw new Error(`Cannot Estimate Gas`);
+  if (! await isGasLimitSufficient(contract, fromAddress, funcName, args, value, rightBound, isRedeemProxyOld)) throw new Error(`Cannot Estimate Gas`);
 
   var gasLimitRange = BN.from(100000);
   // Invariant (assumption): rightBound gas limit is always sufficient
   while (true) {
     if (rightBound.sub(leftBound).lt(gasLimitRange)) return rightBound;
     var mid = (leftBound.add(rightBound)).div(2);
-    var isSufficient = await isGasLimitSufficient(contract, fromAddress, funcName, args, value, mid, isRedeemProxy);
+    var isSufficient = await isGasLimitSufficient(contract, fromAddress, funcName, args, value, mid, isRedeemProxyOld);
     if (isSufficient) {
       rightBound = mid;
     } else {

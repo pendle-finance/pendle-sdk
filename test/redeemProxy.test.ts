@@ -6,7 +6,7 @@ import { dummyAddress, StakingPool } from "../src";
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-var chainId = 1;
+var chainId = 43114;
 
 describe('Redeem Proxy', () => {
     let provider: ethers.providers.JsonRpcProvider;
@@ -20,7 +20,7 @@ describe('Redeem Proxy', () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         
-        signer = provider.getSigner('0x0D207520DF136bFc84c7a2932383362b8ae4fC61');
+        signer = provider.getSigner('0x2C4E1E7251470D5731Dc7c6290bEFbAcf91c1F80');
     })
     
     it('redeemLmV2Interests', async() => {
@@ -35,7 +35,17 @@ describe('Redeem Proxy', () => {
     })
     
     it.only('binary search gas', async() => {
-        const res = await RedeemProxy.methods({signer, provider, chainId}).estimateGasForClaimYields({interestStakingPools: [StakingPool.find('0x309d8cf8f7c3340b50ff0ef457075a3c5792203f', '0xb124c4e18a282143d362a066736fd60d22393ef4', chainId)]})
+        const YTStakingPool = StakingPool.find("0x9ada5ce16cdbd76afdd28b891cd0a1a9f659dad6", "0x11b9346eefa301e278f246d857c0a6edfbf97fb4", chainId);
+        const OTStakingPool = StakingPool.find("0x2aa0bec34deeb6987c118ce353d14eea6def24ce", "0x588dc0dd7c8be073e9da79307e023f1f756f06c6", chainId);
+        const res = await RedeemProxy.methods({signer, provider, chainId}).estimateGasForClaimYields({rewardStakingPools: [YTStakingPool, OTStakingPool]})
         console.log(res)
+    })
+
+    it('construct args for redeem', async() => {
+        const YTStakingPool = StakingPool.find("0x9ada5ce16cdbd76afdd28b891cd0a1a9f659dad6", "0x11b9346eefa301e278f246d857c0a6edfbf97fb4", chainId);
+        const OTStakingPool = StakingPool.find("0x2aa0bec34deeb6987c118ce353d14eea6def24ce", "0x588dc0dd7c8be073e9da79307e023f1f756f06c6", chainId);
+        console.log(await RedeemProxy.methods({signer, provider, chainId}).claimYields({
+            rewardStakingPools: [YTStakingPool, OTStakingPool]
+        }))
     })
 })

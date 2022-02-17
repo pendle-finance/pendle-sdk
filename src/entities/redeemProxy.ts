@@ -233,7 +233,7 @@ export class RedeemProxy {
         }): Promise<GasInfo> => {
             const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            const gasLimit: BN = await binarySearchGas(redeemProxyContract, true, userAddress, 'redeem', args)
+            const gasLimit: BN = await binarySearchGas(redeemProxyContract, chainId == 1, userAddress, 'redeem', args)
             const gasPrice: BN = await getGasPrice(chainId);
 
             return {
