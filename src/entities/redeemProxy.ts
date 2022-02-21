@@ -213,7 +213,6 @@ export class RedeemProxy {
         }): Promise<providers.TransactionResponse> => {
             const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            console.log(JSON.stringify(args, null, "  "))
             return submitTransactionWithBinarySearchedGasLimit(redeemProxyContract, proxyVersion == ProxyVersion.OldSingle, signer!, 'redeem', args);
         }
 
@@ -232,14 +231,10 @@ export class RedeemProxy {
             rewardStakingPools?: StakingPool[],
             tokensToDistribute: Token[]
         }): Promise<GasInfo> => {
-            console.log(rewardStakingPools);
-            const userAddress: string = "0xe1d900c75fd48913c1d092fa0e4c3d7430de7f1b";
-            // const userAddress: string = await signer!.getAddress();
+            const userAddress: string = await signer!.getAddress();
             const args: any[] = constructArgsForClaimYields(yts, ots, lps, interestStakingPools, rewardStakingPools, tokensToDistribute, userAddress);
-            console.log(args);
             const gasLimit: BN = await binarySearchGas(redeemProxyContract, proxyVersion == ProxyVersion.OldSingle, userAddress, 'redeem', args)
             const gasPrice: BN = await getGasPrice(chainId);
-            console.log("GasLimit", gasLimit.toString())
             return {
                 gasCost: new TokenAmount(
                     ETHToken,
