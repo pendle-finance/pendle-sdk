@@ -98,7 +98,6 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
     case forgeIdsInBytes.BENQI:
     case forgeIdsInBytes.COMPOUND_UPGRADED:
     case forgeIdsInBytes.WONDERLAND:
-    case forgeIdsInBytes.REDACTED:
       return contracts.PendleCompoundV2Forge;
 
     case forgeIdsInBytes.JOE_COMPLEX:
