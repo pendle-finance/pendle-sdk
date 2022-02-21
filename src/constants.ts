@@ -14,7 +14,8 @@ export const forgeIdsInBytes = {
   JOE_COMPLEX: utils.formatBytes32String('TraderJoeComplex'),
   BENQI: utils.formatBytes32String('BenQi'),
   XJOE: utils.formatBytes32String('xJoe'),
-  WONDERLAND: utils.formatBytes32String('Wonderland')
+  WONDERLAND: utils.formatBytes32String('Wonderland'),
+  REDACTED: utils.formatBytes32String('Redacted')
 };
 
 export const marketFactoryIds = {
@@ -34,6 +35,7 @@ export const EXP_2022JUN = BN.from("1656547200");
 export const EXP_2021 = BN.from("1640822400");
 
 export const EXP_WONDERLAND = BN.from("1645660800");
+export const EXP_REDACTED = BN.from("1650499200");
 export const ONE_DAY = BN.from("86400");
 export const ONE_MINUTE = BN.from("60");
 export const LMStartTime = {

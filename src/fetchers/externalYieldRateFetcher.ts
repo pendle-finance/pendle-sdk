@@ -149,13 +149,32 @@ export async function fetchWonderlandYield(provider: providers.JsonRpcProvider, 
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
   const TIMEStakingAddress: string = networkInfo.contractAddresses.misc.TIMEStaking;
   const TIMEStakingContract: Contract = new Contract(TIMEStakingAddress, contracts.TIMEStaking.abi, provider);
-  const epoch = await TIMEStakingContract.epoch();
-  const stakingReward = epoch.distribute;
-
+  const epochPromise = TIMEStakingContract.epoch();
   const memoContract: Contract = new Contract(networkInfo.contractAddresses.tokens.MEMO, contracts.MEMOToken.abi, provider);
-
-  const circ = await memoContract.circulatingSupply();
+  const circPromise = memoContract.circulatingSupply();
+  
+  const [epoch, circ] = await Promise.all([epochPromise, circPromise]);
+  const stakingReward = epoch.distribute;
   const stakingRebase = stakingReward / circ;
   const stakingAPY = Math.pow(1 + stakingRebase, 365 * 3) - 1;
   return stakingAPY;
 }
+
+export async function fetchBTRFLYYield(provider: providers.JsonRpcProvider, chainId?: number): Promise<number> {
+  if (!((chainId ?? 1) == 1)) {
+    throw new Error(`Unsupported chainId ${chainId} in fetchWonderlandYield`);
+  }
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+  const StakingAddress: string = networkInfo.contractAddresses.misc.BTRFLYStaking;
+  const StakingContract: Contract = new Contract(StakingAddress, contracts.BTRFLYStaking.abi, provider);
+  const epochPromise = StakingContract.epoch();
+  const xBTRFLYContract: Contract = new Contract(networkInfo.contractAddresses.tokens.xBTRFLY, contracts.MEMOToken.abi, provider);
+  const circPromise = xBTRFLYContract.circulatingSupply();
+  
+  const [epoch, circ] = await Promise.all([epochPromise, circPromise]);
+  const stakingReward = epoch.distribute;
+  const stakingRebase = stakingReward / circ;
+  const stakingAPY = Math.pow(1 + stakingRebase, 365 * 3) - 1;
+  return stakingAPY;
+}
+

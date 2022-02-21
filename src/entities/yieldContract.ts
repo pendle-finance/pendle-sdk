@@ -91,6 +91,8 @@ export class YieldContract {
                 case forgeIdsInBytes.WONDERLAND:
                   underlyingYieldRate = await fetchWonderlandYield(provider, chainId);
                   break;
+                  
+                case forgeIdsInBytes.REDACTED:
       
                 // TODO: add Uniswap support here
               }
@@ -216,6 +218,7 @@ export class YieldContract {
                 case forgeIdsInBytes.XJOE:
                 case forgeIdsInBytes.BENQI:
                 case forgeIdsInBytes.WONDERLAND:
+                case forgeIdsInBytes.REDACTED:
                     return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
 
                 default:
