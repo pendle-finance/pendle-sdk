@@ -98,6 +98,7 @@ export function getABIByForgeId(forgeIdInBytes: string): any {
     case forgeIdsInBytes.BENQI:
     case forgeIdsInBytes.COMPOUND_UPGRADED:
     case forgeIdsInBytes.WONDERLAND:
+    case forgeIdsInBytes.REDACTED:
       return contracts.PendleCompoundV2Forge;
 
     case forgeIdsInBytes.JOE_COMPLEX:
@@ -256,6 +257,7 @@ export async function estimateGas(contract: Contract, fromAddress: string, funcN
 }
 
 async function isGasLimitSufficient(contract: Contract, fromAddress: string, funcName: string, args: any[], value: BN, gasLimit: BN, isRedeemProxy: boolean): Promise<boolean> {
+  console.log(args, gasLimit);
   var isSuccessful = await contract.callStatic[funcName](...args, {from: fromAddress, value: value, gasLimit: gasLimit})
                             .then((res) => {
                               if (!isRedeemProxy) return true;
@@ -283,6 +285,7 @@ export async function binarySearchGas(contract: Contract, isRedeemProxyOld: bool
     if (rightBound.sub(leftBound).lt(gasLimitRange)) return rightBound;
     var mid = (leftBound.add(rightBound)).div(2);
     var isSufficient = await isGasLimitSufficient(contract, fromAddress, funcName, args, value, mid, isRedeemProxyOld);
+    console.log(`${mid.toString()} gas in ${isSufficient ? "enough" : "not enough"}`);
     if (isSufficient) {
       rightBound = mid;
     } else {
