@@ -1,5 +1,5 @@
 import { NetworkContractAddresses, StakingPoolType, MarketProtocols } from "./types";
-import { EXP_2021, EXP_2022, forgeIdsInBytes, marketFactoryIds } from "../constants";
+import { EXP_2021, EXP_2022, EXP_REDACTED, forgeIdsInBytes, marketFactoryIds } from "../constants";
 
 export const mainnetContracts: NetworkContractAddresses = {
     stakingPools: [
@@ -276,6 +276,15 @@ export const mainnetContracts: NetworkContractAddresses = {
             underlyingAssetAddress: "0x37922c69b08babcceae735a31235c81f1d1e8e43",
             forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_SIMPLE,
             expiry: EXP_2022
+        },
+        {
+            address: "0x0F2B3200d559C3877f11033551459000ab7C0d06".toLowerCase(),
+            rewardTokenAddresses: [
+                "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9".toLowerCase()
+            ],
+            underlyingAssetAddress: "0xCC94Faf235cC5D3Bf4bEd3a30db5984306c86aBC".toLowerCase(),
+            forgeIdInBytes: forgeIdsInBytes.REDACTED,
+            expiry: EXP_REDACTED
         }
     ],
     OTs: [
@@ -336,6 +345,14 @@ export const mainnetContracts: NetworkContractAddresses = {
             rewardTokenAddresses: [],
             forgeIdInBytes: forgeIdsInBytes.SUSHISWAP_SIMPLE,
             expiry: EXP_2022
+        },
+        {
+            address: "0x189564397643D9e6173A002f1BA98da7d40a0FA6".toLowerCase(),
+            yieldTokenAddress: "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9".toLowerCase(),
+            underlyingAssetAddress: "0xCC94Faf235cC5D3Bf4bEd3a30db5984306c86aBC".toLowerCase(),
+            rewardTokenAddresses: [],
+            forgeIdInBytes: forgeIdsInBytes.REDACTED,
+            expiry: EXP_REDACTED
         }
     ],
     pendleMarkets: [
@@ -405,6 +422,17 @@ export const mainnetContracts: NetworkContractAddresses = {
             ],
             marketFactoryId: marketFactoryIds.GENERIC
         },
+        {
+            address: "0x72283a76A0ddbB63c713F911f8568440f0B77804".toLowerCase(),
+            pair: [
+                "0x0F2B3200d559C3877f11033551459000ab7C0d06".toLowerCase(),
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".toLowerCase()
+            ],
+            rewardTokenAddresses: [
+                "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9".toLowerCase()
+            ],
+            marketFactoryId: marketFactoryIds.GENERIC
+        }
     ],
     otherMarkets: [
         {
@@ -470,6 +498,14 @@ export const mainnetContracts: NetworkContractAddresses = {
                 '0xbf682bd31a615123d28d611b38b0ae3d2b675c2c',
                 '0x808507121b80c02388fad14726482e061b8da827'
             ]
+        },
+        {
+            address: "0x4C5BE0fEa74c33455F81c85561146BdAF09633dA".toLowerCase(),
+            platform: MarketProtocols.Sushiswap,
+            pair: [
+                "0x189564397643D9e6173A002f1BA98da7d40a0FA6".toLowerCase(),
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".toLowerCase()
+            ]
         }
     ],
     misc: {
@@ -483,7 +519,8 @@ export const mainnetContracts: NetworkContractAddresses = {
         PendleWrapper: '0x82c9d29739333258f08cd3957d2a7ac7f4d53fab', //Dummy
         Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888',
         SushiRouter: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f',
-        PendleMerkleDistributor: '0xc7566aae77105d1917acb0507bae66b521a9ae35'
+        PendleMerkleDistributor: '0xc7566aae77105d1917acb0507bae66b521a9ae35',
+        BTRFLYStaking: "0xBdE4Dfb0dbb0Dd8833eFb6C5BD0Ce048C852C487".toLowerCase()
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -496,13 +533,16 @@ export const mainnetContracts: NetworkContractAddresses = {
         COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
         stkAAVE: '0x4da27a545c0c5b758a6ba100e3a049001de870f5',
         aUSDC: '0xbcca60bb61934080951369a648fb03df4f96263c',
-        cDAI: '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643'
+        cDAI: '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643',
+        xBTRFLY: '0xCC94Faf235cC5D3Bf4bEd3a30db5984306c86aBC'.toLowerCase(),
+        wxBTRFLY: '0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9'.toLowerCase()
     },
     forges: {
         [forgeIdsInBytes.AAVE]: "0x9902475a6ffc0377b034bf469ee0879f3bd273fb",
         [forgeIdsInBytes.COMPOUND]: "0xc02ac197a4d32d93d473779fbea2dca1fb313ed5",
         [forgeIdsInBytes.SUSHISWAP_SIMPLE]: "0x6b0e6b4c0ee4b6460e5cd35a3625a172fe9d3930",
-        [forgeIdsInBytes.SUSHISWAP_COMPLEX]: "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251"
+        [forgeIdsInBytes.SUSHISWAP_COMPLEX]: "0xa71bdadd4aabee6c5005aaabac0ddd27a6657251",
+        [forgeIdsInBytes.REDACTED]: "0x1b529558ACb255594d2FADf499bdBCbd288adc64".toLowerCase()
     }
 }
 

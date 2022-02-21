@@ -282,6 +282,22 @@ export async function fetchMemoPrice(
   ).div(MEMOExchangeRate);
 }
 
+export async function fetchwxBTRFLYPrice(
+  xBTRFLYAddress: string,
+  wxBTRFLYAddress: string,
+  provider: providers.JsonRpcProvider,
+  chainId: number
+): Promise<BigNumber> {
+  const wxBTRFLYContract = new Contract(
+    wxBTRFLYAddress,
+    contracts.wxBTRFLY.abi,
+    provider
+  );
+  const xBTRFLYPrice: BigNumber = await fetchTokenPrice({address: xBTRFLYAddress, provider, chainId});
+  const exchangeRate: BigNumber = new BigNumber((await wxBTRFLYContract.xBTRFLYValue(decimalFactor(9))).toString()).div(decimalFactor(18));
+  return xBTRFLYPrice.multipliedBy(exchangeRate);
+}
+
 export async function fetchPENDLEPriceFromCache(): Promise<BigNumber> {
   const price = await axios
     .get(`https://api.pendle.finance/price/pendle?chainId=1`)
@@ -325,6 +341,17 @@ export async function fetchBasicTokenPrice(
 
       case networkInfo.contractAddresses.tokens.cDAI:
         return await fetchPriceFromCoingecko('cdai');
+
+      case networkInfo.contractAddresses.tokens.xBTRFLY: 
+        return await fetchPriceFromCoingecko('butterflydao');
+
+      case networkInfo.contractAddresses.tokens.wxBTRFLY:
+        return await fetchwxBTRFLYPrice(
+          networkInfo.contractAddresses.tokens.xBTRFLY,
+          address,
+          provider,
+          chainId
+        );
     }
   } else if (chainId == 43114) {
     switch (address.toLowerCase()) {

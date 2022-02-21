@@ -1892,10 +1892,10 @@
     ethers "^5.0.1"
     web3 "^1.6.1"
 
-"@pendle/core@^1.7.0":
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.7.0.tgz#e6ffffd4218601edb3c13b295fdf731fd6698949"
-  integrity sha512-nHy14OWTPDF0T5HonfPT0fuLZJ5brSTB+t6FLsJOf6dum4QW/j9QS3KCVv66HqNg0cfm9+wSFdYtNiu80RuXvw==
+"@pendle/core@^1.8.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.8.0.tgz#b174d6441e53218c9e02b0f5457811048a8dc4f3"
+  integrity sha512-nGBeDq5jjMY+k7iwgF4LxLWrvBOBvh0229ufrHDqhB85h6RMuPYou5AqbhHP+ZO2fMq4BXEhabaofTieGttSTw==
 
 "@pendle/single-staking@^0.0.1":
   version "0.0.1"

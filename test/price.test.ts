@@ -1,15 +1,15 @@
 import { fetchTokenPrice, fetchPENDLEPriceFromCache } from "../src/fetchers/priceFetcher";
 import { ethers, BigNumber as BN, providers } from 'ethers';
-import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield } from "../src/fetchers/externalYieldRateFetcher";
+import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield, fetchBTRFLYYield } from "../src/fetchers/externalYieldRateFetcher";
 import { avalancheContracts } from "../src/networks";
-import { decimalFactor, getGasLimitWithETH } from "../src/helpers";
+import { decimalFactor, getGasLimitWithETH, distributeConstantsByNetwork } from "../src/helpers";
 import { EXP_2023, forgeIdsInBytes, Token, TokenAmount, YieldContract } from "../src";
 import { getGasPrice } from "../src/fetchers/gasPriceFetcher";
 
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const chainId: number = 43114;
+const chainId: number = 1;
 jest.setTimeout(300000);
 
 describe("price fetcher", () => {
@@ -25,7 +25,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0x3acd2ff1c3450bc8a9765afd8d0dea8e40822c86", chainId: chainId});
+        const res = await fetchTokenPrice({provider, address: "0xcc94faf235cc5d3bf4bed3a30db5984306c86abc", chainId: chainId});
         // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })
@@ -36,7 +36,7 @@ describe("price fetcher", () => {
         //     console.log('market:', om.address);
         //     console.log('yield:', res);
         // }
-        console.log(await fetchSushiForkYield('0x37922c69b08babcceae735a31235c81f1d1e8e43', chainId))
+        console.log(await fetchBTRFLYYield(provider, chainId))
     })
 
     it('gas price', async() => {
