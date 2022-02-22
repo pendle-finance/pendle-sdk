@@ -3,12 +3,16 @@ import { BigNumber as BN, BigNumberish, Contract, utils } from 'ethers';
 import { MerkleTree } from 'merkletreejs';
 import { EthConsts } from '@pendle/constants';
 import { contracts } from '../contracts';
-import { PendleRewardDetails, fetchTotalPendleRewards } from '../fetchers';
-import { distributeConstantsByNetwork, isSameAddress, submitTransaction } from '../helpers';
+import { PendleRewardDetails, fetchTotalPendleRewards, fetchTokenPrice } from '../fetchers';
+import { distributeConstantsByNetwork, isSameAddress, submitTransaction, decimalFactor } from '../helpers';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import type { ChainSpecifics } from './types';
-import type { PendleMerkleDistributor as PendleMerkleDistributorContract } from '@pendle/core/typechain-types';
+import type { IERC20, PendleIncentiveData, PendleMerkleDistributor as PendleMerkleDistributorContract } from '@pendle/core/typechain-types';
+import BigNumber from 'bignumber.js';
+import { IncentiveDataStruct, IncentiveDataStructOutput } from '@pendle/core/typechain-types/PendleIncentiveData';
+import { calcLMRewardApr } from '../math/marketMath';
+import { ONE_DAY } from '../constants';
 
 // This class currently works only on Ethereum Mainnet. Should the need to
 // extend this distributor to another chain ever arise, a chainId instance
@@ -42,6 +46,7 @@ export class PendleMerkleDistributor {
     const distributorAddress = networkInfo.contractAddresses.misc.PendleMerkleDistributor;
     const distributorContract = new Contract(distributorAddress, contracts.PendleMerkleDistributor.abi, provider) as PendleMerkleDistributorContract;
     const pendleToken = Token.find(networkInfo.contractAddresses.tokens.PENDLE);
+    const incentiveDataContract = new Contract(networkInfo.contractAddresses.misc.PendleIncentiveData, contracts.PendleIncentiveData.abi, provider) as PendleIncentiveData;
     
     // Fetch claimable Pendle yield
     const fetchClaimableYield = async (userAddress: string): Promise<TokenAmount> => {
@@ -61,9 +66,23 @@ export class PendleMerkleDistributor {
       return submitTransaction(distributorContract, signer!, 'claim', [userAddress, amount, proof]);
     };
 
+    const rewardAPY = async(inputToken: Token): Promise<BigNumber> =>{
+      const pendlePricePromise = fetchTokenPrice({address: pendleToken.address, provider, chainId});
+      const tokenPricePromise = fetchTokenPrice({address: inputToken.address, provider, chainId});
+      const tokenContract = new Contract(inputToken.address, contracts.IERC20.abi, provider) as IERC20;
+      const totalSupplyPromise = tokenContract.totalSupply();
+      const datasPromise = incentiveDataContract.callStatic.getCurrentData([inputToken.address]);
+      const [pendlePrice, datas, tokenPrice, totalSupply] = await Promise.all([pendlePricePromise, datasPromise, tokenPricePromise, totalSupplyPromise]);
+
+      return calcLMRewardApr(pendlePrice.multipliedBy(datas[0].total.toString()).div(decimalFactor(18)),
+        tokenPrice.multipliedBy(totalSupply.toString()).div(decimalFactor(inputToken.decimals)),
+        (ONE_DAY.toNumber() * 365 * 24 * 60 * 60) / (datas[0].epochEnd - datas[0].epochBegin));
+    }
+
     return {
       fetchClaimableYield,
       claim,
+      rewardAPY
     };
   }
 }

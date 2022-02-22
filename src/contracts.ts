@@ -38,6 +38,7 @@ import wxBTRFLY from './abis/wxBTRFLY.json';
 import BTRFLYStaking from './abis/BTRFLYStaking.json';
 import UniForkFactory from '@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Factory.sol/IUniswapV2Factory.json';
 import PendleMerkleDistributor from '@pendle/core/build/artifacts/contracts/misc/PendleMerkleDistributor.sol/PendleMerkleDistributor.json';
+import PendleIncentiveData from '@pendle/core/build/artifacts/contracts/misc/PendleIncentiveData.sol/PendleIncentiveData.json';
 
 
 //TODO: User proper IERC20
@@ -82,5 +83,6 @@ export const contracts = {
   wxBTRFLY,
   BTRFLYStaking,
   UniForkFactory,
-  PendleMerkleDistributor
+  PendleMerkleDistributor,
+  PendleIncentiveData
 };

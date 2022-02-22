@@ -13,7 +13,7 @@ import {
 import { TRANSACTION } from "./transactionFetcher/types";
 import { calcPrincipalForSLPYT } from "../math/marketMath";
 import { ChainSpecifics } from "./types";
-import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield } from "../fetchers/externalYieldRateFetcher";
+import { fetchAaveYield, fetchBenqiYield, fetchBTRFLYYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield } from "../fetchers/externalYieldRateFetcher";
 import { CurrencyAmount } from "./currencyAmount";
 import { fetchValuation } from "../fetchers";
 export type RedeemDetails = {
@@ -46,7 +46,8 @@ export class YieldContract {
     public useCompoundMath (): boolean {
         return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || 
                this.forgeIdInBytes == forgeIdsInBytes.BENQI ||
-               this.forgeIdInBytes == forgeIdsInBytes.WONDERLAND;
+               this.forgeIdInBytes == forgeIdsInBytes.WONDERLAND ||
+               this.forgeIdInBytes == forgeIdsInBytes.REDACTED;
     }
 
     public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
@@ -93,8 +94,8 @@ export class YieldContract {
                   break;
                   
                 case forgeIdsInBytes.REDACTED:
-      
-                // TODO: add Uniswap support here
+                  underlyingYieldRate = await fetchBTRFLYYield(provider, chainId);
+                  break;
               }
             } catch (err) {
             }

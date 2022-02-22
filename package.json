@@ -1,7 +1,7 @@
 {
   "name": "@pendle/sdk",
   "author": "Pendle Labs",
-  "version": "2.1.3",
+  "version": "2.3.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@pendle/constants": "^0.6.4",
-    "@pendle/core": "^1.8.0",
+    "@pendle/core": "^1.8.1",
     "@pendle/single-staking": "^0.0.1",
     "@pendle/subgraph-sdk": "^1.1.1",
     "@traderjoe-xyz/sdk": "^1.1.1",

@@ -1,4 +1,4 @@
-import { dummyTokenAmount, EXP_2022, EXP_2023, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts, dummyAddress } from '../src';
+import { dummyTokenAmount, EXP_2022, EXP_2023, Token, TokenAmount, YieldContract, forgeIdsInBytes, contracts, dummyAddress, EXP_REDACTED } from '../src';
 // import { Market } from '../src/entities/market';
 import { ethers, BigNumber as BN, Contract, utils } from 'ethers';
 import * as dotenv from 'dotenv';
@@ -7,7 +7,7 @@ import { distributeConstantsByNetwork } from '../src/helpers';
 dotenv.config();
 jest.setTimeout(30000);
 
-const chainId: number = 43114;
+const chainId: number = 1;
 
 // const dummyUser = '0x186e446fbd41dD51Ea2213dB2d3ae18B05A05ba8'; // local alice account
 
@@ -80,17 +80,21 @@ describe("Yiled Contract", () => {
     provider = new ethers.providers.JsonRpcProvider(providerUrl);
     signer = provider.getSigner();
     yContract = new YieldContract(
-      utils.parseBytes32String(forgeIdsInBytes.BENQI),
-      Tokens.USDCToken,
-      EXP_2023.toNumber(),
+      utils.parseBytes32String(forgeIdsInBytes.REDACTED),
+      new Token(
+        "0xCC94Faf235cC5D3Bf4bEd3a30db5984306c86aBC", 9
+      ),
+      EXP_REDACTED.toNumber(),
       chainId
     );
   });
 
-  it('yieldContract.mintDetails', async () => {
+  it.only('yieldContract.mintDetails', async () => {
     const response = await yContract.methods({signer, provider, chainId}).mintDetails(new TokenAmount(
-      Tokens.bUSDCToken,
-      BN.from(10).pow(9).toString()
+      new Token(
+        "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9", 18
+      ),
+      BN.from(10).pow(18).toString()
     ));
     console.log(response);
   })

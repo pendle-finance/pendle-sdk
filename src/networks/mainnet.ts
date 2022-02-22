@@ -519,8 +519,9 @@ export const mainnetContracts: NetworkContractAddresses = {
         PendleWrapper: '0x82c9d29739333258f08cd3957d2a7ac7f4d53fab', //Dummy
         Comptroller: '0xc00e94cb662c3520282e6f5717214004a7f26888',
         SushiRouter: '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f',
-        PendleMerkleDistributor: '0xc7566aae77105d1917acb0507bae66b521a9ae35',
-        BTRFLYStaking: "0xBdE4Dfb0dbb0Dd8833eFb6C5BD0Ce048C852C487".toLowerCase()
+        PendleMerkleDistributor: '0x08c317D3F9D05B84cBA33876F1DbC7617954C2F0'.toLowerCase(),
+        BTRFLYStaking: "0xBdE4Dfb0dbb0Dd8833eFb6C5BD0Ce048C852C487".toLowerCase(),
+        PendleIncentiveData: "0xcfa2Cd04C0a34793c25CDa392147ce463eA50CaB".toLowerCase()
     },
     tokens: {
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
