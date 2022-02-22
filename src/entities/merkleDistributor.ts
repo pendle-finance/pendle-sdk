@@ -66,7 +66,7 @@ export class PendleMerkleDistributor {
       return submitTransaction(distributorContract, signer!, 'claim', [userAddress, amount, proof]);
     };
 
-    const rewardAPY = async(inputToken: Token): Promise<BigNumber> =>{
+    const rewardAPR = async(inputToken: Token): Promise<BigNumber> =>{
       const pendlePricePromise = fetchTokenPrice({address: pendleToken.address, provider, chainId});
       const tokenPricePromise = fetchTokenPrice({address: inputToken.address, provider, chainId});
       const tokenContract = new Contract(inputToken.address, contracts.IERC20.abi, provider) as IERC20;
@@ -82,7 +82,7 @@ export class PendleMerkleDistributor {
     return {
       fetchClaimableYield,
       claim,
-      rewardAPY
+      rewardAPR
     };
   }
 }
