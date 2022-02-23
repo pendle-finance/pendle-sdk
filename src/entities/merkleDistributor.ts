@@ -71,9 +71,16 @@ export class PendleMerkleDistributor {
       const tokenPricePromise = fetchTokenPrice({address: inputToken.address, provider, chainId});
       const tokenContract = new Contract(inputToken.address, contracts.IERC20.abi, provider) as IERC20;
       const totalSupplyPromise = tokenContract.totalSupply();
-      const datasPromise = incentiveDataContract.callStatic.getCurrentData([inputToken.address]);
+
+      var hasNoRewardData: boolean = false;
+      const datasPromise = incentiveDataContract.callStatic.getCurrentData([inputToken.address]).catch((err: any) => {
+        hasNoRewardData = true;
+        return []
+      });
       const [pendlePrice, datas, tokenPrice, totalSupply] = await Promise.all([pendlePricePromise, datasPromise, tokenPricePromise, totalSupplyPromise]);
 
+      if (hasNoRewardData) return "0";
+      
       const rewardValuation = pendlePrice.multipliedBy(datas[0].total.toString()).div(decimalFactor(18));
       const baseValuation = tokenPrice.multipliedBy(totalSupply.toString()).div(decimalFactor(inputToken.decimals));
       const epochLength = datas[0].epochEnd - datas[0].epochBegin;
