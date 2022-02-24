@@ -68,23 +68,23 @@ export class PendleMerkleDistributor {
 
     const rewardAPR = async(inputToken: Token): Promise<string> =>{
       const pendlePricePromise = fetchTokenPrice({address: pendleToken.address, provider, chainId});
-      const tokenPricePromise = fetchTokenPrice({address: inputToken.address, provider, chainId});
       const tokenContract = new Contract(inputToken.address, contracts.IERC20.abi, provider) as IERC20;
       const totalSupplyPromise = tokenContract.totalSupply();
+      const tokenPricePromise = fetchTokenPrice({address: inputToken.address, provider, chainId});
 
-      var hasNoRewardData: boolean = false;
       const datasPromise = incentiveDataContract.callStatic.getCurrentData([inputToken.address]).catch((err: any) => {
-        hasNoRewardData = true;
-        return []
+        Promise.resolve(undefined);
       });
-      const [pendlePrice, datas, tokenPrice, totalSupply] = await Promise.all([pendlePricePromise, datasPromise, tokenPricePromise, totalSupplyPromise]);
 
-      if (hasNoRewardData) return "0";
-      
+      const [pendlePrice, datas] = await Promise.all([pendlePricePromise, datasPromise]);
+      if (datas === undefined) return "0";
+
+      const [tokenPrice, totalSupply] = await Promise.all([tokenPricePromise, totalSupplyPromise]);
+
       const rewardValuation = pendlePrice.multipliedBy(datas[0].total.toString()).div(decimalFactor(18));
       const baseValuation = tokenPrice.multipliedBy(totalSupply.toString()).div(decimalFactor(inputToken.decimals));
       const epochLength = datas[0].epochEnd - datas[0].epochBegin;
-      const APR = calcLMRewardApr(rewardValuation, baseValuation, (ONE_DAY.toNumber() * 365 * 24 * 60 * 60) / epochLength);
+      const APR = calcLMRewardApr(rewardValuation, baseValuation, (ONE_DAY.toNumber() * 365) / epochLength);
       return APR.toFixed(DecimalsPrecision);
     }
 

@@ -33,7 +33,7 @@ describe("Staking pools", () => {
         signer = provider.getSigner('0x82c9D29739333258f08cD3957d2a7ac7f4d53fAb');
         sp = StakingPool.find('0x309d8cf8f7c3340b50ff0ef457075a3c5792203f', '0xb124c4e18a282143d362a066736fd60d22393ef4', chainId);
     });
-    it('Get totalStaked', async() => {
+    it.only('Get totalStaked', async() => {
         const totalStake = await sp.methods({signer, provider, chainId}).getTotalStaked();
         console.log(JSON.stringify(totalStake, null, '  '));
     })
@@ -43,7 +43,7 @@ describe("Staking pools", () => {
         console.log(JSON.stringify(balance, null, '  '));
     })
 
-    it.only('Get Reward APRs', async() => {
+    it('Get Reward APRs', async() => {
         const aprs = await sp.methods({signer, provider, chainId}).rewardAprs();
         console.log(JSON.stringify(aprs, null, '  '));
     })

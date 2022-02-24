@@ -88,7 +88,7 @@ export const mainnetContracts: NetworkContractAddresses = {
             startTime: "1623888000"
         },
         {
-            address: "0x309d8cf8f7c3340b50ff0ef457075a3c5792203f",
+            address: "0x2c09fd74e80cE12bEbBC8f56FAB8633eA41C2bCc",
             inputTokenAddress: "0xb124c4e18a282143d362a066736fd60d22393ef4",
             contractType: StakingPoolType.LmV2,
             rewardTokenAddresses: [

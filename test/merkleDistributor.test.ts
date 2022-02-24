@@ -53,4 +53,8 @@ describe(PendleMerkleDistributor, () => {
     );
     expect(balanceAfter.sub(balanceBefore).toString()).toBe(expectedAmount.rawAmount());
   });
+
+  it.only('APR', async() => {
+    console.log(await distributor.methods({signer, provider, chainId}).rewardAPR(new Token("0x4C5BE0fEa74c33455F81c85561146BdAF09633dB", 18)));
+  })
 });

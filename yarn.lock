@@ -1892,7 +1892,7 @@
     ethers "^5.0.1"
     web3 "^1.6.1"
 
-"@pendle/core@^1.8.1":
+"@pendle/core@1.8.1":
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/@pendle/core/-/core-1.8.1.tgz#92a960a8fb784f8fe630152f7c0a475858afd751"
   integrity sha512-b01Tn7mm/jZVrfCxIBCu8ZBtFtEeF/C4QsPKgpkAW+kjOrI0rqXDufoAcxK+HyeGfQp3rMpx4rUSdEVwHDlgvA==
