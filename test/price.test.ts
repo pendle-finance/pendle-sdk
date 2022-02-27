@@ -25,7 +25,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0xcc94faf235cc5d3bf4bed3a30db5984306c86abc", chainId: chainId});
+        const res = await fetchTokenPrice({provider, address: "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9", chainId: chainId});
         // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })

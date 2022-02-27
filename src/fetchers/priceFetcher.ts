@@ -294,7 +294,7 @@ export async function fetchwxBTRFLYPrice(
     provider
   );
   const xBTRFLYPrice: BigNumber = await fetchTokenPrice({address: xBTRFLYAddress, provider, chainId});
-  const exchangeRate: BigNumber = new BigNumber((await wxBTRFLYContract.xBTRFLYValue(decimalFactor(9))).toString()).div(decimalFactor(18));
+  const exchangeRate: BigNumber = new BigNumber((await wxBTRFLYContract.xBTRFLYValue(decimalFactor(18))).toString()).div(decimalFactor(9));
   return xBTRFLYPrice.multipliedBy(exchangeRate);
 }
 
