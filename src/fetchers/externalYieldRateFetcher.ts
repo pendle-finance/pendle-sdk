@@ -106,41 +106,8 @@ export async function fetchBenqiYield(underlyingAddress: string): Promise<number
   return 0;
 }
 
-export async function fetchXJOEYield(provider: providers.JsonRpcProvider, chainId?: number): Promise<number> {
-  if (chainId != 43114) throw Error(`Invalid chainId: ${chainId} in fetchXJOEYield`);
-  const dateAfter = (await getCurrentTimestamp(provider)) - ONE_DAY.mul(7).toNumber();
-  const sevenDayTradingVolume: BigNumber = await request(
-    traderJoeSubgraphApi,
-    gql`{
-      dayDatas(where: {factory: "0x9ad6c38be94206ca50bb0d90783181662f0cfa10", date_gte: ${dateAfter}}) {
-        date
-        volumeUSD
-        untrackedVolume
-        txCount
-        __typename
-      }
-    }`
-  ).then((data: any) => {
-    return data.dayDatas.reduce((s: BigNumber, d: any, index: number): BigNumber => {
-      if (index >= 7) {
-        return s
-      };
-      return s.plus(d.volumeUSD);
-    }, new BigNumber(0))
-  })
-  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-  const JOEAddress: string = networkInfo.contractAddresses.tokens.JOE;
-  const xJOEAddress: string = networkInfo.contractAddresses.tokens.xJOE;
-  const JOEContract: Contract = new Contract(JOEAddress, contracts.IERC20.abi, provider);
-  const joeLocked: BN = await JOEContract.balanceOf(xJOEAddress);
-  const joeValuelocked = await fetchValuation(new TokenAmount(
-    new Token(
-      JOEAddress,
-      networkInfo.decimalsRecord[JOEAddress]
-    ),
-    joeLocked.toString()
-  ), provider, chainId);
-  return sevenDayTradingVolume.multipliedBy(365).div(7).multipliedBy(0.0005).div(joeValuelocked.amount).toNumber()
+export async function fetchXJOEYield(provider?: providers.JsonRpcProvider, chainId?: number): Promise<number> {
+  return 0;
 }
 export async function fetchWonderlandYield(provider: providers.JsonRpcProvider, chainId?: number): Promise<number> {
   if (chainId != 43114) {
