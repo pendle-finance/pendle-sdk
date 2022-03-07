@@ -86,7 +86,7 @@ export class YieldContract {
                   break;
       
                 case forgeIdsInBytes.XJOE:
-                  underlyingYieldRate = await fetchXJOEYield(provider, chainId);
+                  underlyingYieldRate = await fetchXJOEYield();
                   break;
       
                 case forgeIdsInBytes.WONDERLAND:
