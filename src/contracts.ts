@@ -13,6 +13,7 @@ import PendleLiquidityMiningBase from '@pendle/core/build/artifacts/contracts/co
 import PendleLiquidityMiningV2Base from '@pendle/core/build/artifacts/contracts/core/abstractV2/PendleLiquidityMiningBaseV2.sol/PendleLiquidityMiningBaseV2.json';
 import PendleGenericLiquidityMiningMulti from '@pendle/core/build/artifacts/contracts/core/Generic/PendleGenericLiquidityMiningMulti.sol/PendleGenericLiquidityMiningMulti.json';
 import PendleLiquidityMiningBaseV2Multi from '@pendle/core/build/artifacts/contracts/core/abstractV2/PendleLiquidityMiningBaseV2Multi.sol/PendleLiquidityMiningBaseV2Multi.json';
+import PendleMarketBase from '@pendle/core/build/artifacts/contracts/core/abstract/PendleMarketBase.sol/PendleMarketBase.json';
 import PendleSLPLiquidityMining from '@pendle/core/build/artifacts/contracts/core/SushiswapComplex/PendleSLPLiquidityMining.sol/PendleSLPLiquidityMining.json';
 import PendleRedeemProxy from './abis/PendleRedeemProxyETH.json';
 import PendleRedeemProxyMulti from '@pendle/core/build/artifacts/contracts/misc/PendleRedeemProxyMulti.sol/PendleRedeemProxyMulti.json';
@@ -52,6 +53,7 @@ export const contracts = {
   PendleBaseToken,
   PendleLiquidityMiningBase,
   PendleLiquidityMiningV2Base,
+  PendleMarketBase,
   PendleSLPLiquidityMining,
   PendleGenericLiquidityMiningMulti,
   PendleLiquidityMiningBaseV2Multi,

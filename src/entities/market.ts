@@ -38,7 +38,8 @@ export type MarketDetails = {
     impliedYield: string,
     underlyingYieldRate: number,
     YTPrice: CurrencyAmount,
-    underlyingPrice: CurrencyAmount
+    underlyingPrice: CurrencyAmount,
+    lockStartTime: number
   }
 }
 
@@ -211,7 +212,7 @@ export class PendleMarket extends Market {
   public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
 
     const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-    const marketContract = new Contract(this.address, contracts.IPendleMarket.abi, provider);
+    const marketContract = new Contract(this.address, contracts.PendleMarketBase.abi, provider);
     const pendleDataContract = new Contract(networkInfo.contractAddresses.misc.PendleData, contracts.IPendleData.abi, provider);
     const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, provider);
     const transactionFetcher: TransactionFetcher = new TransactionFetcher(chainId === undefined ? 1 : chainId);
@@ -244,7 +245,9 @@ export class PendleMarket extends Market {
       return marketReserves;
     }
 
- 
+    const getLockStartTime = async (): Promise<number> => {
+      return (await marketContract.lockStartTime()).toNumber();
+    }
 
     const readMarketDetails = async (): Promise<MarketDetails> => {
       const marketReserves: MarketReservesRaw = await getMarketReserves();
@@ -267,6 +270,9 @@ export class PendleMarket extends Market {
       var promises: Promise<any>[] = [];
       var underlyingYieldRate: number = 0;
       promises.push(yieldContract.methods({signer, provider, chainId}).getUnderlyingYieldRate().then((res: number) => underlyingYieldRate = res));
+
+      let lockStartTime = 0;
+      promises.push(getLockStartTime().then((res: number) => lockStartTime = res));
 
       const currentTime: number = await getCurrentTimestamp(provider);
 
@@ -309,7 +315,8 @@ export class PendleMarket extends Market {
             currency: 'USD',
             amount: principalValuation.toFixed(DecimalsPrecision)
           },
-          underlyingYieldRate
+          underlyingYieldRate,
+          lockStartTime
         }
       };
     };
