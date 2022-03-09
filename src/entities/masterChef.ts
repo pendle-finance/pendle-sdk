@@ -5,7 +5,7 @@ import { NetworkInfo } from "../networks";
 import { distributeConstantsByNetwork, getBlocksomeDurationEarlier } from "../helpers";
 import { contracts } from "../contracts";
 import BigNumber from "bignumber.js";
-import { fetchTokenPrice, fetchValuation } from "../fetchers/priceFetcher";
+import { fetchCachedTokenPrice, fetchValuation } from "../fetchers/priceFetcher";
 import { AprInfo } from "./types";
 import { calcLMRewardApr, calcValuation, DecimalsPrecision } from "../math/marketMath";
 import { Token } from "./token";
@@ -30,7 +30,7 @@ export class MasterChef {
                 const blockPerDay: number = blockNumber - blockNumberOneDayAgo;
                 const sushiPerBlock: BN = globalSushiPerBlock.mul(allocPoint).div(totalAllocPoint);
                 const sushiAddress: string = networkInfo.contractAddresses.tokens.SUSHI;
-                const sushiPrice: BigNumber = await fetchTokenPrice({address: sushiAddress, provider, chainId});
+                const sushiPrice: BigNumber = await fetchCachedTokenPrice(sushiAddress, chainId);
                 const sushiRewardsValue: BigNumber = calcValuation(sushiPrice, sushiPerBlock.mul(blockPerDay), networkInfo.decimalsRecord[sushiAddress]);
 
                 const lpContract: Contract = new Contract(poolInfo.lpToken, contracts.IERC20.abi, provider);
@@ -78,7 +78,7 @@ export class MasterChef {
 
 
                 const joeAddress: string = networkInfo.contractAddresses.tokens.JOE;
-                const joePrice: BigNumber = await fetchTokenPrice({address: joeAddress, provider, chainId});
+                const joePrice: BigNumber = await fetchCachedTokenPrice(joeAddress, chainId);
                 const joeRewardsValue: BigNumber = calcValuation(joePrice, joeRewardForThisPool, networkInfo.decimalsRecord[joeTokenAddress]);
                 
                 const lpContract: Contract = new Contract(poolInfo.lpToken, contracts.IERC20.abi, provider);

@@ -3,7 +3,7 @@ import { BigNumber as BN, BigNumberish, Contract, utils } from 'ethers';
 import { MerkleTree } from 'merkletreejs';
 import { EthConsts } from '@pendle/constants';
 import { contracts } from '../contracts';
-import { PendleRewardDetails, fetchTotalPendleRewards, fetchTokenPrice } from '../fetchers';
+import { PendleRewardDetails, fetchTotalPendleRewards, fetchCachedTokenPrice } from '../fetchers';
 import { distributeConstantsByNetwork, isSameAddress, submitTransaction, decimalFactor } from '../helpers';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
@@ -67,10 +67,10 @@ export class PendleMerkleDistributor {
     };
 
     const rewardAPR = async(inputToken: Token): Promise<string> =>{
-      const pendlePricePromise = fetchTokenPrice({address: pendleToken.address, provider, chainId});
+      const pendlePricePromise = fetchCachedTokenPrice(pendleToken.address, chainId);
       const tokenContract = new Contract(inputToken.address, contracts.IERC20.abi, provider) as IERC20;
       const totalSupplyPromise = tokenContract.totalSupply();
-      const tokenPricePromise = fetchTokenPrice({address: inputToken.address, provider, chainId});
+      const tokenPricePromise = fetchCachedTokenPrice(inputToken.address, chainId);
 
       const datasPromise = incentiveDataContract.callStatic.getCurrentData([inputToken.address]).catch((err: any) => {
         Promise.resolve(undefined);

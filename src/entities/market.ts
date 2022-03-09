@@ -15,7 +15,7 @@ import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, ca
 import { forgeIdsInBytes, ONE_DAY, ONE_MINUTE, ETHAddress, ZERO, RONE } from '../constants';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield, fetchWonderlandYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactionFetcher/types';
-import { fetchTokenPrice, fetchValuation } from '../fetchers/priceFetcher';
+import { fetchValuation, fetchCachedTokenPrice } from '../fetchers/priceFetcher';
 
 import BigNumber from 'bignumber.js';
 import { RedeemProxy } from './redeemProxy';
@@ -735,7 +735,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValueBigNumber = async (marketReserve: MarketReservesRaw): Promise<BigNumber> => {
-      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, provider, chainId });
+      const baseTokenPrice: BigNumber = await fetchCachedTokenPrice(this.tokens[1].address, chainId );
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
       return totalLiquidityUSD;
     }
@@ -771,7 +771,7 @@ export class PendleMarket extends Market {
       if (marketReserves === undefined) {
         marketReserves = await marketContract.getReserves();
       }
-      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, provider, chainId });
+      const baseTokenPrice: BigNumber = await fetchCachedTokenPrice( this.tokens[1].address, chainId );
       const ytDecimal: number = networkInfo.decimalsRecord[this.tokens[0].address];
       const rate: BN = calcRate(marketReserves!.xytBalance, marketReserves!.xytWeight, marketReserves!.tokenBalance, marketReserves!.tokenWeight, ytDecimal);
       const ytPrice: BigNumber = calcTokenPriceByMarket(baseTokenPrice, rate, networkInfo.decimalsRecord[this.tokens[1].address]);
@@ -1061,7 +1061,7 @@ export class UniForkMarket extends Market {
         otReserve = marketReserve.reserve1;
         otherReserve = marketReserve.reserve0;
       }
-      const otherPirce: BigNumber = await fetchTokenPrice({address: otherTokenAddress, provider, chainId});
+      const otherPirce: BigNumber = await fetchCachedTokenPrice(otherTokenAddress, chainId);
       return otherPirce.multipliedBy(otherReserve.toString()).div(decimalFactor(networkInfo.decimalsRecord[otherTokenAddress]))
         .multipliedBy(decimalFactor(networkInfo.decimalsRecord[otAddress])).div(otReserve.toString());
     }
