@@ -296,7 +296,7 @@ export async function fetchwxBTRFLYPrice(
 
 export async function fetchCachedTokenPrice(address: string, chainId: number): Promise<BigNumber> {
   const price = await axios
-    .get(`https://api.pendle.finance/price/?chainId=${chainId}&tokenAddress =${address}`)
+    .get(`https://api.pendle.finance/price?tokenAddress=${address}&chainId=${chainId}`)
     .then((res: any) => {
       return res.data;
     });
