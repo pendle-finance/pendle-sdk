@@ -3,16 +3,15 @@ import { BigNumber as BN, BigNumberish, Contract, utils } from 'ethers';
 import { MerkleTree } from 'merkletreejs';
 import { EthConsts } from '@pendle/constants';
 import { contracts } from '../contracts';
-import { PendleRewardDetails, fetchTotalPendleRewards, fetchCachedTokenPrice } from '../fetchers';
+import { PendleRewardDetails, fetchTotalPendleRewards, fetchTokenPrice } from '../fetchers';
 import { distributeConstantsByNetwork, isSameAddress, submitTransaction, decimalFactor } from '../helpers';
 import { Token } from './token';
 import { TokenAmount } from './tokenAmount';
 import type { ChainSpecifics } from './types';
 import type { IERC20, PendleIncentiveData, PendleMerkleDistributor as PendleMerkleDistributorContract } from '@pendle/core/typechain-types';
-import BigNumber from 'bignumber.js';
-import { IncentiveDataStruct, IncentiveDataStructOutput } from '@pendle/core/typechain-types/PendleIncentiveData';
 import { calcLMRewardApr, DecimalsPrecision } from '../math/marketMath';
 import { ONE_DAY } from '../constants';
+import axios from 'axios';
 
 // This class currently works only on Ethereum Mainnet. Should the need to
 // extend this distributor to another chain ever arise, a chainId instance
@@ -66,11 +65,11 @@ export class PendleMerkleDistributor {
       return submitTransaction(distributorContract, signer!, 'claim', [userAddress, amount, proof]);
     };
 
-    const rewardAPR = async(inputToken: Token): Promise<string> =>{
-      const pendlePricePromise = fetchCachedTokenPrice(pendleToken.address, chainId);
+    const computeRewardAPR = async(inputToken: Token): Promise<string> => {
+      const pendlePricePromise = fetchTokenPrice({address: pendleToken.address, chainId});
       const tokenContract = new Contract(inputToken.address, contracts.IERC20.abi, provider) as IERC20;
       const totalSupplyPromise = tokenContract.totalSupply();
-      const tokenPricePromise = fetchCachedTokenPrice(inputToken.address, chainId);
+      const tokenPricePromise = fetchTokenPrice({address: inputToken.address, chainId});
 
       const datasPromise = incentiveDataContract.callStatic.getCurrentData([inputToken.address]).catch((err: any) => {
         Promise.resolve(undefined);
@@ -88,9 +87,15 @@ export class PendleMerkleDistributor {
       return APR.toFixed(DecimalsPrecision);
     }
 
+    const rewardAPR = async(inputToken: Token): Promise<string> => {
+      const apr = await axios.get(`https://api.pendle.finance/apr/merkle?inputTokenAddress=${inputToken.address}`).then((res: any) => res.data);
+      return apr;
+    }
+
     return {
       fetchClaimableYield,
       claim,
+      computeRewardAPR,
       rewardAPR
     };
   }

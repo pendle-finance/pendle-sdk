@@ -1,6 +1,6 @@
 import { Token, ETHToken } from './token';
 import { TokenAmount } from './tokenAmount';
-import { Contract, providers, BigNumber as BN, utils } from 'ethers';
+import { Contract, providers, BigNumber as BN } from 'ethers';
 import { contracts } from '../contracts';
 import { YtOrMarketInterest, Yt } from './yt';
 import { PENDLEMARKETNFO, NetworkInfo, YTINFO, MARKETINFO, MarketProtocols } from '../networks';
@@ -12,15 +12,16 @@ import {
   PendleAmmQuery,
 } from './transactionFetcher';
 import { PercentageMaxDecimals, PONE, calcAvgRate, calcExactIn, calcExactOut, calcOtherTokenAmount, calcRateWithSwapFee, calcSwapFee, calcOutAmountLp, calcPriceImpact, calcShareOfPool, calcRate, calcOutAmountToken, calcReserveUSDValue, calcSwapFeeAPR, calcTokenPriceByMarket, calcPrincipalForSLPYT, DecimalsPrecision, ONE, calcImpliedYield, calcPrincipalFloat, calcSlippedDownAmount, calcSlippedUpAmount, calcUnweightedRate } from '../math/marketMath';
-import { forgeIdsInBytes, ONE_DAY, ONE_MINUTE, ETHAddress, ZERO, RONE } from '../constants';
-import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchXJOEYield, fetchWonderlandYield } from '../fetchers/externalYieldRateFetcher';
+import { ONE_DAY, ONE_MINUTE, ETHAddress, ZERO, RONE } from '../constants';
+import { fetchSushiForkYield } from '../fetchers/externalYieldRateFetcher';
 import { TRANSACTION } from './transactionFetcher/types';
-import { fetchValuation, fetchCachedTokenPrice } from '../fetchers/priceFetcher';
+import { fetchValuation, fetchTokenPrice } from '../fetchers/priceFetcher';
 
 import BigNumber from 'bignumber.js';
 import { RedeemProxy } from './redeemProxy';
 import { Ot } from './ot';
 import { ChainSpecifics } from './types';
+import axios from 'axios';
 
 export type TokenReserveDetails = {
   reserves: TokenAmount
@@ -249,7 +250,16 @@ export class PendleMarket extends Market {
       return (await marketContract.lockStartTime()).toNumber();
     }
 
-    const readMarketDetails = async (): Promise<MarketDetails> => {
+    const readMarketDetails = async(): Promise<MarketDetails> => {
+      const marketDetails: MarketDetails = await axios
+        .get(`https://api.pendle.finance/market-detail?chainId=${chainId}&marketAddress=${this.address}`)
+        .then((res: any) => {
+          return res.data;
+        });
+      return marketDetails;
+    }
+
+    const computeMarketDetails = async (): Promise<MarketDetails> => {
       const marketReserves: MarketReservesRaw = await getMarketReserves();
       const ytReserveDetails: TokenReserveDetails = {
         reserves: new TokenAmount(
@@ -735,7 +745,7 @@ export class PendleMarket extends Market {
     }
 
     const getLiquidityValueBigNumber = async (marketReserve: MarketReservesRaw): Promise<BigNumber> => {
-      const baseTokenPrice: BigNumber = await fetchCachedTokenPrice(this.tokens[1].address, chainId );
+      const baseTokenPrice: BigNumber = await fetchTokenPrice({address: this.tokens[1].address, chainId });
       const totalLiquidityUSD: BigNumber = calcReserveUSDValue(marketReserve.tokenBalance, networkInfo.decimalsRecord[this.tokens[1].address], baseTokenPrice, marketReserve.tokenWeight);
       return totalLiquidityUSD;
     }
@@ -766,12 +776,12 @@ export class PendleMarket extends Market {
       return getLiquidityValue(pastMarketReserves);
     }
 
-    const getYTPrice = async (marketReserves: MarketReservesRaw | undefined): Promise<BigNumber> => {
+    const computeYTPrice = async (marketReserves: MarketReservesRaw | undefined): Promise<BigNumber> => {
       if (await isExpired(yieldContract.expiry, provider)) return new BigNumber(0);
       if (marketReserves === undefined) {
         marketReserves = await marketContract.getReserves();
       }
-      const baseTokenPrice: BigNumber = await fetchCachedTokenPrice( this.tokens[1].address, chainId );
+      const baseTokenPrice: BigNumber = await fetchTokenPrice({ address: this.tokens[1].address, chainId });
       const ytDecimal: number = networkInfo.decimalsRecord[this.tokens[0].address];
       const rate: BN = calcRate(marketReserves!.xytBalance, marketReserves!.xytWeight, marketReserves!.tokenBalance, marketReserves!.tokenWeight, ytDecimal);
       const ytPrice: BigNumber = calcTokenPriceByMarket(baseTokenPrice, rate, networkInfo.decimalsRecord[this.tokens[1].address]);
@@ -779,7 +789,7 @@ export class PendleMarket extends Market {
     }
 
     const getYTPriceAndImpliedYield = async (marketReserves: MarketReservesRaw): Promise<{ ytPrice: BigNumber, principalValuation: BigNumber, impliedYield: BigNumber }> => {
-      const ytPrice: BigNumber = await getYTPrice(marketReserves);
+      const ytPrice: BigNumber = await computeYTPrice(marketReserves);
       const principalValuationPerYT: CurrencyAmount = (await yieldContract.methods({signer, provider, chainId}).getPrincipalValuationPerYT()).valuation;
       const p: BigNumber = ytPrice.dividedBy(principalValuationPerYT.amount);
 
@@ -869,6 +879,7 @@ export class PendleMarket extends Market {
     }
 
     return {
+      computeMarketDetails,
       readMarketDetails,
       swapExactInDetails,
       swapExactIn,
@@ -885,7 +896,7 @@ export class PendleMarket extends Market {
       getLPPriceBigNumber,
       getSwapFeeApr,
       getMarketFactoryId,
-      getYTPrice
+      computeYTPrice
     };
   }
 }
@@ -973,7 +984,16 @@ export class UniForkMarket extends Market {
       return (await fetchSushiForkYield(this.address, chainId)).toString()
     }
 
-    const readMarketDetails = async (): Promise<OtherMarketDetails> => {
+    const readMarketDetails = async(): Promise<OtherMarketDetails> => {
+      const marketDetails: OtherMarketDetails = await axios
+        .get(`https://api.pendle.finance/market-detail?chainId=${chainId}&marketAddress=${this.address}`)
+        .then((res: any) => {
+          return res.data;
+        });
+      return marketDetails;
+    }
+
+    const computeMarketDetails = async (): Promise<OtherMarketDetails> => {
       const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, provider);
       var token0Address: string = '', token0Reserve: BN = ZERO, token1Reserve: BN = ZERO, totalSupplyLP: BN = ZERO;
       const promises = [];
@@ -1028,7 +1048,7 @@ export class UniForkMarket extends Market {
         }
       };
       try {
-        const {otPrice, impliedYield} = await getOtPriceAndimpliedYield();
+        const {otPrice, impliedYield} = await computeOtPriceAndImpliedYield();
         marketDetails.otherDetails.otPrice = {
           currency: 'USD',
           amount: otPrice.toFixed(DecimalsPrecision)
@@ -1039,7 +1059,7 @@ export class UniForkMarket extends Market {
       return marketDetails;
     }
 
-    const getOtPrice = async(): Promise<BigNumber> => {
+    const computeOtPrice = async(): Promise<BigNumber> => {
       var otAddress: string = this.tokens[0].address;
       var otherTokenAddress: string = this.tokens[1].address;
 
@@ -1061,13 +1081,13 @@ export class UniForkMarket extends Market {
         otReserve = marketReserve.reserve1;
         otherReserve = marketReserve.reserve0;
       }
-      const otherPirce: BigNumber = await fetchCachedTokenPrice(otherTokenAddress, chainId);
+      const otherPirce: BigNumber = await fetchTokenPrice({ address:otherTokenAddress, chainId });
       return otherPirce.multipliedBy(otherReserve.toString()).div(decimalFactor(networkInfo.decimalsRecord[otherTokenAddress]))
         .multipliedBy(decimalFactor(networkInfo.decimalsRecord[otAddress])).div(otReserve.toString());
     }
 
-    const getOtPriceAndimpliedYield = async(): Promise<{otPrice: BigNumber, impliedYield: BigNumber}> => {
-      const otPrice: BigNumber = await getOtPrice();
+    const computeOtPriceAndImpliedYield = async(): Promise<{otPrice: BigNumber, impliedYield: BigNumber}> => {
+      const otPrice: BigNumber = await computeOtPrice();
       const yieldContract: YieldContract = this.yieldContract(chainId);
       const principalPerOT: TokenAmount = await yieldContract.methods({signer, provider, chainId}).getPrincipalPerYT();
       const principalValuation: CurrencyAmount = await fetchValuation(principalPerOT, provider, chainId);
@@ -1228,13 +1248,14 @@ export class UniForkMarket extends Market {
 
     return {
       getSwapFeeApr,
+      computeMarketDetails,
       readMarketDetails,
       fetchRewardsFromOtReserves,
       addDualDetails,
       addDual,
       removeDualDetails,
       removeDual,
-      getOtPrice
+      computeOtPrice
     }
   }
 }

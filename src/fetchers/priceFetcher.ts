@@ -76,20 +76,20 @@ export async function fetchSLPPrice({
 }): Promise<BigNumber> {
   var pair = await getSushiForkPairInfo(address, chainId);
   try {
-    const token0Price: BigNumber = await fetchCachedTokenPrice(
-      pair.token0.id,
+    const token0Price: BigNumber = await fetchTokenPrice({
+      address:pair.token0.id,
       chainId
-    );
+    });
     const reserveUSD: BigNumber = token0Price
       .multipliedBy(pair.reserve0)
       .multipliedBy(2);
     return reserveUSD.dividedBy(new BigNumber(pair.totalSupply));
   } catch {
     try {
-      const token1Price: BigNumber = await fetchCachedTokenPrice(
-        pair.token1.id,
+      const token1Price: BigNumber = await fetchTokenPrice({
+        address: pair.token1.id,
         chainId
-      );
+      });
       const reserveUSD: BigNumber = token1Price
         .multipliedBy(pair.reserve1)
         .multipliedBy(2);
@@ -119,10 +119,10 @@ export async function fetchJLPPrice({
   promises.push(pairContract.totalSupply().then((res: BN)=> {totalSupply = res}));
   await Promise.all(promises);
   try {
-    const token0Price: BigNumber = await fetchCachedTokenPrice(
-      token0!,
+    const token0Price: BigNumber = await fetchTokenPrice({
+      address: token0!,
       chainId
-    );
+    });
     const reserveUSD: BigNumber = token0Price
       .multipliedBy(reserve0!.toString())
       .div(decimalFactor(networkInfo.decimalsRecord[token0!.toLowerCase()]))
@@ -130,10 +130,10 @@ export async function fetchJLPPrice({
     return reserveUSD.multipliedBy(decimalFactor(18)).dividedBy(new BigNumber(totalSupply!.toString()));
   } catch {
     try {
-      const token1Price: BigNumber = await fetchCachedTokenPrice(
-        token1!,
+      const token1Price: BigNumber = await fetchTokenPrice({
+        address: token1!,
         chainId
-      );
+      });
       const reserveUSD: BigNumber = token1Price
         .multipliedBy(reserve1!.toString())
         .dividedBy(decimalFactor(networkInfo.decimalsRecord[token1!.toLowerCase()]))
@@ -156,7 +156,7 @@ export async function fetchOtPrice(
     return new BigNumber(1);
   }
   const otMarket: UniForkMarket = UniForkMarket.find(marketAddress, chainId);
-  return await otMarket.methods({ provider, chainId }).getOtPrice();
+  return await otMarket.methods({ provider, chainId }).computeOtPrice();
 }
 
 export async function fetchYtPrice(
@@ -168,7 +168,7 @@ export async function fetchYtPrice(
     yt.priceFeedMarketAddress,
     chainId
   );
-  return await market.methods({ provider, chainId }).getYTPrice();
+  return await market.methods({ provider, chainId }).computeYTPrice();
 }
 
 export async function fetchCTokenPrice(
@@ -197,7 +197,7 @@ export async function fetchCTokenPrice(
     )
   );
   return adjustedExchangeRate.multipliedBy(
-    await fetchCachedTokenPrice(underlyingAsset, chainId)
+    await fetchTokenPrice({address: underlyingAsset, chainId})
   );
 }
 
@@ -233,7 +233,7 @@ export async function fetchxJOEPrice(
   chainId: number
 ): Promise<BigNumber> {
   return (
-    await fetchCachedTokenPrice(JOEAddress, chainId)
+    await fetchTokenPrice({address: JOEAddress, chainId})
   ).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, provider));
 }
 
@@ -274,7 +274,7 @@ export async function fetchMemoPrice(
     (await wMEMOContract.wMEMOToMEMO(decimalFactor(18))).toString()
   ).div(decimalFactor(9));
   return (
-    await fetchCachedTokenPrice(wMEMOAddress, chainId)
+    await fetchTokenPrice({address: wMEMOAddress, chainId})
   ).div(MEMOExchangeRate);
 }
 
@@ -289,12 +289,18 @@ export async function fetchwxBTRFLYPrice(
     contracts.wxBTRFLY.abi,
     provider
   );
-  const xBTRFLYPrice: BigNumber = await fetchCachedTokenPrice(xBTRFLYAddress, chainId);
+  const xBTRFLYPrice: BigNumber = await fetchTokenPrice({address: xBTRFLYAddress, chainId});
   const exchangeRate: BigNumber = new BigNumber((await wxBTRFLYContract.xBTRFLYValue(decimalFactor(18))).toString()).div(decimalFactor(9));
   return xBTRFLYPrice.multipliedBy(exchangeRate);
 }
 
-export async function fetchCachedTokenPrice(address: string, chainId: number): Promise<BigNumber> {
+export async function fetchTokenPrice({
+  address,
+  chainId,
+}: {
+  address: string;
+  chainId: number;
+}): Promise<BigNumber> {
   const price = await axios
     .get(`https://api.pendle.finance/price?tokenAddress=${address}&chainId=${chainId}`)
     .then((res: any) => {
@@ -391,7 +397,7 @@ export async function fetchBasicTokenPrice(
   throw Error(`Token ${address} is not supported in basic tokens`);
 }
 
-export async function fetchTokenPrice({
+export async function computeTokenPrice({
   address,
   provider,
   chainId,
@@ -400,7 +406,7 @@ export async function fetchTokenPrice({
   provider: providers.JsonRpcProvider;
   chainId: number;
 }): Promise<BigNumber> {
-  const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1 || chainId == 43114) {
     try {
       return await fetchBasicTokenPrice(address, provider, chainId);
@@ -450,9 +456,9 @@ export async function fetchValuation(
   provider: providers.JsonRpcProvider,
   chainId: number
 ): Promise<CurrencyAmount> {
-  const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
-  const price: BigNumber = await fetchCachedTokenPrice(amount.token.address, chainId);
+  const price: BigNumber = await fetchTokenPrice({address: amount.token.address, chainId});
   return {
     currency: 'USD',
     amount: price

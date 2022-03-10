@@ -1,4 +1,4 @@
-import { fetchTokenPrice, fetchPENDLEPriceFromCache } from "../src/fetchers/priceFetcher";
+import { fetchTokenPrice } from "../src/fetchers/priceFetcher";
 import { ethers, BigNumber as BN, providers } from 'ethers';
 import { fetchAaveYield, fetchBenqiYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield, fetchBTRFLYYield } from "../src/fetchers/externalYieldRateFetcher";
 import { avalancheContracts } from "../src/networks";
@@ -25,7 +25,7 @@ describe("price fetcher", () => {
       });
 
     it.only('price', async() => {
-        const res = await fetchTokenPrice({provider, address: "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9", chainId: chainId});
+        const res = await fetchTokenPrice({address: "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9", chainId: chainId});
         // const res = await fetchPENDLEPriceFromCache();
         console.log(res.toString());
     })
