@@ -256,6 +256,12 @@ export class PendleMarket extends Market {
         .then((res: any) => {
           return res.data;
         });
+      marketDetails.tokenReserves = marketDetails.tokenReserves.map((v) => {
+        return {
+          reserves: TokenAmount.deserialize(v.reserves),
+          weights: v.weights
+        }
+      })
       return marketDetails;
     }
 
@@ -990,6 +996,9 @@ export class UniForkMarket extends Market {
         .then((res: any) => {
           return res.data;
         });
+
+      marketDetails.tokenReserves = marketDetails.tokenReserves.map(TokenAmount.deserialize);
+      marketDetails.otherDetails.rates = marketDetails.otherDetails.rates.map(TokenAmount.deserialize);
       return marketDetails;
     }
 

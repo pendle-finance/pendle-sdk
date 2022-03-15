@@ -108,12 +108,12 @@ describe("One click wrapper", () => {
 
   })
 
-  it('apr', async() => {
+  it.only('apr', async() => {
     const res2 = await wrapper.methods({signer, provider: signer.provider, chainId}).apr(Action.stakeOTYT);
     console.log('stakeOTYT', JSON.stringify(res2, null, '  '));
   })
 
-  it.only('send', async() => {
+  it('send', async() => {
     // const sim_res: SimulationDetails = await wrapper.methods({signer, provider: signer.provider, chainId}).simulateDual(Action.stakeOTYT, new TokenAmount(
     //   new Token(
     //     networkInfo.contractAddresses.tokens.USDC,

@@ -322,7 +322,6 @@ export class OneClickWrapper {
                     const underlyingLp: Market = Market.find(this.yieldContract.underlyingAsset.address, chainId);
                     const underlyingLPDetails: OtherMarketDetails = await (underlyingLp.methods({signer, provider, chainId}).readMarketDetails());
                     const testInutTokenIdxInLP: number = isSameAddress(underlyingLPDetails.tokenReserves[0].token.address, underlyingAmount0.token.address) ? 0 : 1;
-
                     if (underlyingAmount1 === undefined) {
                         const otherTokenInLP: Token = underlyingLPDetails.tokenReserves[1 ^ testInutTokenIdxInLP].token;
 

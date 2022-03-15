@@ -22,6 +22,10 @@ export class Token {
     }
     return new Token(address, decimals, expiry)
   }
+
+  public static deserialize(obj: any): Token {
+    return new Token(obj.address, obj.decimals, obj.expiry);
+  }
 }
 
 export const ETHToken: Token = new Token(

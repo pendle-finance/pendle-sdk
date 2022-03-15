@@ -58,6 +58,7 @@ describe("Market", () => {
         const marketDetails = await market.methods({signer, provider, chainId}).readMarketDetails();
 
         console.log(JSON.stringify(marketDetails, null, '  '));
+        console.log(marketDetails.tokenReserves[0].reserves.rawAmount())
     })
 
     // it('PendleMarket.yieldContract', async () => {
