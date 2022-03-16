@@ -38,6 +38,7 @@ import {
     DataAddLiqJoeStruct as DataAddLiqUniFork,
     DataTknzStruct
 } from "@pendle/core/typechain-types/PendleWrapper";
+import axios from "axios";
 
 export enum Action {
     stakeOT,
@@ -1286,6 +1287,21 @@ export class OneClickWrapper {
         }
 
         const apr = async (action: Action): Promise<WrapperAPRInfo> => {
+            const requesturl = axios.getUri({
+                url: "https://api.pendle.finance/apr/wrapper",
+                params: {
+                    forgeId: this.yieldContract.forgeId,
+                    underlyingAsset: this.yieldContract.underlyingAsset.address,
+                    expiry: this.yieldContract.expiry,
+                    action: action
+                }
+            })
+            console.log(requesturl)
+            const data: WrapperAPRInfo = await axios.get(requesturl).then((res: any) => res.data);
+            return data;
+        }
+
+        const computeApr = async (action: Action): Promise<WrapperAPRInfo> => {
             const pendleFixture: PendleFixture = await getPendleFixture();
 
             var inputTokenAmount: TokenAmount;
@@ -1342,7 +1358,8 @@ export class OneClickWrapper {
             simulateDual,
             simulateSingle,
             send,
-            apr,
+            computeApr,
+            apr
         }
     }
 }
