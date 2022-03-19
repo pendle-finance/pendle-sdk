@@ -886,7 +886,7 @@ export class PendleMarket extends Market {
 
     const getSwapFeeApr = async (): Promise<string> => {
       const requestUrl = axios.getUri({
-        url: "https://api.pendle.finance/apr/swap-fee",
+        url: "http://localhost:3000/apr/swap-fee",
         params: {
           chainId: chainId,
           marketAddress: this.address
@@ -1000,7 +1000,7 @@ export class UniForkMarket extends Market {
     
     const getSwapFeeApr = async (): Promise<string> => {
       const requestUrl = axios.getUri({
-        url: "https://api.pendle.finance/apr/swap-fee",
+        url: "http://localhost:3000/apr/swap-fee",
         params: {
           chainId: chainId,
           marketAddress: this.address
