@@ -523,7 +523,7 @@ export class StakingPool {
         const rewardsForThisExpiry: TokenAmount[] = await getTotalRewardForOneEpoch(epochData, allocPoint)
 
         const rewardsValue: BigNumber[] = await Promise.all(rewardsForThisExpiry.map(async (t: TokenAmount): Promise<BigNumber> => {
-          return await calcValuation(await fetchTokenPrice({address: t.token.address, chainId}), BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
+          return calcValuation(await fetchTokenPrice({address: t.token.address, chainId}), BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
         }));
         const rewardApr: BigNumber = calcLMRewardApr(rewardsValue.reduce((p: BigNumber, c: BigNumber) => p.plus(c), new BigNumber(0)), stakedUSDValue, 52);
         return [{

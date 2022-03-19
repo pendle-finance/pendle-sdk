@@ -862,7 +862,7 @@ export class PendleMarket extends Market {
       return liquidity.multipliedBy(BN.from(10).pow(decimal).toString()).dividedBy(totalSupplyLp.toString());
     }
 
-    const getSwapFeeAprBigNumber = async (): Promise<BigNumber> => {
+    const computeSwapfeeAprBigNumber = async (): Promise<BigNumber> => {
       if (await isExpired(yieldContract.expiry, provider)) return new BigNumber(0);
 
       var promises = [];
@@ -880,8 +880,19 @@ export class PendleMarket extends Market {
       return swapFeeApr;
     }
 
+    const computeSwapfeeApr = async (): Promise<string> => {
+      return (await computeSwapfeeAprBigNumber()).toFixed(DecimalsPrecision);
+    }
+
     const getSwapFeeApr = async (): Promise<string> => {
-      return (await getSwapFeeAprBigNumber()).toFixed(DecimalsPrecision);
+      const requestUrl = axios.getUri({
+        url: "https://api.pendle.finance/apr/swap-fee",
+        params: {
+          chainId: chainId,
+          marketAddress: this.address
+        }
+      });
+      return await axios.get(requestUrl).then((res: any) => res.data);
     }
 
     return {
@@ -900,6 +911,7 @@ export class PendleMarket extends Market {
       removeSingleDetails,
       removeSingle,
       getLPPriceBigNumber,
+      computeSwapfeeApr,
       getSwapFeeApr,
       getMarketFactoryId,
       computeYTPrice
@@ -987,6 +999,17 @@ export class UniForkMarket extends Market {
     const marketContract: Contract = new Contract(this.address, contracts.UniswapV2Pair.abi, provider);
     
     const getSwapFeeApr = async (): Promise<string> => {
+      const requestUrl = axios.getUri({
+        url: "https://api.pendle.finance/apr/swap-fee",
+        params: {
+          chainId: chainId,
+          marketAddress: this.address
+        }
+      });
+      return await axios.get(requestUrl).then((res: any) => res.data);
+    }
+
+    const computeSwapfeeApr = async (): Promise<string> => {
       return (await fetchSushiForkYield(this.address, chainId)).toString()
     }
 
@@ -1257,6 +1280,7 @@ export class UniForkMarket extends Market {
 
     return {
       getSwapFeeApr,
+      computeSwapfeeApr,
       computeMarketDetails,
       readMarketDetails,
       fetchRewardsFromOtReserves,
