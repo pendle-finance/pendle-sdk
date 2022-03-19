@@ -63,7 +63,7 @@ export class YieldContract {
 
         const getUnderlyingYieldRate = async (): Promise<number> => {
             const requestUrl = axios.getUri({
-                url: "https://api.pendle.finance/underlying-yield",
+                url: "http://localhost:3000/underlying-yield",
                 params: {
                     chainId: chainId,
                     forgeId: this.forgeId,
@@ -244,7 +244,7 @@ export class YieldContract {
 
         const getPrincipalValuationPerYT = async (): Promise<{ principal: TokenAmount, valuation: CurrencyAmount }> => {
             const requestUrl = axios.getUri({
-                url: "https://api.pendle.finance/principal-valuation",
+                url: "http://localhost:3000/principal-valuation",
                 params: {
                     chainId: chainId,
                     forgeId: this.forgeId,
