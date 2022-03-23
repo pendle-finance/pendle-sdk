@@ -862,7 +862,7 @@ export class PendleMarket extends Market {
       return liquidity.multipliedBy(BN.from(10).pow(decimal).toString()).dividedBy(totalSupplyLp.toString());
     }
 
-    const computeSwapfeeAprBigNumber = async (): Promise<BigNumber> => {
+    const computeSwapFeeAprBigNumber = async (): Promise<BigNumber> => {
       if (await isExpired(yieldContract.expiry, provider)) return new BigNumber(0);
 
       var promises = [];
@@ -880,8 +880,8 @@ export class PendleMarket extends Market {
       return swapFeeApr;
     }
 
-    const computeSwapfeeApr = async (): Promise<string> => {
-      return (await computeSwapfeeAprBigNumber()).toFixed(DecimalsPrecision);
+    const computeSwapFeeApr = async (): Promise<string> => {
+      return (await computeSwapFeeAprBigNumber()).toFixed(DecimalsPrecision);
     }
 
     const getSwapFeeApr = async (): Promise<string> => {
@@ -911,7 +911,7 @@ export class PendleMarket extends Market {
       removeSingleDetails,
       removeSingle,
       getLPPriceBigNumber,
-      computeSwapfeeApr,
+      computeSwapFeeApr,
       getSwapFeeApr,
       getMarketFactoryId,
       computeYTPrice
@@ -1009,7 +1009,7 @@ export class UniForkMarket extends Market {
       return await axios.get(requestUrl).then((res: any) => res.data);
     }
 
-    const computeSwapfeeApr = async (): Promise<string> => {
+    const computeSwapFeeApr = async (): Promise<string> => {
       return (await fetchSushiForkYield(this.address, chainId)).toString()
     }
 
@@ -1280,7 +1280,7 @@ export class UniForkMarket extends Market {
 
     return {
       getSwapFeeApr,
-      computeSwapfeeApr,
+      computeSwapFeeApr,
       computeMarketDetails,
       readMarketDetails,
       fetchRewardsFromOtReserves,

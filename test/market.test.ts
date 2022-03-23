@@ -50,11 +50,11 @@ describe("Market", () => {
         // const providerUrl = `http://127.0.0.1:8545`;
         provider = new ethers.providers.JsonRpcProvider(providerUrl);
         signer = provider.getSigner('0xA581bB0ac1a7eC393e76ccD45de2BfFf6146e213');
-        market = Market.find('0x72283a76A0ddbB63c713F911f8568440f0B77804', chainId)
+        market = Market.find('0x4C5BE0fEa74c33455F81c85561146BdAF09633dA', chainId)
         // market = PendleMarket.find('0x027dfe08d7a3ce2562ce17a6f6f4b78d26f360bd', chainId)
     });
 
-    it.only("PendleMarket.readMarketDetails", async () => {
+    it("PendleMarket.readMarketDetails", async () => {
         const marketDetails = await market.methods({signer, provider, chainId}).readMarketDetails();
 
         console.log(JSON.stringify(marketDetails, null, '  '));
@@ -140,8 +140,8 @@ describe("Market", () => {
         console.log(response);
     })
 
-    it('PendleMarket.getSwapFeeApr', async() => {
-        const response = await market.methods({signer, provider, chainId}).getSwapFeeApr();
+    it.only('PendleMarket.getSwapFeeApr', async() => {
+        const response = await market.methods({signer, provider, chainId}).computeSwapFeeApr();
         console.log(response);
     })
 
