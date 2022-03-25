@@ -75,7 +75,7 @@ export class YieldContract {
                   break;
       
                 case forgeIdsInBytes.BENQI:
-                  underlyingYieldRate = await fetchBenqiYield(this.underlyingAsset.address);
+                  underlyingYieldRate = await fetchBenqiYield(this.yieldToken.address, provider, chainId);
                   break;
       
                 case forgeIdsInBytes.SUSHISWAP_COMPLEX:

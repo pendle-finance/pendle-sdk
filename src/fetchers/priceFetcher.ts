@@ -440,6 +440,7 @@ export async function fetchTokenPrice({
       | undefined = networkInfo.contractAddresses.otherMarkets?.find(
       (m: MARKETINFO) => isSameAddress(m.address, address)
     );
+    
     if (otherMarket !== undefined) {
       if (otherMarket.platform == MarketProtocols.Sushiswap) {
         return await fetchSLPPrice({ address, provider, chainId });
@@ -448,7 +449,7 @@ export async function fetchTokenPrice({
       }
     }
     throw Error(
-      `Unsupported token ${address} with chainId ${chainId} in fetch toke price`
+      `Unsupported token ${address} with chainId ${chainId} in fetch token price`
     );
   } else if (chainId == 42) {
     return new BigNumber(1); // returning dummy data since it's kovan
