@@ -94,14 +94,14 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
   return yieldRate
 }
 
-export async function fetchBenqiYield(underlyingAddress: string, provider?: providers.JsonRpcProvider, chainId?: number): Promise<number> {
+export async function fetchBenqiYield(qiTokenAddress: string, provider?: providers.JsonRpcProvider, chainId?: number): Promise<number> {
   if(chainId != 43114){
     throw new Error(`Unsupported chainId ${chainId} in fetchBenqiYield`);
   }
 
   const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
-  const underlyingContract: Contract = new Contract(underlyingAddress, contracts.IQiToken.abi, provider);
-  const supplyRatePerTimestamp = await underlyingContract.supplyRatePerTimestamp();
+  const qiTokenContract: Contract = new Contract(qiTokenAddress, contracts.IQiToken.abi, provider);
+  const supplyRatePerTimestamp = await qiTokenContract.supplyRatePerTimestamp();
   const supplyAPY = new BigNumberjs(supplyRatePerTimestamp.toString())
     .div("1000000000000000000")
     .plus(1)
