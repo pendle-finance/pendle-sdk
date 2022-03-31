@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@pendle/constants": "^0.6.4",
-    "@pendle/core": "1.8.1",
+    "@pendle/core": "^1.8.3",
     "@pendle/single-staking": "^0.0.1",
     "@pendle/subgraph-sdk": "^1.1.1",
     "@traderjoe-xyz/sdk": "^1.1.1",

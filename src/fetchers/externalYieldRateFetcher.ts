@@ -9,6 +9,7 @@ import { contracts } from '../contracts';
 import { fetchValuation } from './priceFetcher';
 import { Token, TokenAmount } from '../entities';
 const axios = require('axios');
+BigNumberjs.config({POW_PRECISION: 20});
 
 export const fetchAaveYield = async (underlyingAddress: string) => {
   const url =
@@ -94,22 +95,27 @@ export const fetchSushiForkYield = async (poolAddress: string, chainId?: number)
   return yieldRate
 }
 
-export async function fetchBenqiYield(underlyingAddress: string): Promise<number> {
-  const networkInfo: NetworkInfo = distributeConstantsByNetwork(43114);
-  const benqiAPI = 'https://api.benqi.fi/tokens/total_apys';
-  const response = await axios.get(benqiAPI).then((res: any) => res.data);
-  for (const t in networkInfo.contractAddresses.tokens) {
-    if (isSameAddress(networkInfo.contractAddresses.tokens[t], underlyingAddress)) {
-      if (t == "WETH") return response["AVAX"].supply;
-      return response[t].supply;
-    }
+export async function fetchBenqiYield(qiTokenAddress: string, provider?: providers.JsonRpcProvider, chainId?: number): Promise<number> {
+  if(chainId != 43114){
+    throw new Error(`Unsupported chainId ${chainId} in fetchBenqiYield`);
   }
-  return 0;
+
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
+  const qiTokenContract: Contract = new Contract(qiTokenAddress, contracts.IQiToken.abi, provider);
+  const supplyRatePerTimestamp = await qiTokenContract.supplyRatePerTimestamp();
+  const supplyAPY = new BigNumberjs(supplyRatePerTimestamp.toString())
+    .div("1000000000000000000")
+    .plus(1)
+    .pow(31536000)
+    .minus(1);
+
+  return supplyAPY.toNumber();
 }
 
 export async function fetchXJOEYield(provider?: providers.JsonRpcProvider, chainId?: number): Promise<number> {
   return 0;
 }
+
 export async function fetchWonderlandYield(provider: providers.JsonRpcProvider, chainId?: number): Promise<number> {
   if (chainId != 43114) {
     throw new Error(`Unsupported chainId ${chainId} in fetchWonderlandYield`);

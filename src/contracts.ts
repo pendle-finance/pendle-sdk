@@ -30,7 +30,7 @@ import JoeMasterChef from './abis/JoeMasterChefABI.json';
 import MultiCallV2 from './abis/MulticallV2.json';
 import UniswapV2Pair from '@pendle/core/build/artifacts/contracts/interfaces/IUniswapV2Pair.sol/IUniswapV2Pair.json';
 import ICToken from '@pendle/core/build/artifacts/contracts/interfaces/ICToken.sol/ICToken.json';
-import IQiToken from '@pendle/core/build/artifacts/contracts/interfaces/IQiToken.sol/IQiToken.json';
+import IQiToken from './abis/qiToken.json';
 import BenqiComptroller from './abis/BenqiComptroller.json';
 import WrappedMEMO from './abis/WrappedMEMO.json';
 import TIMEStaking from './abis/TIMEStaking.json';
