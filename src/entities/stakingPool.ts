@@ -10,7 +10,7 @@ import { CurrencyAmount } from './currencyAmount';
 import { PendleMarket } from './market';
 import { Yt } from './yt';
 import BigNumber from 'bignumber.js';
-import { fetchTokenPrice } from '../fetchers/priceFetcher';
+import { computeTokenPrice, fetchTokenPrice } from '../fetchers/priceFetcher';
 import { calcLMRewardApr, calcValuation, DecimalsPrecision } from '../math/marketMath';
 import { AprInfo } from './types';
 import { MasterChef } from './masterChef';
@@ -18,6 +18,7 @@ import { PairTokens, PairUints, ChainSpecifics } from './types';
 import { RedeemProxy } from './redeemProxy';
 import { PairTokenUints } from './multiTokens';
 import { ONE_DAY } from '../constants';
+import axios from 'axios';
 
 export interface StakingPoolId {
   address: string;
@@ -446,16 +447,16 @@ export class StakingPool {
     const getTotalStaked = async (): Promise<StakedAmount> => {
       if (this.isLmV1()) {
         const totalStakeLP: BN = (await stakingPoolContract.readExpiryData(expiry)).totalStakeLP;
-        const marketLPPrice: BigNumber = await market.methods({signer, provider, chainId}).getLPPriceBigNumber();
+        const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, chainId});
         return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.isLmV2()) {
         const totalStakeLP: BN = await stakingPoolContract.totalStake();
-        const marketLPPrice: BigNumber = await fetchTokenPrice({ address: this.inputToken.address, provider, chainId });
+        const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, chainId});
         return populateStakedAmount(totalStakeLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const PENDLEContract: Contract = new Contract(this.inputToken.address, contracts.IERC20.abi, provider);
         const totalStake: BN = await PENDLEContract.balanceOf(this.address);
-        const PENDLEPrice: BigNumber = await fetchTokenPrice({ address: this.inputToken.address, provider, chainId });
+        const PENDLEPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, chainId});
         return populateStakedAmount(totalStake, PENDLEPrice);
       } else {
         throw Error(UNSUPPORTED_TYPE);
@@ -469,12 +470,12 @@ export class StakingPool {
         return populateStakedAmount(stakedLP, marketLPPrice);
       } else if (this.isLmV2()) {
         const stakedLP: BN = await stakingPoolContract.balances(address);
-        const marketLPPrice: BigNumber = await fetchTokenPrice({ address: this.inputToken.address, provider, chainId });
+        const marketLPPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, chainId});
         return populateStakedAmount(stakedLP, marketLPPrice);
       } else if (this.contractType == StakingPoolType.PendleSingleSided) {
         const userShareBalance: BN = await stakingPoolContract.balances(address);
         const userPendleBalance: BN = await stakingPoolContract.callStatic.leave(userShareBalance, { from: address });
-        const PENDLEPrice: BigNumber = await fetchTokenPrice({ address: this.inputToken.address, provider, chainId });
+        const PENDLEPrice: BigNumber = await fetchTokenPrice({address: this.inputToken.address, chainId});
         return populateStakedAmount(userPendleBalance, PENDLEPrice);
       } else {
         throw Error(UNSUPPORTED_TYPE);
@@ -500,7 +501,12 @@ export class StakingPool {
       }
     }
 
-    const rewardAprs = async (): Promise<AprInfo[]> => {
+    const rewardAprs = async(): Promise<AprInfo[]> => {
+      const aprs = await axios.get(`https://api.pendle.finance/apr/stakingpool?chainId=${chainId}&poolAddress=${this.address}&inputTokenAddress=${this.inputToken.address}`).then((res: any) => res.data);
+      return aprs;
+    }
+
+    const computeRewardAprs = async (): Promise<AprInfo[]> => {
       if (this.isLmV1()) {
         const stakedUSDValue: BigNumber = new BigNumber((await getTotalStaked()).valuation.amount);
         const startTime: BN = await stakingPoolContract.startTime();
@@ -517,7 +523,7 @@ export class StakingPool {
         const rewardsForThisExpiry: TokenAmount[] = await getTotalRewardForOneEpoch(epochData, allocPoint)
 
         const rewardsValue: BigNumber[] = await Promise.all(rewardsForThisExpiry.map(async (t: TokenAmount): Promise<BigNumber> => {
-          return await calcValuation(await fetchTokenPrice({ address: t.token.address, provider, chainId }), BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
+          return calcValuation(await fetchTokenPrice({address: t.token.address, chainId}), BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
         }));
         const rewardApr: BigNumber = calcLMRewardApr(rewardsValue.reduce((p: BigNumber, c: BigNumber) => p.plus(c), new BigNumber(0)), stakedUSDValue, 52);
         return [{
@@ -534,8 +540,8 @@ export class StakingPool {
         var aprInfos: AprInfo[] = [];
         const rewards: TokenAmount[] = await getTotalRewardForOneEpoch(epochData);
         const rewardsValue: BigNumber[] = await Promise.all(rewards.map(async (t: TokenAmount): Promise<BigNumber> => {
-          const tokenPrice: BigNumber = await fetchTokenPrice({ address: t.token.address, provider, chainId });
-          const valuation: BigNumber = await calcValuation(tokenPrice, BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
+          const tokenPrice: BigNumber = await fetchTokenPrice({address: t.token.address, chainId});
+          const valuation: BigNumber = calcValuation(tokenPrice, BN.from(t.rawAmount()), networkInfo.decimalsRecord[t.token.address]);
           return valuation;
         }));
         aprInfos.push({
@@ -583,6 +589,7 @@ export class StakingPool {
       unstake,
       getTotalStaked,
       balanceOf,
+      computeRewardAprs,
       rewardAprs
     }
   }
