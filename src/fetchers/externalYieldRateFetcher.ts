@@ -100,7 +100,6 @@ export async function fetchBenqiYield(qiTokenAddress: string, provider?: provide
     throw new Error(`Unsupported chainId ${chainId} in fetchBenqiYield`);
   }
 
-  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
   const qiTokenContract: Contract = new Contract(qiTokenAddress, contracts.IQiToken.abi, provider);
   const supplyRatePerTimestamp = await qiTokenContract.supplyRatePerTimestamp();
   const supplyAPY = new BigNumberjs(supplyRatePerTimestamp.toString())
