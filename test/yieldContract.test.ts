@@ -89,7 +89,7 @@ describe("Yiled Contract", () => {
     );
   });
 
-  it.only('yieldContract.mintDetails', async () => {
+  it('yieldContract.mintDetails', async () => {
     const response = await yContract.methods({signer, provider, chainId}).mintDetails(new TokenAmount(
       new Token(
         "0x4B16d95dDF1AE4Fe8227ed7B7E80CF13275e61c9", 18
@@ -109,7 +109,7 @@ describe("Yiled Contract", () => {
   //   console.log(response);
   // })
 
-  it('yieldContract.redeemDetails', async () => {
+  it.only('yieldContract.redeemDetails', async () => {
     const response = await yContract.methods({signer, provider, chainId}).redeemDetails(new TokenAmount(
       Tokens.OTqiUSDCToken,
       BN.from(10).pow(8).toString()

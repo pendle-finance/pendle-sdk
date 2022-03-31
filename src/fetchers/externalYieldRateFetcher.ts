@@ -50,6 +50,7 @@ export const fetchCompoundYield = async (yieldBearingAddress: string) => {
 }
 
 export const fetchSushiForkYield = async (poolAddress: string, chainId?: number): Promise<number> => { //chainId
+  poolAddress = poolAddress.toLowerCase();
   const currentTime = getCurrentTimestampLocal()
   const dateAfter = currentTime - ONE_DAY.toNumber();
   const yieldRate: number = await request(

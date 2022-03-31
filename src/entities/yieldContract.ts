@@ -16,6 +16,7 @@ import { ChainSpecifics } from "./types";
 import { fetchAaveYield, fetchBenqiYield, fetchBTRFLYYield, fetchCompoundYield, fetchSushiForkYield, fetchWonderlandYield, fetchXJOEYield } from "../fetchers/externalYieldRateFetcher";
 import { CurrencyAmount } from "./currencyAmount";
 import { fetchValuation } from "../fetchers";
+import axios from "axios";
 export type RedeemDetails = {
     redeemableAmount: TokenAmount;
     interestAmount: TokenAmount;
@@ -43,14 +44,14 @@ export class YieldContract {
         );
     }
 
-    public useCompoundMath (): boolean {
-        return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED || 
-               this.forgeIdInBytes == forgeIdsInBytes.BENQI ||
-               this.forgeIdInBytes == forgeIdsInBytes.WONDERLAND ||
-               this.forgeIdInBytes == forgeIdsInBytes.REDACTED;
+    public useCompoundMath(): boolean {
+        return this.forgeIdInBytes == forgeIdsInBytes.COMPOUND_UPGRADED ||
+            this.forgeIdInBytes == forgeIdsInBytes.BENQI ||
+            this.forgeIdInBytes == forgeIdsInBytes.WONDERLAND ||
+            this.forgeIdInBytes == forgeIdsInBytes.REDACTED;
     }
 
-    public methods({signer, provider, chainId}: ChainSpecifics): Record<string, any> {
+    public methods({ signer, provider, chainId }: ChainSpecifics): Record<string, any> {
         const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
         if (networkInfo.contractAddresses.forges[this.forgeIdInBytes] === undefined) {
             return Error(`No such forge with forgeId ${this.forgeIdInBytes} in this network.`)
@@ -61,47 +62,61 @@ export class YieldContract {
         const pendleRouterContract = new Contract(networkInfo.contractAddresses.misc.PendleRouter, contracts.IPendleRouter.abi, provider);
 
         const getUnderlyingYieldRate = async (): Promise<number> => {
+            const requestUrl = axios.getUri({
+                url: "https://api.pendle.finance/underlying-yield",
+                params: {
+                    chainId: chainId,
+                    forgeId: this.forgeId,
+                    underlyingAsset: this.underlyingAsset.address,
+                    expiry: this.expiry
+                }
+            });
+            const data = await axios.get(requestUrl).then((res: any) => res.data);
+            return data;
+        }
+
+        const computeUnderlyingYieldRate = async (): Promise<number> => {
 
             if (chainId == 42) return 0; // return 0 for kovan 
             var underlyingYieldRate: number = 0;
             try {
-              switch (this.forgeIdInBytes) {
-                case forgeIdsInBytes.AAVE:
-                  underlyingYieldRate = await fetchAaveYield(this.underlyingAsset.address);
-                  break;
-      
-                case forgeIdsInBytes.COMPOUND:
-                  underlyingYieldRate = await fetchCompoundYield(this.yieldToken.address);
-                  break;
-      
-                case forgeIdsInBytes.BENQI:
-                  underlyingYieldRate = await fetchBenqiYield(this.yieldToken.address, provider, chainId);
-                  break;
-      
-                case forgeIdsInBytes.SUSHISWAP_COMPLEX:
-                case forgeIdsInBytes.SUSHISWAP_SIMPLE:
-                case forgeIdsInBytes.JOE_COMPLEX:
-                case forgeIdsInBytes.JOE_SIMPLE:
-                  underlyingYieldRate = await fetchSushiForkYield(this.yieldToken.address, chainId);
-                  break;
-      
-                case forgeIdsInBytes.XJOE:
-                  underlyingYieldRate = await fetchXJOEYield();
-                  break;
-      
-                case forgeIdsInBytes.WONDERLAND:
-                  underlyingYieldRate = await fetchWonderlandYield(provider, chainId);
-                  break;
-                  
-                case forgeIdsInBytes.REDACTED:
-                  underlyingYieldRate = await fetchBTRFLYYield(provider, chainId);
-                  break;
-              }
+                switch (this.forgeIdInBytes) {
+                    case forgeIdsInBytes.AAVE:
+                        underlyingYieldRate = await fetchAaveYield(this.underlyingAsset.address);
+                        break;
+
+                    case forgeIdsInBytes.COMPOUND:
+                        underlyingYieldRate = await fetchCompoundYield(this.yieldToken.address);
+                        break;
+
+                    case forgeIdsInBytes.BENQI:
+                        underlyingYieldRate = await fetchBenqiYield(this.yieldToken.address, provider, chainId);
+                        break;
+
+                    case forgeIdsInBytes.SUSHISWAP_COMPLEX:
+                    case forgeIdsInBytes.SUSHISWAP_SIMPLE:
+                    case forgeIdsInBytes.JOE_COMPLEX:
+                    case forgeIdsInBytes.JOE_SIMPLE:
+                        underlyingYieldRate = await fetchSushiForkYield(this.yieldToken.address, chainId);
+                        break;
+
+                    case forgeIdsInBytes.XJOE:
+                        underlyingYieldRate = await fetchXJOEYield();
+                        break;
+
+                    case forgeIdsInBytes.WONDERLAND:
+                        underlyingYieldRate = await fetchWonderlandYield(provider, chainId);
+                        break;
+
+                    case forgeIdsInBytes.REDACTED:
+                        underlyingYieldRate = await fetchBTRFLYYield(provider, chainId);
+                        break;
+                }
             } catch (err) {
             }
             return underlyingYieldRate;
         }
-        
+
         const mintDetails = async (toMint: TokenAmount): Promise<TokenAmount[]> => {
             if (this.forgeIdInBytes == forgeIdsInBytes.AAVE || this.forgeIdInBytes == forgeIdsInBytes.COMPOUND) {
                 const response = await pendleForgeContract.callStatic.mintOtAndXyt(this.underlyingAsset.address, this.expiry, BN.from(toMint.rawAmount()), dummyAddress, { from: networkInfo.contractAddresses.misc.PendleRouter });
@@ -196,7 +211,7 @@ export class YieldContract {
             }
         }
 
-        const getPrincipalPerYT = async (): Promise<TokenAmount> => {
+        const computePrincipalPerYT = async (): Promise<TokenAmount> => {
             switch (this.forgeIdInBytes) {
                 case forgeIdsInBytes.AAVE:
                     return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
@@ -223,14 +238,29 @@ export class YieldContract {
                     return new TokenAmount(this.underlyingAsset, decimalFactor(networkInfo.decimalsRecord[this.underlyingAsset.address]));
 
                 default:
-                    throw Error(`Unsupported forgeId in getPrincipalPerYT ${this.forgeId}`)
+                    throw Error(`Unsupported forgeId in computePrincipalPerYT ${this.forgeId}`)
             }
         }
 
-        const getPrincipalValuationPerYT = async(): Promise<{principal: TokenAmount, valuation: CurrencyAmount}> => {
-            const principal = await getPrincipalPerYT();
+        const getPrincipalValuationPerYT = async (): Promise<{ principal: TokenAmount, valuation: CurrencyAmount }> => {
+            const requestUrl = axios.getUri({
+                url: "https://api.pendle.finance/principal-valuation",
+                params: {
+                    chainId: chainId,
+                    forgeId: this.forgeId,
+                    underlyingAsset: this.underlyingAsset.address,
+                    expiry: this.expiry
+                }
+            });
+            const data = await axios.get(requestUrl).then((res: any) => res.data);
+            data.principal = TokenAmount.deserialize(data.principal);
+            return data;
+        }
+
+        const computePrincipalValuationPerYT = async (): Promise<{ principal: TokenAmount, valuation: CurrencyAmount }> => {
+            const principal = await computePrincipalPerYT();
             const valuation = await fetchValuation(principal, provider, chainId);
-            return {principal, valuation};
+            return { principal, valuation };
         }
 
         return {
@@ -238,8 +268,10 @@ export class YieldContract {
             mint,
             redeemDetails,
             redeem,
-            getPrincipalPerYT,
+            computePrincipalPerYT,
+            computePrincipalValuationPerYT,
             getPrincipalValuationPerYT,
+            computeUnderlyingYieldRate,
             getUnderlyingYieldRate
         };
     }

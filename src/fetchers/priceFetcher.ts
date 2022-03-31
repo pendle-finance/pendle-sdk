@@ -77,9 +77,8 @@ export async function fetchSLPPrice({
   var pair = await getSushiForkPairInfo(address, chainId);
   try {
     const token0Price: BigNumber = await fetchTokenPrice({
-      address: pair.token0.id,
-      provider,
-      chainId,
+      address:pair.token0.id,
+      chainId
     });
     const reserveUSD: BigNumber = token0Price
       .multipliedBy(pair.reserve0)
@@ -89,8 +88,7 @@ export async function fetchSLPPrice({
     try {
       const token1Price: BigNumber = await fetchTokenPrice({
         address: pair.token1.id,
-        provider,
-        chainId,
+        chainId
       });
       const reserveUSD: BigNumber = token1Price
         .multipliedBy(pair.reserve1)
@@ -123,8 +121,7 @@ export async function fetchJLPPrice({
   try {
     const token0Price: BigNumber = await fetchTokenPrice({
       address: token0!,
-      provider,
-      chainId,
+      chainId
     });
     const reserveUSD: BigNumber = token0Price
       .multipliedBy(reserve0!.toString())
@@ -135,8 +132,7 @@ export async function fetchJLPPrice({
     try {
       const token1Price: BigNumber = await fetchTokenPrice({
         address: token1!,
-        provider,
-        chainId,
+        chainId
       });
       const reserveUSD: BigNumber = token1Price
         .multipliedBy(reserve1!.toString())
@@ -160,7 +156,7 @@ export async function fetchOtPrice(
     return new BigNumber(1);
   }
   const otMarket: UniForkMarket = UniForkMarket.find(marketAddress, chainId);
-  return await otMarket.methods({ provider, chainId }).getOtPrice();
+  return await otMarket.methods({ provider, chainId }).computeOtPrice();
 }
 
 export async function fetchYtPrice(
@@ -172,7 +168,7 @@ export async function fetchYtPrice(
     yt.priceFeedMarketAddress,
     chainId
   );
-  return await market.methods({ provider, chainId }).getYTPrice();
+  return await market.methods({ provider, chainId }).computeYTPrice();
 }
 
 export async function fetchCTokenPrice(
@@ -201,7 +197,7 @@ export async function fetchCTokenPrice(
     )
   );
   return adjustedExchangeRate.multipliedBy(
-    await fetchTokenPrice({ address: underlyingAsset, provider, chainId })
+    await fetchTokenPrice({address: underlyingAsset, chainId})
   );
 }
 
@@ -237,7 +233,7 @@ export async function fetchxJOEPrice(
   chainId: number
 ): Promise<BigNumber> {
   return (
-    await fetchTokenPrice({ address: JOEAddress, provider, chainId })
+    await fetchTokenPrice({address: JOEAddress, chainId})
   ).multipliedBy(await getxJOEExchangeRate(xJOEAddress, JOEAddress, provider));
 }
 
@@ -278,7 +274,7 @@ export async function fetchMemoPrice(
     (await wMEMOContract.wMEMOToMEMO(decimalFactor(18))).toString()
   ).div(decimalFactor(9));
   return (
-    await fetchTokenPrice({ address: wMEMOAddress, provider, chainId })
+    await fetchTokenPrice({address: wMEMOAddress, chainId})
   ).div(MEMOExchangeRate);
 }
 
@@ -293,14 +289,20 @@ export async function fetchwxBTRFLYPrice(
     contracts.wxBTRFLY.abi,
     provider
   );
-  const xBTRFLYPrice: BigNumber = await fetchTokenPrice({address: xBTRFLYAddress, provider, chainId});
+  const xBTRFLYPrice: BigNumber = await fetchTokenPrice({address: xBTRFLYAddress, chainId});
   const exchangeRate: BigNumber = new BigNumber((await wxBTRFLYContract.xBTRFLYValue(decimalFactor(18))).toString()).div(decimalFactor(9));
   return xBTRFLYPrice.multipliedBy(exchangeRate);
 }
 
-export async function fetchPENDLEPriceFromCache(): Promise<BigNumber> {
+export async function fetchTokenPrice({
+  address,
+  chainId,
+}: {
+  address: string;
+  chainId: number;
+}): Promise<BigNumber> {
   const price = await axios
-    .get(`https://api.pendle.finance/price/pendle?chainId=1`)
+    .get(`https://api.pendle.finance/price?tokenAddress=${address}&chainId=${chainId}`)
     .then((res: any) => {
       return res.data;
     });
@@ -320,11 +322,7 @@ export async function fetchBasicTokenPrice(
         return new BigNumber(1);
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        if (process.env.COMPUTE_PRICE) {
-          return await fetchPriceFromCoingecko('pendle');
-        } else {
-          return await fetchPENDLEPriceFromCache();
-        }
+        return await fetchPriceFromCoingecko('pendle');
 
       case networkInfo.contractAddresses.tokens.WETH:
       case ETHAddress.toLowerCase():
@@ -371,11 +369,7 @@ export async function fetchBasicTokenPrice(
         return await fetchPriceFromCoingecko('joe');
 
       case networkInfo.contractAddresses.tokens.PENDLE:
-        if (process.env.COMPUTE_PRICE) {
-          return await fetchPriceFromCoingecko('pendle');
-        } else {
-          return await fetchPENDLEPriceFromCache();
-        }
+        return await fetchPriceFromCoingecko('pendle');
 
       case networkInfo.contractAddresses.tokens.QI:
         return await fetchPriceFromCoingecko('benqi');
@@ -403,7 +397,7 @@ export async function fetchBasicTokenPrice(
   throw Error(`Token ${address} is not supported in basic tokens`);
 }
 
-export async function fetchTokenPrice({
+export async function computeTokenPrice({
   address,
   provider,
   chainId,
@@ -412,7 +406,7 @@ export async function fetchTokenPrice({
   provider: providers.JsonRpcProvider;
   chainId: number;
 }): Promise<BigNumber> {
-  const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
   if (chainId === undefined || chainId == 1 || chainId == 43114) {
     try {
       return await fetchBasicTokenPrice(address, provider, chainId);
@@ -463,13 +457,9 @@ export async function fetchValuation(
   provider: providers.JsonRpcProvider,
   chainId: number
 ): Promise<CurrencyAmount> {
-  const networkInfo: NetworkInfo = await distributeConstantsByNetwork(chainId);
+  const networkInfo: NetworkInfo = distributeConstantsByNetwork(chainId);
 
-  const price: BigNumber = await fetchTokenPrice({
-    address: amount.token.address,
-    provider,
-    chainId,
-  });
+  const price: BigNumber = await fetchTokenPrice({address: amount.token.address, chainId});
   return {
     currency: 'USD',
     amount: price

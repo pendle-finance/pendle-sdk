@@ -61,6 +61,10 @@ export class TokenAmount {
             balancesOf
         }
     }
+
+    public static deserialize(obj: any): TokenAmount {
+        return new TokenAmount(Token.deserialize(obj.token), obj.rawAmnt);
+    }
 }
 
 export const dummyTokenAmount: TokenAmount = new TokenAmount(
