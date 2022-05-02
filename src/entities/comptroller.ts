@@ -62,8 +62,8 @@ export class Comptroller {
                     const qiTokenContract: Contract = new Contract(qiOrCToken.address, contracts.IQiToken.abi, provider);
                     var supplySpeedForQi: BN, supplySpeedForAvax: BN, totalSupply: BN;
                     var promises = [];
-                    promises.push(comptrollerContract.rewardSpeeds(BenqiRewardTypes.Qi, qiOrCToken.address).then((res: BN) => supplySpeedForQi = res));
-                    promises.push(comptrollerContract.rewardSpeeds(BenqiRewardTypes.Avax, qiOrCToken.address).then((res: BN) => supplySpeedForAvax = res));
+                    promises.push(comptrollerContract.supplyRewardSpeeds(BenqiRewardTypes.Qi, qiOrCToken.address).then((res: BN) => supplySpeedForQi = res));
+                    promises.push(comptrollerContract.supplyRewardSpeeds(BenqiRewardTypes.Avax, qiOrCToken.address).then((res: BN) => supplySpeedForAvax = res));
                     promises.push(qiTokenContract.totalSupply().then((res: BN) => totalSupply = res));
                     await Promise.all(promises);
 
