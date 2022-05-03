@@ -1296,7 +1296,7 @@ export class OneClickWrapper {
                     action: action
                 }
             })
-            console.log(requesturl)
+            // console.log(requesturl)
             const data: WrapperAPRInfo = await axios.get(requesturl).then((res: any) => res.data);
             return data;
         }
